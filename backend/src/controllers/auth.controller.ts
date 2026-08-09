@@ -29,6 +29,7 @@ function publicUser(user: IUser) {
     verified: user.verified,
     vip: user.vip,
     chatToggle: user.chatToggle,
+    createdAt: user.createdAt,
   };
 }
 

@@ -13,6 +13,7 @@ export interface AuthUser {
   verified: boolean;
   vip: boolean;
   chatToggle?: boolean;
+  createdAt?: string;
 }
 
 interface AuthContextValue {

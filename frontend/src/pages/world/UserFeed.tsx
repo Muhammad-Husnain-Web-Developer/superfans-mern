@@ -23,7 +23,6 @@ import { ControlPanelHost } from '../profile/ControlPanelHost';
 export function UserFeed() {
   useLayoutPageStyles();
   const { t } = useTranslation('content');
-  const navigate = useNavigate();
   const { user: authUser, loading } = useAuth();
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
   const [posts, setPosts] = useState<FeedPost[]>([]);
