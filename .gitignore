@@ -21,3 +21,6 @@ _*.txt
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# TypeScript incremental build cache
+*.tsbuildinfo
