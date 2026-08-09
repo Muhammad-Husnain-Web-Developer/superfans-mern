@@ -1,0 +1,14 @@
+{
+    "title": "REPORT POST",
+    "reasons": {
+        "sensuality": "Report for excessive sensuality or explicit content",
+        "impersonation": "This person is using my identity or someone else's.",
+        "violence": "This content contains violence and should not be shown to the public.",
+        "racism": "This post contains racist messages that defame and incite hatred.",
+        "other": "Others"
+    },
+    "sent_title": "Report Sent",
+    "thank_you": "Your report has been successfully submitted. Thanks for making this social network better.",
+    "failed_title": "Oops!",
+    "failed_message": "Something went wrong. Please try again later."
+}

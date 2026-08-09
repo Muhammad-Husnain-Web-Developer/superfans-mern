@@ -1,0 +1,14 @@
+{
+    "title": "举报帖子",
+    "reasons": {
+        "sensuality": "因过度感官或明确内容而举报",
+        "impersonation": "此人冒用我的身份或他人的身份。",
+        "violence": "此内容包含暴力，不应向公众展示。",
+        "racism": "此帖子包含侮辱性的种族主义言论，煽动仇恨。",
+        "other": "其他"
+    },
+    "sent_title": "举报已发送",
+    "thank_you": "您的举报已成功提交。感谢您帮助改善社交网络。",
+    "failed_title": "Oops！",
+    "failed_message": "出了点问题。请稍后再试。"
+}

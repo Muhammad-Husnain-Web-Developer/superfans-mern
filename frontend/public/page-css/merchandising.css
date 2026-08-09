@@ -1,0 +1,257 @@
+
+    /* WebKit-based browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  height: 11px;
+  width: 11px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* optional: light background */
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #777;
+  border-radius: 20px;
+  border-right: 4px solid blueviolet; /* for horizontal scrollbars */
+  /* border: 3px solid orange; */ /* optional alternative */
+}
+
+.container {
+  width: 100% !important;
+  margin-top: 40px;
+  margin-bottom: 40px;
+  padding: 30px 25px;
+  border-radius: 6px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #222;
+}
+
+.logo {
+  display: block;
+  max-width: 180px;
+  margin: 0 auto 30px auto;
+}
+
+h2#influencerTitle {
+  font-weight: 700;
+  font-size: 2.2rem;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #000;
+}
+
+p {
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 30px;
+  color: #444;
+}
+
+p strong {
+  color: #da1212;
+  font-weight: 700;
+}
+
+.warning {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  background-color: #fff4f4;
+  border: 1px solid #da1212;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 30px;
+  color: #b71c1c;
+  font-weight: 600;
+}
+
+.warning svg {
+  fill: #da1212;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.btn-back, .btn-confirm {
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.btn-back {
+  background-color: transparent;
+  border: 3px solid #000;
+  color: #000;
+}
+
+.btn-back:hover, .btn-back:focus {
+  background-color: #000;
+  color: #fff;
+  text-decoration: none;
+}
+
+.btn-confirm {
+    border: 3px solid #409c40 !important;
+  
+    display: inline-block;
+    margin-left: 1px;
+        background: #5cb85c;
+    color: #fff;
+}
+
+.btn-confirm:hover, .btn-confirm:focus {
+  background-color: #409c40 ;
+  color: #fff;
+}
+
+/* Responsive tweaks */
+
+@media (max-width: 776px) {
+
+  .container {
+  width: 90%;
+
+}
+}
+@media (max-width: 576px) {
+  .container {
+    padding: 20px 15px;
+  }
+
+  .btn-group {
+   margin-bottom: 40px;
+   flex-wrap: nowrap !important;
+  }
+
+  .btn-back, .btn-confirm {
+    width: 100%;
+    padding: 14px 0;
+  }
+
+}
+
+    
+
+
+.language-dropdownz {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999;
+    font-family: Arial, sans-serif;
+}
+
+.dropdown-toggle {
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: -50px;
+    right: 0;
+    min-width: 100%;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 8px 12px;
+    color: #333;
+    text-decoration: none;
+}
+
+.dropdown-menu a:hover {
+    background-color: #f0f0f0;
+}
+
+.language-dropdownz:hover .dropdown-menu {
+    display: block;
+}
+
+
+
+
+
+    
+.btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.btn-rank {
+    border: 3px solid black;
+    background: white;
+    color: black;
+    padding: 6px 0;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    box-sizing: border-box;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 90px;
+}
+
+.btn-dark {
+    border: 3px solid black !important;
+    outline: none;
+    background: #000;
+}
+.btn-dark:hover {
+    background: #fff;
+    color: #000;
+    border: 3px solid #000;
+}
+.btn-dark:focus {
+    box-shadow: none !important;
+}
+/* Mobile tweaks */
+@media (max-width: 600px) {
+    .btn-rank {
+        padding: 8px 0;
+        font-size: 0.9rem;
+        width: 90px; 
+    }
+}
+
+.btn-rank:hover {
+    background: black;
+    color: white;
+    text-decoration: none;
+}
+
+.btn-all {
+    background: #232121;
+    color: #fff;
+}

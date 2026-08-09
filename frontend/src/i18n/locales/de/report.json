@@ -1,0 +1,14 @@
+{
+    "title": "BEITRAG MELDEN",
+    "reasons": {
+        "sensuality": "Melden wegen übermäßiger Sinnlichkeit oder expliziter Inhalte",
+        "impersonation": "Diese Person verwendet meine Identität oder die einer anderen Person.",
+        "violence": "Dieser Inhalt enthält Gewalt und sollte der Öffentlichkeit nicht gezeigt werden.",
+        "racism": "Dieser Beitrag enthält rassistische Botschaften, die diffamieren und zu Hass anstiften.",
+        "other": "Andere"
+    },
+    "sent_title": "Meldung gesendet",
+    "thank_you": "Ihre Meldung wurde erfolgreich übermittelt. Danke, dass Sie dieses soziale Netzwerk verbessern.",
+    "failed_title": "Hoppla!",
+    "failed_message": "Etwas ist schiefgelaufen. Bitte versuchen Sie es später noch einmal."
+}

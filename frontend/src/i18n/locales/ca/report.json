@@ -1,0 +1,14 @@
+{
+    "title": "REPORTAR PUBLICACIÓ",
+    "reasons": {
+        "sensuality": "Reportar per contingut excessivament sensual o explícit",
+        "impersonation": "Aquesta persona està utilitzant la meva identitat o la d'una altra persona.",
+        "violence": "Aquest contingut conté violència i no hauria de ser mostrat al públic.",
+        "racism": "Aquesta publicació conté missatges racistes que difamen i inciten a l’odi.",
+        "other": "Altres"
+    },
+    "sent_title": "Informe Enviat",
+    "thank_you": "El teu informe s’ha enviat correctament. Gràcies per ajudar a millorar aquesta xarxa social.",
+    "failed_title": "Ups!",
+    "failed_message": "Alguna cosa ha anat malament. Si us plau, torna-ho a intentar més tard."
+}

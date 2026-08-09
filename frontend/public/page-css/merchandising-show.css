@@ -1,0 +1,470 @@
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: #f5f5f5;
+        padding-top: 30px;
+        color: #222;
+      }
+      
+.swal2-show {
+          border-radius:20px;
+  background: #8a2be2;
+  color: #fff !important;
+  }
+  .swal2-show button {
+          border: 2px solid #409c40 !important;
+    display: inline-block;
+    margin-left: 10px;
+        background: #5cb85c;
+    color: #fff;
+  }
+   .swal2-show button:hover {
+     background: #409c40 !important;
+     border: 2px solid #409c40 !important;
+  }
+      .product-container {
+        width: 55%;
+        margin: auto;
+        padding: 30px;
+      }
+      .product-image {
+  width: 100%;
+  max-width: 400px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  display: block;
+  margin: 0 auto;
+}
+
+      .price-box {
+        font-size: 1.5em;
+        color: #fff;
+        background: #333;
+        border: 4px solid #000;
+        padding: 12px;
+        text-align: center;
+        margin-top: 20px;
+        position: relative;
+      }
+      .price-box span {
+        font-size: 2rem;
+      }
+      .tag {
+        font-size: 0.95em;
+        color: #777;
+        font-weight: 600;
+      }
+      .back-link {
+        display: inline-block;
+        margin-top: 30px;
+        color: #000;
+        border: 2px solid #000;
+        padding: 10px 20px;
+        text-decoration: none;
+        transition: 0.3s;
+      }
+      .back-link:hover {
+        background: #000;
+        color: #fff;
+      }
+      .tooltip-container {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+      }
+      .tooltip-container .tooltip-text {
+        visibility: hidden;
+        background-color: #333;
+        color: #fff;
+        font-size: 13px;
+        text-align: center;
+        border-radius: 4px;
+        padding: 6px 10px;
+        position: absolute;
+        z-index: 10;
+        top: 125%;
+        left: 50%;
+        transform: translateX(-50%);
+        opacity: 0;
+        transition: opacity 0.1s;
+        white-space: nowrap;
+      }
+      .tooltip-container:hover .tooltip-text {
+        visibility: visible;
+        opacity: 1;
+        
+        
+        /**SCROLLBAR COLOR **/
+        
+        	#fh5co-aside::-webkit-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-webkit-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-webkit-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-moz-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-moz-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-moz-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-o-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-o-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-o-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-ms-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-ms-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-ms-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+      }
+      
+      @media (max-width: 600px) {
+  .product-container {
+    width: 90% ;
+  }
+  
+  
+        /**SCROLLBAR COLOR **/
+        
+        	#fh5co-aside::-webkit-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-webkit-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-webkit-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-moz-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-moz-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-moz-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-o-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-o-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-o-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-ms-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-ms-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-ms-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+  
+}
+    
+
+
+        .custom-carousel-icon {
+    background-image: none !important;
+    font-size: 40px;
+    color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border: 2px solid black;
+    border-radius: 50%;
+    background-color: white;
+}
+
+.carousel-control-prev .custom-carousel-icon::before {
+    content: '‹'; 
+    font-size: 30px;
+}
+
+.carousel-control-next .custom-carousel-icon::before {
+    content: '›'; 
+    font-size: 30px;
+}
+
+.btn-success:hover {
+    background: green !important;
+}
+
+
+
+        /**SCROLLBAR COLOR **/
+        
+        	#fh5co-aside::-webkit-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-webkit-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-webkit-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-moz-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-moz-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-moz-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-o-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-o-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-o-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+			#fh5co-aside::-ms-scrollbar {
+				width: 11px !important;
+				/* width of the entire scrollbar */
+			}
+
+			#fh5co-aside::-ms-scrollbar-track {
+				background: #f1f1f1 !important;
+				/* color of the tracking area */
+			}
+
+			#fh5co-aside::-ms-scrollbar-thumb {
+				background-color: #777;
+				/* color of the scroll thumb */
+				border-radius: 20px;
+				/* roundness of the scroll thumb */
+				/*border: 3px solid orange;*/
+				/* creates padding around scroll thumb */
+				border-right: 4px solid blueviolet;
+			}
+
+    
+
+
+		.js-fullheight::-scrollbar {
+			width: 11px;
+			/* width of the entire scrollbar */
+		}
+
+		.js-fullheightl::-scrollbar-track {
+			background: #f1f1f1;
+			/* color of the tracking area */
+		}
+
+		.js-fullheight::-scrollbar-thumb {
+			background-color: #777;
+			/* color of the scroll thumb */
+			border-radius: 20px;
+			/* roundness of the scroll thumb */
+			/*border: 3px solid orange;*/
+			/* creates padding around scroll thumb */
+			border-right: 4px solid blueviolet;
+			height: 11px !important;
+		}
+
+		.js-fullheight::-webkit-scrollbar {
+			width: 11px;
+			/* width of the entire scrollbar */
+		}
+
+		.js-fullheight::-webkit-scrollbar-track {
+			background: #f1f1f1;
+			/* color of the tracking area */
+		}
+
+		.js-fullheight::-webkit-scrollbar-thumb {
+			background-color: #777;
+			/* color of the scroll thumb */
+			border-radius: 20px;
+			/* roundness of the scroll thumb */
+			/*border: 3px solid orange;*/
+			/* creates padding around scroll thumb */
+			border-right: 4px solid blueviolet;
+			height: 11px !important;
+		}
+
+		body::-scrollbar {
+			width: 11px;
+			/* width of the entire scrollbar */
+		}
+
+		body::-scrollbar-track {
+			background: #f1f1f1;
+			/* color of the tracking area */
+		}
+
+		body::-scrollbar-thumb {
+			background-color: #777;
+			/* color of the scroll thumb */
+			border-radius: 20px;
+			/* roundness of the scroll thumb */
+			/*border: 3px solid orange;*/
+			/* creates padding around scroll thumb */
+			border-right: 4px solid blueviolet;
+			height: 11px !important;
+		}
+
+		body::-webkit-scrollbar {
+			width: 11px;
+			/* width of the entire scrollbar */
+		}
+
+		body::-webkit-scrollbar-track {
+			background: #f1f1f1;
+			/* color of the tracking area */
+		}
+
+		body::-webkit-scrollbar-thumb {
+			background-color: #777;
+			/* color of the scroll thumb */
+			border-radius: 20px;
+			/* roundness of the scroll thumb */
+			/*border: 3px solid orange;*/
+			/* creates padding around scroll thumb */
+			border-right: 4px solid blueviolet;
+			height: 11px !important;
+		}
+	

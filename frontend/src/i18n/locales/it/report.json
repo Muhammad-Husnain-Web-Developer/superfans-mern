@@ -1,0 +1,14 @@
+{
+    "title": "SEGNALA POST",
+    "reasons": {
+        "sensuality": "Segnala per contenuti eccessivamente sensuali o espliciti",
+        "impersonation": "Questa persona sta usando la mia identità o quella di qualcun altro.",
+        "violence": "Questo contenuto contiene violenza e non dovrebbe essere mostrato al pubblico.",
+        "racism": "Questo post contiene messaggi razzisti che diffamano e incitano all’odio.",
+        "other": "Altro"
+    },
+    "sent_title": "Segnalazione Inviata",
+    "thank_you": "La tua segnalazione è stata inviata con successo. Grazie per aver contribuito a rendere migliore questo social network.",
+    "failed_title": "Ops!",
+    "failed_message": "Qualcosa è andato storto. Riprova più tardi, per favore."
+}

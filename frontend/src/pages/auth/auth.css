@@ -1,0 +1,892 @@
+/* Exact styles ported from resources/views/auth/login.blade.php and register.blade.php */
+
+.auth-page {
+  min-height: 100vh;
+  background: #fff;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #212529;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.auth-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 90vh;
+  /* Bootstrap .row uses -15px side margins so columns span the gutter — matching this
+     makes the col (and the card/input inside it) the exact Laravel width. */
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+.auth-col {
+  width: 100%;
+  padding: 0 15px;
+}
+@media (min-width: 992px) {
+  .auth-col {
+    flex: 0 0 41.666667%;
+    max-width: 41.666667%;
+  }
+}
+
+.auth-card {
+  background: #fff;
+  border-radius: 30px;
+  border: 0;
+  padding: 1.5rem; /* p-4 */
+  padding-top: 0;
+}
+
+.auth-card-body {
+  padding: 1.25rem;
+  padding-top: 0;
+}
+@media (max-width: 500px) {
+  .auth-card,
+  .auth-card-body {
+    padding: 0 !important;
+  }
+}
+
+.auth-logo-wrap {
+  text-align: center;
+}
+/* Tailwind preflight makes img display:block — restore inline so text-align centers them */
+.auth-logo-wrap img,
+.auth-page img,
+.confirm-page img {
+  display: inline-block;
+}
+.confirm-logo {
+  display: block !important; /* this one centers via margin auto, as the original */
+}
+.auth-logo-login {
+  width: 54%;
+  margin-bottom: 14px;
+}
+.auth-logo-register {
+  width: 50%;
+  margin-bottom: 14px;
+}
+
+.auth-title {
+  text-align: center;
+  color: #212529;
+  margin-bottom: 0.5rem !important;
+  font-size: 2.5rem; /* bootstrap h1 */
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.auth-subtitle {
+  color: black;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.auth-form-group {
+  margin-bottom: 1rem;
+}
+
+/* input rules from the blade <style> block */
+.auth-input {
+  display: block;
+  width: 100%;
+  height: 45px;
+  padding: 0.375rem 0.75rem;
+  font-size: 20px !important;
+  font-weight: 100 !important;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid black !important;
+  border-radius: 0 !important;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
+}
+.auth-input::placeholder {
+  font-size: 16px;
+  color: #6c757d;
+}
+.auth-input:focus {
+  border: 1px solid black !important;
+  color: black;
+  background-color: #fff;
+  outline: 0;
+  box-shadow: none !important;
+}
+/* register page focus differs (blue) */
+.auth-page--register .auth-input:focus {
+  border: 1px solid rgb(0, 162, 255) !important;
+  color: rgb(0, 162, 255);
+}
+
+.auth-input.is-invalid {
+  border-color: #dc3545 !important;
+}
+.invalid-feedback {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  font-size: 80%;
+  color: #dc3545;
+}
+
+.auth-link {
+  color: #007bff;
+  text-decoration: none;
+}
+.auth-link:hover {
+  color: #0056b3;
+  text-decoration: underline;
+}
+
+/* limegreen login button (exact inline styles from blade) */
+.btn-login-green {
+  padding: 0.375rem 11px !important;
+  background-color: limegreen;
+  border: 3px solid green;
+  color: #fff;
+  font-family:
+    Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif !important;
+  text-decoration: none;
+  margin-left: auto;
+  display: block;
+  font-size: 1.1em !important;
+  margin-top: 10px;
+  font-weight: 900 !important;
+  border-radius: 0 !important;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.btn-login-green:hover {
+  background-color: green !important;
+  transition: 0.5s !important;
+  outline: none !important;
+}
+.btn-login-green:active,
+.btn-login-green:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.btn-login-green .dot {
+  width: 11px;
+  height: 11px;
+  background: #00e172;
+  border-radius: 45px;
+  color: #00e172;
+  font-size: 0.83em;
+  margin-left: 4px;
+}
+
+/* register chooser buttons (creator purple / fan dark) */
+.btn-choose {
+  padding: 0.375rem 11px !important;
+  color: #fff;
+  font-family:
+    Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif !important;
+  text-decoration: none;
+  display: block;
+  border-radius: 0 !important;
+  font-size: 20px;
+  font-weight: 900;
+  margin-left: auto;
+  margin-right: auto;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.5;
+}
+.btn-choose--creator {
+  background-color: #724abb;
+  border: 3px solid #4712a6;
+}
+.btn-choose--creator:hover {
+  color: #fff !important;
+  background-color: #4712a6 !important;
+  transition: 0.5s !important;
+}
+.btn-choose--fan {
+  background-color: #333;
+  border: 3px solid #111;
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+.btn-choose--fan:hover {
+  color: #fff !important;
+  background-color: #111 !important;
+  transition: 0.5s !important;
+}
+.btn-choose:active,
+.btn-choose:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.auth-choose-row {
+  display: flex;
+  margin: 0 -15px;
+}
+.auth-choose-col {
+  flex: 0 0 50%;
+  max-width: 50%;
+  padding: 0 15px;
+}
+@media (max-width: 500px) {
+  .auth-choose-col {
+    padding: 0 8px !important;
+  }
+}
+
+.auth-bottom-text {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+/* full-screen loader (white, locale logo, fades out) */
+.auth-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+.auth-loader img {
+  width: 59%;
+}
+
+/* language dropdown — fixed bottom right, opens upward */
+.language-dropdownz {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  font-family: Arial, sans-serif;
+}
+.language-dropdownz .dropdown-toggle {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+/* Bootstrap 4's .dropdown-toggle caret (the original pages get this from bootstrap.css) */
+.language-dropdownz .dropdown-toggle::after {
+  display: inline-block;
+  margin-left: 0.255em;
+  vertical-align: 0.255em;
+  content: '';
+  border-top: 0.3em solid;
+  border-right: 0.3em solid transparent;
+  border-bottom: 0;
+  border-left: 0.3em solid transparent;
+}
+.language-dropdownz .dropdown-menu {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  min-width: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.language-dropdownz .dropdown-menu.show {
+  display: block;
+}
+.language-dropdownz .dropdown-menu a {
+  display: block;
+  padding: 8px 12px;
+  color: #333;
+  text-decoration: none;
+}
+.language-dropdownz .dropdown-menu a:hover {
+  background-color: #f0f0f0;
+}
+.language-dropdownz img {
+  width: 20px;
+  height: 20px;
+}
+
+/* bounty-hunter mail link, bottom-right corner */
+.cazarrecompensas {
+  position: fixed;
+  bottom: 0;
+  right: 4px;
+  font-size: 0.65em;
+}
+
+/* ===== fan/creator registration form (register_u / register_i) ===== */
+
+.auth-row--form {
+  height: auto;
+  min-height: 100vh;
+}
+.auth-card--form {
+  margin-top: 1rem;
+  margin-bottom: 3rem;
+  padding-top: 1.5rem;
+}
+.auth-card--form .auth-card-body {
+  padding-top: 1.25rem;
+}
+.auth-logo-form {
+  width: 53%;
+  margin-bottom: 14px;
+}
+
+.auth-label {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+}
+
+/* dark register button (#333/#111, monospace, right-aligned, sparkle) */
+.btn-register-dark {
+  padding: 0.375rem 11px !important;
+  background-color: #333;
+  color: #fff;
+  font-family:
+    Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif !important;
+  text-decoration: none;
+  border: 3px solid #111;
+  margin-left: auto;
+  display: block;
+  font-size: 1.1em;
+  border-radius: 0 !important;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.btn-register-dark:hover {
+  background-color: #111 !important;
+  transition: 0.5s !important;
+}
+.btn-register-dark:active,
+.btn-register-dark:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* select2-lookalike multi select */
+.s2-box {
+  width: 100%;
+  min-height: 33px;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  background: #fff;
+  cursor: text;
+  padding: 2px 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+  position: relative;
+}
+.s2-tag {
+  background-color: #e4e4e4;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 0.9em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.s2-tag button {
+  border: 0;
+  background: none;
+  color: #999;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1em;
+  line-height: 1;
+}
+.s2-tag button:hover {
+  color: #333;
+}
+.s2-placeholder {
+  color: #999;
+  padding-left: 4px;
+}
+.s2-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #fff;
+  border: 1px solid #aaa;
+  border-top: 0;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.s2-option {
+  padding: 6px 8px;
+  cursor: pointer;
+  font-size: 0.95em;
+}
+.s2-option:hover {
+  background: #5897fb;
+  color: #fff;
+}
+.s2-option.disabled {
+  color: #aaa;
+  cursor: not-allowed;
+  background: #fff;
+}
+
+/* bootstrap-4 custom-file lookalike */
+.custom-file-box {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(1.5em + 0.75rem + 2px);
+}
+.custom-file-box input[type='file'] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  height: 100%;
+}
+.custom-file-face {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.custom-file-face::after {
+  content: 'Browse';
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  bottom: -1px;
+  z-index: 3;
+  display: block;
+  padding: 0.375rem 0.75rem;
+  line-height: 1.5;
+  color: #495057;
+  background-color: #e9ecef;
+  border-left: inherit;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+/* social link inputs revealed per selected network */
+.social-link-input {
+  margin-top: 10px;
+}
+
+/* terms checkbox row */
+.auth-terms {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1rem;
+  /* Blade sets padding-left:20px, but Bootstrap's form-check margins net it to flush with
+     the inputs in the rendered Laravel app — match the rendered result (checkbox at 542). */
+  gap: 8px;
+}
+.auth-terms input[type='checkbox'] {
+  height: auto;
+  border: none !important;
+  width: auto;
+}
+.auth-terms a {
+  color: purple;
+  text-decoration: none;
+}
+.auth-terms a:hover {
+  text-decoration: underline;
+}
+
+/* sweetalert2 lookalike (purple modal, white text, white OK button) */
+.swal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  font-size: 0.7rem;
+}
+.swal-modal {
+  color: #fff;
+  background: #8a2be2;
+  border-radius: 5px;
+  width: 32em;
+  max-width: 90%;
+  padding: 1.25em;
+  text-align: center;
+}
+.swal-title {
+  font-size: 1.875em;
+  font-weight: 600;
+  margin: 0.5em 0 1em;
+}
+.swal-confirm {
+  color: #000;
+  background: #fff;
+  border: 0;
+  border-radius: 0.25em;
+  font-size: 1.0625em;
+  font-weight: 500;
+  padding: 0.625em 1.1em;
+  cursor: pointer;
+}
+
+/* ===== creator confirm page (influencer_r.blade.php) ===== */
+.confirm-page {
+  min-height: 100vh;
+  background: #fff;
+  color: #222;
+}
+.confirm-container {
+  width: 70%;
+  margin: 40px auto;
+  padding: 30px 25px;
+  border-radius: 6px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #222;
+}
+.confirm-logo {
+  display: block;
+  max-width: 180px;
+  margin: 0 auto 30px auto;
+}
+.confirm-title {
+  font-weight: 700;
+  font-size: 2.2rem;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #000;
+}
+.confirm-container p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 30px;
+  color: #444;
+}
+.confirm-container p strong {
+  color: #da1212;
+  font-weight: 700;
+}
+.confirm-warning {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  background-color: #fff4f4;
+  border: 1px solid #da1212;
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 30px;
+  color: #b71c1c;
+  font-weight: 600;
+}
+.confirm-warning svg {
+  fill: #da1212;
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+.confirm-btn-group {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+.confirm-btn {
+  padding: 12px 32px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 0;
+  text-decoration: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  display: inline-block;
+  cursor: pointer;
+}
+.confirm-btn--yes {
+  border: 3px solid #409c40 !important;
+  margin-left: 1px;
+  background: #5cb85c;
+  color: #fff;
+  font-size: 1.1rem !important;
+  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono',
+    'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
+  font-weight: 900 !important;
+}
+.confirm-btn--yes:hover {
+  background-color: #409c40;
+  color: #fff;
+}
+.confirm-btn--business {
+  border: 3px solid #666 !important;
+  margin-left: 1px;
+  background: #999;
+  color: #fff;
+}
+.confirm-btn--business:hover {
+  background-color: #666;
+  color: #fff;
+}
+.confirm-back-text {
+  color: #111 !important;
+  font-size: 0.9em !important;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+@media (max-width: 776px) {
+  .confirm-container {
+    width: 90%;
+  }
+}
+@media (max-width: 576px) {
+  .confirm-container {
+    padding: 20px 15px;
+  }
+  .confirm-btn-group {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .confirm-btn {
+    width: 100%;
+    padding: 14px 0;
+    text-align: center;
+  }
+}
+
+/* ===== password reset pages (passwords/email + reset blades) ===== */
+.btn-reset-red {
+  display: block;
+  width: 100%;
+  color: #da1212;
+  background: transparent;
+  border: 2px solid #da1212;
+  border-radius: 0;
+  font-size: 20px;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  line-height: 1.5;
+  text-align: center;
+}
+.btn-reset-red:hover,
+.btn-reset-red:focus,
+.btn-reset-red:active {
+  color: #fff !important;
+  background-color: #da1212 !important;
+  border-color: #da1212 !important;
+  box-shadow: none !important;
+  outline: none;
+}
+.auth-logo-reset {
+  width: 56%;
+}
+.custom-status-message {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  padding: 15px 20px;
+  border-radius: 5px;
+  margin: 15px auto;
+  max-width: 600px;
+  text-align: center;
+  font-size: 16px;
+  font-family: sans-serif;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* ===== business login/register (grey buttons) ===== */
+.btn-business {
+  padding: 0.375rem 11px !important;
+  border: 3px solid #666 !important;
+  background: #999;
+  color: #fff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  text-decoration: none;
+  margin-left: auto;
+  display: block;
+  font-size: 1.1em !important;
+  margin-top: 10px;
+  border-radius: 0 !important;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.btn-business:hover {
+  background-color: #666;
+  color: #fff;
+}
+.btn-business:focus,
+.btn-business:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.btn-business--register {
+  border: 3px solid #111 !important;
+  margin-top: 0;
+}
+
+/* ===== cropper modal (register_u.blade.php #modal) ===== */
+.crop-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 12121;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+}
+.crop-modal-dialog {
+  width: 100%;
+  max-width: 1000px;
+  margin: 1.75rem auto;
+  padding: 0 10px;
+}
+.crop-modal-content {
+  background: #fff;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+.crop-modal-header {
+  display: block !important;
+  position: relative;
+  padding: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.crop-modal-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  background: transparent;
+  border: 0;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.crop-modal-title {
+  color: #000;
+  font-family: Montserrat, Arial, sans-serif;
+  font-weight: 700;
+  font-size: 17px;
+  margin: 0;
+}
+.crop-modal-subtitle {
+  color: #666 !important;
+  font-family: consolas, monospace;
+  font-size: 0.9em;
+  margin-top: 10px;
+  margin-bottom: 0;
+  text-align: left;
+}
+.crop-modal-body {
+  padding: 1rem;
+}
+.cropper_row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.cropper-col-image {
+  flex: 0 0 66.666667%;
+  max-width: 66.666667%;
+  padding: 0;
+}
+.cropper-col-preview {
+  flex: 0 0 33.333333%;
+  max-width: 33.333333%;
+  padding: 0 15px;
+}
+@media (max-width: 767px) {
+  .cropper_row {
+    padding: 10px;
+  }
+  .cropper-col-image,
+  .cropper-col-preview {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+#sample_image {
+  display: block;
+  max-width: 100%;
+}
+.crop-preview {
+  overflow: hidden;
+  width: 160px;
+  height: 160px;
+  margin: 10px;
+  border: 1px solid red;
+}
+.crop-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0.75rem;
+  border-top: 1px solid #dee2e6;
+  gap: 0;
+}
+.crop-btn-cancel {
+  background: #ec1919 !important;
+  border: 1px solid #ec1919 !important;
+  color: #fff;
+  margin-right: 4px !important;
+  margin-bottom: 4px !important;
+  font-family: Roboto, Arial, sans-serif !important;
+  font-size: 18px !important;
+  font-weight: 400 !important;
+  border-radius: 0 !important;
+  transition: 0.5s !important;
+  padding: 8px 20px !important;
+  cursor: pointer;
+}
+.crop-btn-crop {
+  background-color: #fff !important;
+  color: #000 !important;
+  border: 3px solid #000 !important;
+  margin-right: 4px;
+  margin-bottom: 4px;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
+  border-radius: 0;
+  transition: 0.5s;
+  padding: 8px 20px !important;
+  cursor: pointer;
+}
+.crop-btn-crop:hover {
+  background-color: #000 !important;
+  color: #fff !important;
+}

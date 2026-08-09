@@ -1,0 +1,18 @@
+# dependencies & build
+node_modules/
+dist/
+
+# secrets / env
+.env
+.env.*
+!.env.example
+
+# runtime data — NEVER commit (large / machine-specific)
+legacy-assets/
+uploads/
+
+# misc
+*.log
+_*.mjs
+_*.txt
+.DS_Store

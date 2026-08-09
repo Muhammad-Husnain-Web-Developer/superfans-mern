@@ -1,0 +1,23 @@
+# dependencies & build output
+node_modules/
+dist/
+dist-ssr/
+
+# secrets / env — NEVER commit
+.env
+.env.*
+!.env.example
+
+# runtime data — large / machine-specific, transferred to the server separately
+backend/legacy-assets/
+backend/uploads/
+
+# misc
+*.log
+*.local
+_*.mjs
+_*.txt
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/

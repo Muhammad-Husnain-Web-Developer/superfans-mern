@@ -1,0 +1,14 @@
+{
+    "title": "SIGNALER LE POST",
+    "reasons": {
+        "sensuality": "Signaler pour contenu trop sensuel ou explicite",
+        "impersonation": "Cette personne utilise mon identité ou celle de quelqu’un d’autre.",
+        "violence": "Ce contenu contient de la violence et ne devrait pas être affiché au public.",
+        "racism": "Ce post contient des messages racistes qui diffament et incitent à la haine.",
+        "other": "Autre"
+    },
+    "sent_title": "Signalement Envoyé",
+    "thank_you": "Votre signalement a été soumis avec succès. Merci d’aider à améliorer ce réseau social.",
+    "failed_title": "Oups !",
+    "failed_message": "Une erreur s’est produite. Veuillez réessayer plus tard."
+}

@@ -1,0 +1,206 @@
+import { Router } from 'express';
+import { asyncHandler } from '../middleware/asyncHandler.js';
+import { ApiError } from '../middleware/errors.js';
+import { User } from '../models/User.js';
+import { Post } from '../models/Post.js';
+import { Like } from '../models/Like.js';
+import { Followership } from '../models/Followership.js';
+import { Subscription } from '../models/Subscription.js';
+import { SocialNetwork } from '../models/SocialNetwork.js';
+import { UserBlock } from '../models/UserBlock.js';
+import { optionalAuth } from '../middleware/auth.js';
+
+export const profilesRouter = Router();
+
+/**
+ * Public profile by vanity URL — mirrors Laravel's fallback route
+ * (UserController@user_profile): 404 when missing, distinct response for
+ * suspended accounts, otherwise profile + latest posts.
+ */
+profilesRouter.get(
+  '/:usernameUrl',
+  optionalAuth,
+  asyncHandler(async (req, res) => {
+    const user = await User.findOne({ usernameUrl: req.params.usernameUrl });
+    if (!user) throw ApiError.notFound('Profile not found');
+
+    // Blade parity: auth()->user()->hasBlocked($user) / isBlockedBy($user)
+    let viewerHasBlocked = false;
+    let viewerIsBlockedBy = false;
+    let viewerFollowing = false;
+    let viewerSubscribed = false;
+    if (req.auth) {
+      [viewerHasBlocked, viewerIsBlockedBy, viewerFollowing, viewerSubscribed] = await Promise.all([
+        UserBlock.exists({ blocker: req.auth.userId, blocked: user._id }).then(Boolean),
+        UserBlock.exists({ blocker: user._id, blocked: req.auth.userId }).then(Boolean),
+        Followership.exists({ followedUser: user._id, followerUser: req.auth.userId }).then(Boolean),
+        Subscription.exists({ influencer: user._id, user: req.auth.userId }).then(Boolean),
+      ]);
+    }
+    if (user.status === 'suspended') {
+      res.status(403).json({ success: false, message: 'suspended', data: { status: user.status } });
+      return;
+    }
+
+    const postsCount = await Post.countDocuments({ influencer: user._id });
+
+    // Stats exactly as the Blade page computes them:
+    // followers = users.no_of_followers + followerships + subscriptions
+    // likes     = likes on the user's posts + sum(posts.no_of_likes)
+    const [followershipCount, subscriptionCount, postIds, likesAgg] = await Promise.all([
+      Followership.countDocuments({ followedUser: user._id }),
+      Subscription.countDocuments({ influencer: user._id }),
+      Post.find({ influencer: user._id }, { _id: 1 }).lean(),
+      Post.aggregate<{ _id: null; total: number }>([
+        { $match: { influencer: user._id } },
+        { $group: { _id: null, total: { $sum: '$noOfLikes' } } },
+      ]),
+    ]);
+    const likeRowCount = await Like.countDocuments({ post: { $in: postIds.map((p) => p._id) } });
+    const likesTotal = likeRowCount + (likesAgg[0]?.total ?? 0);
+    const followersTotal = user.noOfFollowers + followershipCount + subscriptionCount;
+
+    // Laravel stores network IDs in the CSV column — resolve to name/images/link
+    const networkIds = user.networks.map((n) => Number(n)).filter((n) => Number.isFinite(n));
+    const networkDocs = await SocialNetwork.find({ mysqlId: { $in: networkIds } }).lean();
+    const networkDetails = networkIds
+      .map((id, index) => {
+        const doc = networkDocs.find((d) => d.mysqlId === id);
+        if (!doc) return null;
+        return {
+          id: doc.mysqlId,
+          name: doc.name,
+          image: doc.image,
+          feedImage: doc.feedImage,
+          link: user.networkProfileLinks[index] ?? doc.defaultAddress,
+        };
+      })
+      .filter((n) => n !== null);
+
+    res.json({
+      success: true,
+      data: {
+        id: String(user._id),
+        name: user.name,
+        surname: user.surname ?? null,
+        role: user.role,
+        usernameUrl: user.usernameUrl,
+        bio: user.bio ?? null,
+        profilePicture: user.profilePicture ?? null,
+        coverPicture: user.coverPicture ?? null,
+        coverColor: user.coverColor,
+        verified: user.verified,
+        vip: user.vip,
+        chatToggle: user.chatToggle,
+        noOfFollowers: user.noOfFollowers,
+        priceOfSubscription: user.priceOfSubscription ?? null,
+        networks: user.networks,
+        networkProfileLinks: user.networkProfileLinks,
+        networkDetails,
+        followersTotal,
+        likesTotal,
+        viewerHasBlocked,
+        viewerIsBlockedBy,
+        viewerFollowing,
+        viewerSubscribed,
+        /* payout details are the owner's own business — never expose them to other viewers */
+        ...(req.auth && String(user._id) === req.auth.userId
+          ? {
+              earnings: user.earnings,
+              bankAccount: user.bankAccount ?? null,
+              paypalAccount: user.paypalAccount ?? null,
+            }
+          : {}),
+        instagramLink: user.instagramLink ?? null,
+        footerNameUsername: user.footerNameUsername ?? null,
+        profilePictureBorderStatus: user.profilePictureBorderStatus ?? null,
+        country: user.country ?? null,
+        birth: user.birth ?? null,
+        gender: user.gender ?? null,
+        categories: user.categories,
+        postsCount,
+        createdAt: user.createdAt,
+      },
+    });
+  }),
+);
+
+/**
+ * Subscriber / follower list — the people subscribed to (influencer) or following (user)
+ * this profile. Powers #subcriberlistmodal / #followerlistmodal (opened from the "Followers"
+ * count). Each row carries the relation id + type so the profile owner can remove it.
+ */
+profilesRouter.get(
+  '/:usernameUrl/subscribers',
+  optionalAuth,
+  asyncHandler(async (req, res) => {
+    const profile = await User.findOne({ usernameUrl: req.params.usernameUrl });
+    if (!profile) throw ApiError.notFound('Profile not found');
+
+    const [subs, follows] = await Promise.all([
+      Subscription.find({ influencer: profile._id })
+        .populate<{ user: { _id: unknown; usernameUrl?: string; profilePicture?: string } }>(
+          'user',
+          'usernameUrl profilePicture',
+        )
+        .lean(),
+      Followership.find({ followedUser: profile._id })
+        .populate<{ followerUser: { _id: unknown; usernameUrl?: string; profilePicture?: string } }>(
+          'followerUser',
+          'usernameUrl profilePicture',
+        )
+        .lean(),
+    ]);
+
+    const list = [
+      ...subs
+        .filter((s) => s.user)
+        .map((s) => ({
+          id: String(s._id),
+          type: 'subscription' as const,
+          usernameUrl: s.user.usernameUrl ?? '',
+          profilePicture: s.user.profilePicture ?? null,
+        })),
+      ...follows
+        .filter((f) => f.followerUser)
+        .map((f) => ({
+          id: String(f._id),
+          type: 'followership' as const,
+          usernameUrl: f.followerUser.usernameUrl ?? '',
+          profilePicture: f.followerUser.profilePicture ?? null,
+        })),
+    ];
+
+    res.json({
+      success: true,
+      data: {
+        isOwner: Boolean(req.auth && req.auth.userId === String(profile._id)),
+        list,
+      },
+    });
+  }),
+);
+
+/** Profile posts (newest first) — mirrors direct_user_posts / influencer_posts. */
+profilesRouter.get(
+  '/:usernameUrl/posts',
+  asyncHandler(async (req, res) => {
+    const user = await User.findOne({ usernameUrl: req.params.usernameUrl });
+    if (!user) throw ApiError.notFound('Profile not found');
+
+    const posts = await Post.find({ influencer: user._id }).sort({ mysqlId: -1, createdAt: -1 }).lean();
+
+    res.json({
+      success: true,
+      data: posts.map((p) => ({
+        id: String(p._id),
+        imageVideo: p.imageVideo ?? null,
+        thumbnail: p.thumbnail ?? null,
+        noOfLikes: p.noOfLikes,
+        visible: p.visible,
+        tags: p.tags,
+        createdAt: p.createdAt,
+      })),
+    });
+  }),
+);

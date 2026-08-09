@@ -1,0 +1,14 @@
+{
+    "title": "REPORTAR PUBLICACIÓN",
+    "reasons": {
+        "sensuality": "Reportar por exceso de sensualidad o contenido explícito",
+        "impersonation": "Esta persona está usando mi identidad o la de otra persona",
+        "violence": "Este contenido incluye violencia y no debería mostrarse al público.",
+        "racism": "Esta publicación contiene mensajes racistas que difaman e incitan al odio.",
+        "other": "Otros"
+    },
+    "sent_title": "Reporte Enviado",
+    "thank_you": "Tu reporte se ha enviado correctamente. Gracias por ayudar a mejorar esta red social.",
+    "failed_title": "¡Ups!",
+    "failed_message": "Algo salió mal. Por favor, inténtalo de nuevo más tarde."
+}

@@ -1,0 +1,158 @@
+body { background: #f9f9f9; font-family: Arial, sans-serif; margin: 0; }
+
+label { margin-right: 10px; }
+
+.main { padding: 30px; margin-left: 240px; }
+@media (max-width: 900px) { .main { margin-left: 0; } }
+
+h2#pageTitle { font-weight: 700; font-size: 1.8rem; margin-bottom: 20px; }
+
+.ad-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+.ad-card {
+  border: 6px solid #c3c3c3;
+  border-radius: 20px;
+  background: #fff;
+  padding: 20px;
+  color: #111;
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
+  height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  font-family: Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", monospace, serif !important;
+}
+.ad-card h4 { font-weight: bold; font-size: 1.1rem; }
+.ad-card p { margin-top: 8px; font-size: 0.9rem; color: #555; font-weight: 550; font-family: Helvetica, Arial, sans-serif !important; }
+.ad-card:hover { background: #000; color: #fff; text-decoration: none; border: 6px solid #000; }
+.ad-card:hover p { color: #fff; }
+a { text-decoration: none !important; }
+
+.redlabel {
+  border: 2px solid #d91e33 !important;
+  background: #fef4f3 !important;
+  color: #d91e33;
+  border-radius: 7px !important;
+  padding: 11px 30px;
+  font-family: Consolas, Menlo, Monaco, monospace, serif !important;
+  font-weight: 600;
+  display: flex; align-items: center; justify-content: center;
+  width: 86.5%;
+  margin-bottom: 47px !important;
+}
+.redlabel p { width: 74%; margin-right: 15px; }
+.redlabel h2 { width: 2%; font-size: 2.3em; position: relative; top: -4px; left: -20px; }
+#redlabelButton {
+  font-weight: 550;
+  font-family: Consolas, Menlo, Monaco, monospace, serif !important;
+  border: 3px solid #000; background: #fff; padding: 7px 11px; color: #111; margin-left: 25px;
+}
+#redlabelButton:hover { background: #000; color: #fff; transition: 0.5s; }
+
+/* modal shell */
+.ads-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 12px;
+  overflow-y: auto;
+}
+.ads-modal-box { position: relative; width: 100%; max-width: 800px; margin: auto; }
+.close-modal-btn {
+  position: absolute; top: 12px; right: 16px; font-size: 26px; color: #aaa;
+  background: none; border: none; cursor: pointer; z-index: 1000; transition: .2s;
+}
+.close-modal-btn:hover { color: #fff; transform: scale(1.12); }
+
+.field { display: flex; align-items: center; gap: 16px; justify-content: center; }
+.value { font-size: 22px; }
+
+input[type="range"] {
+  width: 35%;
+  appearance: none; height: 17px; border-radius: 6px; outline: none;
+  background: linear-gradient(to right, #4f46e5 var(--value, 0%), #ddd var(--value, 0%));
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none; width: 18px; height: 18px; border-radius: 50%;
+  background: white; border: 2px solid #4f46e5; cursor: pointer;
+}
+
+.ads-section-title { font-size: 26px; font-weight: 800; }
+.ads-input { padding: 12px; font-size: 17px; border-radius: 6px; }
+.ads-input:focus { border-color: #fff; outline: none; }
+.ads-checkbox-group label { width: 48%; color: #fff; margin-bottom: 6px; font-size: 15px; }
+.ads-checkbox-group input { margin-right: 6px; }
+
+.add-question-btn {
+  color: lightgray !important; border: 2px solid gray !important; background-color: transparent;
+  padding: 10px 14px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: .25s;
+}
+.add-question-btn:hover { background-color: rgba(128,128,128,0.2); }
+.extra-question-box { position: relative; display: flex; align-items: center; gap: 8px; width: 75%; margin: 0 auto 12px auto; }
+.extra-question-box input { flex: 1; }
+.remove-question-btn { background: #b71c1c; border: none; color: white; font-weight: 900; font-size: 17px; width: 40px; height: 40px; border-radius: 7px; cursor: pointer; transition: .2s; }
+.remove-question-btn:hover { background: #ff3055; }
+
+.tooltip-container { position: relative; display: inline-block; cursor: help !important; }
+.tooltip-container .tooltip-text { visibility: hidden; opacity: 0; position: absolute; }
+.tooltip-container.show .tooltip-text, .tooltip-container:hover .tooltip-text {
+  visibility: visible; opacity: 1; background: #333; color: white; font-size: 12px; width: 350px; padding: 20px; border-radius: 10px; z-index: 9999;
+}
+
+/* location picker */
+.location-city-trigger {
+  display: flex; align-items: center; min-height: 31px; padding: 0.25rem 0.5rem; font-size: 0.875rem;
+  background: #fff; border: 1px solid #ced4da; border-radius: 0.2rem; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #000 !important;
+}
+.location-city-panel {
+  display: none; position: absolute; top: 100%; left: 0; right: 0; margin-top: 2px; max-height: 200px;
+  overflow-y: auto; background: #fff; border: 1px solid #ced4da; border-radius: 0.2rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; padding: 6px; min-width: 220px;
+}
+.location-city-panel.show { display: block; }
+.location-city-panel label { display: block; margin: 0; padding: 4px 8px; cursor: pointer; font-size: 0.875rem; color: #212529 !important; text-align: left; }
+.location-city-panel label:hover { background: #f8f9fa; }
+
+.selectPost { width: 85px; height: 85px; background: white; border: 5px solid #000; border-radius: 8px; cursor: pointer; margin: 10px; transition: .25s; object-fit: cover; }
+.selectPost:hover { background: #bbbbbb; }
+.selectPost.selected { border-color: #00ff3c; background: #9effb5; }
+
+.continue-btn {
+  padding: 11px !important; background-color: limegreen; border-color: limegreen; color: #fff;
+  font-family: Consolas, Menlo, Monaco, monospace, serif !important; text-decoration: none;
+  border: 3px solid green; margin: 10px auto 0 auto; display: block; font-size: 1.1em !important;
+  font-weight: 900 !important; border-radius: 0 !important; width: 230px !important; cursor: pointer;
+}
+.continue-btn:hover { background-color: green !important; transition: 0.11s !important; }
+.cancel-btn {
+  padding: 11px !important; background-color: #000; border-color: #fff; color: #fff;
+  font-family: Consolas, Menlo, Monaco, monospace, serif !important; text-decoration: none;
+  border: 3px solid #fff; margin: 10px auto 0 auto; display: block; font-size: 0.8em !important;
+  font-weight: 900 !important; border-radius: 0 !important; width: 180px !important; cursor: pointer;
+}
+.cancel-btn:hover { background: #b51628; border-color: #b51628; }
+
+/* ads sidebar */
+.ads-sidebar {
+  background: #fff; color: #000; padding-top: 20px;
+  border-right: 4px solid rgba(0,0,0,0.65);
+  position: fixed; top: 0; bottom: 0; left: 0; width: 256px; overflow-y: auto; z-index: 50;
+}
+.ads-sidebar h6 { margin: 1px 0 15px; text-align: center; font-size: 17px; color: #333; font-weight: 550; letter-spacing: -0.3px; font-family: "Anton", sans-serif !important; font-style: normal; }
+.ads-sidebar .side_logo { display: block; text-align: center; }
+.ads-sidebar .upper-links a, .ads-sidebar .footer-links a {
+  display: block; color: #777; padding: 12px 45px; text-decoration: none;
+  border-bottom: 2px solid rgba(0,0,0,0.65); font-weight: 700; font-size: 13.8pt;
+  font-family: Consolas, Menlo, Monaco, monospace, serif !important;
+}
+.ads-sidebar .footer-links { margin-top: 60px; font-size: 0.8em; padding: 0 20px; }
+.ads-sidebar .footer-links a { padding: 12px 5px; }
+.ads-sidebar .upper-links a:first-child { border-top: 2px solid rgba(0,0,0,0.65); }
+.ads-sidebar .upper-links a:hover, .ads-sidebar .footer-links a:hover { background: #f0f2f5; }
+.ads-sidebar .upper-links a.active { background: #000; color: #fff; }
+@media (max-width: 900px) { .ads-sidebar { position: relative; width: 100%; } }

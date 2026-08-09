@@ -1,0 +1,27 @@
+/* ============================================================
+   Parity shims — rules the blades express as inline `!important`
+   styles, which React style objects cannot represent.
+   Values copied verbatim from the blade markup.
+   ============================================================ */
+
+/* layouts_direct_user sidebar power buttons (logged-in red / guest purple):
+   style="padding: 6px !important; width: 35px; height: 35px; text-align: center;
+          padding: 6px 0; font-size: 15px; line-height: 1.428571429; border-radius: 30px;"
+   (the !important padding wins over the later shorthand → computed 6px) */
+.power-btn {
+  padding: 6px !important;
+  width: 35px;
+  height: 35px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.428571429;
+  border-radius: 30px;
+}
+
+/* layouts_direct_user/header.blade.php top-right guest button:
+   style="border-radius: 20px; padding-right: 22px; padding-left: 22px;
+          padding: 6px !important; background-color: #724abb; border-color: #724abb;"
+   (the !important shorthand overrides the 22px sides → computed 6px all round) */
+.login-btn-top {
+  padding: 6px !important;
+}

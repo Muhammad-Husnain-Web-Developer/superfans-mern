@@ -1,0 +1,104 @@
+@import "./styles/parity.css";
+
+/* No Tailwind utilities: the ported pages use the original bootstrap.css/style.css
+   class names (mt-4, p-4, card, row, col-md-*, text-center ...) and Tailwind
+   defines several of the same names — shipping them silently changed spacing
+   (e.g. .mt-4 added 10px the blade never had). Only our own @theme tokens and
+   @font-face rules live here; every page pulls its CSS from the original app. */
+
+/* ============================================================
+   Superfans design tokens — ported from the Laravel app
+   (public/assets/css/style.css + rockwell_style.css)
+   ============================================================ */
+
+@theme {
+  /* Brand */
+  --color-primary: #da1212; /* main red accent */
+  --color-primary-dark: #ec1919;
+  --color-cover-yellow: #ffd30f; /* default profile cover color */
+
+  /* Status (Bootstrap 4 palette used across the original UI) */
+  --color-success: #5cb85c;
+  --color-info: #5bc0de;
+  --color-warning: #f0ad4e;
+  --color-danger: #d9534f;
+
+  /* Neutrals */
+  --color-line: #e6e6e6;
+
+  /* Typography */
+  --font-sans: "Roboto", Arial, sans-serif;
+  --font-heading: "Montserrat", Arial, sans-serif;
+  --font-rockwell: "RockwellNova", "Roboto Slab", serif;
+}
+
+/* ---------- RockwellNova (brand font, self-hosted) ---------- */
+@font-face {
+  font-family: "RockwellNova";
+  src: url("/fonts/rockwell/RockwellNova.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RockwellNova";
+  src: url("/fonts/rockwell/RockwellNova-Italic.woff") format("woff");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RockwellNova";
+  src: url("/fonts/rockwell/RockwellNova-Light.woff") format("woff");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RockwellNova";
+  src: url("/fonts/rockwell/RockwellNova-Bold.woff") format("woff");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RockwellNova";
+  src: url("/fonts/rockwell/RockwellNova-BoldItalic.woff") format("woff");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RockwellNova";
+  src: url("/fonts/rockwell/RockwellNova-ExtraBold.woff") format("woff");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "RockwellNova";
+  src: url("/fonts/rockwell/RockwellNova-ExtraBoldItalic.woff") format("woff");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ---------- icomoon (icon font from the original app) ---------- */
+@font-face {
+  font-family: "icomoon";
+  src: url("/fonts/icomoon/icomoon.woff") format("woff"),
+    url("/fonts/icomoon/icomoon.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+/* Body typography comes from the original style.css (linked in index.html),
+   exactly as on the Laravel pages — no overrides here. */
+
+/* Parity: the Laravel pages have no CSS reset, so images are browser-default
+   inline. Something in the bundle computes them to block — restore the
+   original behavior app-wide (page CSS can still override, e.g. the cropper). */
+img {
+  display: inline;
+}

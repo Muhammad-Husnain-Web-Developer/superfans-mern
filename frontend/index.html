@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/brand/superheroina.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffc83d" />
+    <title>Superfans | World</title>
+    <!-- Google fonts the layouts_direct_user layout loads (main.blade.php L90-130). style.css
+         asks for Montserrat/Roboto by name, so without these the text silently falls back to
+         Arial and every measurement drifts a few px. -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,300,600,400italic,700" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800;900&display=swap" rel="stylesheet" />
+    <!-- Original site stylesheets, served unchanged from the Laravel assets (dev: proxied to the API).
+         These are what the layouts_direct_user pages load. Standalone blades (rankings, auth) load
+         Bootstrap 4 from a CDN instead — <StandalonePage> swaps them at runtime, hence the ids. -->
+    <link rel="stylesheet" href="/assets/css/animate.css" data-layout-css />
+    <link rel="stylesheet" href="/assets/css/icomoon.css" data-layout-css />
+    <link rel="stylesheet" id="local-bootstrap" href="/assets/css/bootstrap.css" data-layout-css />
+    <link rel="stylesheet" id="site-style" href="/assets/css/style.css" data-layout-css />
+    <link rel="stylesheet" href="/assets/css/rockwell_style.css" data-layout-css />
+    <!-- Font Awesome — same CDN versions the Laravel layouts load -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <!-- select2 — same CDN version the Laravel layouts load (its CSS styles our lookalike widget) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

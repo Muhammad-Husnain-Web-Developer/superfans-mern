@@ -1,0 +1,14 @@
+{
+    "title": "DENUNCIAR PUBLICAÇÃO",
+    "reasons": {
+        "sensuality": "Denunciar por sensualidade excessiva ou conteúdo explícito",
+        "impersonation": "Essa pessoa está usando minha identidade ou a de outra pessoa.",
+        "violence": "Este conteúdo contém violência e não deve ser exibido ao público.",
+        "racism": "Esta publicação contém mensagens racistas que difamam e incitam o ódio.",
+        "other": "Outros"
+    },
+    "sent_title": "Denúncia Enviada",
+    "thank_you": "Sua denúncia foi enviada com sucesso. Obrigado por ajudar a tornar esta rede social melhor.",
+    "failed_title": "Ops!",
+    "failed_message": "Algo deu errado. Por favor, tente novamente mais tarde."
+}
