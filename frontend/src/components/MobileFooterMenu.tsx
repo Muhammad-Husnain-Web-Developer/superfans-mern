@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { useRegisterModal } from './RegisterModal';
 import { assetImage } from '../utils/format';
 import '../styles/footer-modals.css';
 
@@ -19,6 +20,9 @@ interface SearchHit {
 export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
+  /* the blade sent guests to the /login page from here; everywhere else in the
+     app a guest action raises the register modal, so these do the same */
+  const registerModal = useRegisterModal();
   const [query, setQuery] = useState('');
   const [hits, setHits] = useState<SearchHit[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,7 +43,7 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
   }, [query]);
 
   return (
-    <div className="mobile-footer-menu">
+    <div className={`mobile-footer-menu${authUser ? '' : ' is-guest'}`}>
       <div className="mobile-search-container">
         <input
           type="text"
@@ -84,30 +88,29 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
       </a>
 
       {authUser ? (
-        <div className="footer-btn-square footer-btn-addpost" onClick={onAddPost} style={{ cursor: 'pointer' }}>
-          <strong style={{ fontSize: 25 }}>+</strong>
-        </div>
-      ) : (
-        <a href="/login" className="footer-btn-square footer-btn-addpost">
-          <strong style={{ fontSize: 25 }}>+</strong>
-        </a>
-      )}
+        <>
+          <div className="footer-btn-square footer-btn-addpost" onClick={onAddPost} style={{ cursor: 'pointer' }}>
+            <strong style={{ fontSize: 25 }}>+</strong>
+          </div>
 
-      {authUser ? (
-        <div className="footer-btn-stream" style={{ cursor: 'pointer' }}>
-          <span className="stream-indicator"></span>
-          Stream
-        </div>
-      ) : (
-        <a href="/login" className="footer-btn-stream">
-          <span className="stream-indicator"></span>
-          Stream
-        </a>
-      )}
+          <div className="footer-btn-stream" style={{ cursor: 'pointer' }}>
+            <span className="stream-indicator"></span>
+            Stream
+          </div>
 
-      <a href="/user/messages" className="footer-btn-message">
-        <i className="fa fa-envelope"></i>
-      </a>
+          <a href="/user/messages" className="footer-btn-message">
+            <i className="fa fa-envelope"></i>
+          </a>
+        </>
+      ) : (
+        /* Add post, Stream and Mensajes all need an account, and the blade sent
+           guests from each of them to /login. One Login button replaces the three
+           — this is also the bottom-bar login the top-right button defers to on
+           mobile (see .login-btn-top in parity.css). */
+        <div className="footer-btn-login" onClick={registerModal.open} style={{ cursor: 'pointer' }}>
+          <b>Login</b> | <i className="fa fa-power-off" aria-hidden="true"></i>
+        </div>
+      )}
     </div>
   );
 }

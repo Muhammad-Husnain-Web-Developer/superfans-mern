@@ -47,7 +47,11 @@ export function InfluencerSearch({ placeholder }: { placeholder: string }) {
           `/users/search/influencers?query=${encodeURIComponent(value)}`,
         )
         .then((r) => {
-          setHits(r.data.data);
+          /* bootstrap-3-typeahead 4.0.1 — the plugin the blades load — caps the
+             menu at its default `items: 8`, and the blades never override it.
+             Without this the endpoint's full 20 rows rendered a 753px list that
+             ran off the sidebar. */
+          setHits(r.data.data.slice(0, 8));
           setOpen(true);
         })
         .catch(() => setHits([]));
@@ -75,7 +79,10 @@ export function InfluencerSearch({ placeholder }: { placeholder: string }) {
               <a
                 className="dropdown-item"
                 href={`/${hit.name}`}
-                style={{ display: 'block', padding: '3px 20px', color: '#333', textDecoration: 'none' }}
+                /* display comes from layout-direct-user.css: the row is a flex
+                   line so a long name can ellipsis without pushing the
+                   verified badge out of view */
+                style={{ padding: '3px 20px', color: '#333', textDecoration: 'none' }}
                 onClick={(e) => {
                   e.preventDefault();
                   setOpen(false);
@@ -83,14 +90,14 @@ export function InfluencerSearch({ placeholder }: { placeholder: string }) {
                   navigate(`/${hit.name}`);
                 }}
               >
-                {hit.name}
+                <span className="dropdown-item-name">{hit.name}</span>
                 {hit.verified && (
                   <img
                     src={assetImage('verified.png')}
                     alt="Verified"
                     width={18}
                     height={18}
-                    style={{ position: 'relative', bottom: 2, marginLeft: 5, display: 'inline-block' }}
+                    style={{ position: 'relative', bottom: 2, marginLeft: 5, flexShrink: 0 }}
                   />
                 )}
               </a>

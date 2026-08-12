@@ -216,7 +216,8 @@
         }
 
         /* Stream Button - Purple styling with Consolas */
-        .footer-btn-stream {
+        .footer-btn-stream,
+        .footer-btn-login {
             height: 40px;
             background: #6622e5;
             border: 3px solid #520be0;
@@ -416,7 +417,8 @@
             border-width: 2px;
         }
 
-        .footer-btn-stream {
+        .footer-btn-stream,
+        .footer-btn-login {
             height: 36px;
             padding: 0 10px;
             font-size: 12px;
@@ -463,7 +465,8 @@
             font-size: 14px;
         }
 
-        .footer-btn-stream {
+        .footer-btn-stream,
+        .footer-btn-login {
             height: 34px;
             padding: 0 8px;
             font-size: 11px;
@@ -506,7 +509,8 @@
             font-size: 13px;
         }
 
-        .footer-btn-stream {
+        .footer-btn-stream,
+        .footer-btn-login {
             height: 32px;
             padding: 0 6px;
             font-size: 10px;
@@ -584,5 +588,110 @@ input.login-modal-input:focus {
 @media (max-width: 767px) {
   .register-modal .modal-dialog {
     margin: 30px 15px;
+  }
+}
+
+/* ===== Bottom-bar influencer search =====
+   The input carries both .footer-search-input and .influencer_search. Both the
+   3px grey border above and `.influencer_search { border: 0 !important }`
+   (layout-direct-user.css:1102, from main.blade.php:1240) are !important and
+   equally specific, so the later one won and the border vanished — same in the
+   blade. Scoping by the bar outranks it without touching the sidebar search. */
+@media (max-width: 768px) {
+  .mobile-footer-menu .footer-search-input {
+    border: 3px solid #d3d3d3 !important;
+  }
+
+  /* Focusing the field hands the whole bar over to it: the other controls
+     collapse to zero width and the field takes the freed space. :focus-within
+     also releases it again on blur, with no state to keep in sync. */
+  .mobile-footer-menu {
+    transition: gap 0.25s ease;
+  }
+
+  .mobile-footer-menu .mobile-search-container {
+    transition: max-width 0.25s ease;
+  }
+
+  .mobile-footer-menu:focus-within .mobile-search-container {
+    max-width: 100%;
+  }
+
+  .mobile-footer-menu .footer-btn-square,
+  .mobile-footer-menu .footer-btn-stream,
+  .mobile-footer-menu .footer-btn-login,
+  .mobile-footer-menu .footer-btn-message {
+    max-width: 120px;
+    opacity: 1;
+    overflow: hidden;
+    transition:
+      max-width 0.25s ease,
+      opacity 0.2s ease,
+      min-width 0.25s ease,
+      padding 0.25s ease,
+      border-width 0.25s ease;
+  }
+
+  .mobile-footer-menu:focus-within {
+    gap: 0;
+  }
+
+  .mobile-footer-menu:focus-within .footer-btn-square,
+  .mobile-footer-menu:focus-within .footer-btn-stream,
+  .mobile-footer-menu:focus-within .footer-btn-login,
+  .mobile-footer-menu:focus-within .footer-btn-message {
+    max-width: 0;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+    border-width: 0;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-footer-menu .footer-search-input {
+    border-width: 2px !important;
+  }
+}
+
+/* ===== Guest login button =====
+   Replaces Add post / Stream / Mensajes while logged out. It borrows the stream
+   button's metrics (see the selector lists above) and carries the login purples
+   from parity.css. Square corners — nothing in this bar is rounded except the
+   search field. */
+@media (max-width: 768px) {
+  .footer-btn-login {
+    background: #724abb;
+    border-color: #4712a6;
+    border-radius: 0;
+    text-decoration: none;
+  }
+
+  .footer-btn-login:hover,
+  .footer-btn-login:active {
+    background: #4712a6;
+    color: #fff;
+    text-decoration: none;
+    transform: scale(0.98);
+  }
+
+  /* Three buttons short, space-between left dead gaps between the remaining
+     controls. The search field is capped at 100-140px for the logged-in bar; let
+     it absorb that space instead so the guest row reads as one continuous strip. */
+  .mobile-footer-menu.is-guest .mobile-search-container {
+    max-width: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-footer-menu,
+  .mobile-footer-menu .mobile-search-container,
+  .mobile-footer-menu .footer-btn-square,
+  .mobile-footer-menu .footer-btn-stream,
+  .mobile-footer-menu .footer-btn-login,
+  .mobile-footer-menu .footer-btn-message {
+    transition: none;
   }
 }
