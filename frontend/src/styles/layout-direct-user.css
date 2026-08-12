@@ -1119,10 +1119,9 @@ font-weight: 100 !important;
 	
 	}
 
-	.login_button:hover {
-		background: red !important;
-		color: white !important;
-	}
+	/* .login_button:hover used to force a red background here, mirroring
+	   main.blade.php:1260 — but no element in either app carries that class,
+	   and the client asked for purple, so the dead rule is gone. */
 
 	#open_register_modal, #open_login_modal {
 		/* color: #ccc9c9; */

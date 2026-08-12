@@ -24,4 +24,28 @@
    (the !important shorthand overrides the 22px sides → computed 6px all round) */
 .login-btn-top {
   padding: 6px !important;
+  background-color: #724abb;
+  border-color: #724abb;
+  color: #fff;
+}
+
+/* The blade paired this button with bootstrap's .btn-danger, whose :active and
+   :focus states repainted it red on click — the purple only ever covered :hover
+   (main.blade.php:1520). btn-danger is gone from the markup, so the whole
+   pressed/focused range is pinned to that same purple. */
+.login-btn-top:focus,
+.login-btn-top:active,
+.login-btn-top:hover {
+  background: #4712a6 !important;
+  border-color: #4712a6 !important;
+  color: #fff;
+}
+
+/* Phones already carry a login control in the bottom bar (the ⏻ in
+   .fh5co-footer), so the top-right one is a duplicate there. 768px is the width
+   at which that bar becomes the primary nav in style.css. */
+@media screen and (max-width: 768px) {
+  .login-btn-top {
+    display: none;
+  }
 }

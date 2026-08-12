@@ -44,6 +44,9 @@ function fileToDataUrl(file: File): Promise<string> {
 
 export function RegisterModalProvider({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(false);
+  /* drives the open animation: the frame mounts at its off-screen start, then
+     `in` is added on the next frame so the transition actually runs */
+  const [entered, setEntered] = useState(false);
   const [view, setView] = useState<View>('choice');
   /* the modal reuses the layout chrome, so pull that stylesheet in only while it is open */
   useLayoutPageStyles(visible);
@@ -78,6 +81,15 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
     setError(null);
     setVisible(true);
   }
+
+  useEffect(() => {
+    if (!visible) {
+      setEntered(false);
+      return;
+    }
+    const id = requestAnimationFrame(() => setEntered(true));
+    return () => cancelAnimationFrame(id);
+  }, [visible]);
 
   function close() {
     setVisible(false);
@@ -189,7 +201,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
 
   const frame = (content: ReactNode, withBack: boolean) => (
     <div
-      className="modal"
+      className={`modal register-modal${entered ? ' in' : ''}`}
       style={{
         zIndex: 123112311231,
         display: 'block',
@@ -202,7 +214,8 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
     >
       <div
         className="modal-dialog modal-dialog-centered"
-        style={{ margin: '30px auto', maxWidth: 600 }}
+        /* margin lives in footer-modals.css so the phone gutter can override it */
+        style={{ maxWidth: 600 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content" style={{ borderRadius: 20, background: '#8a2be2', width: '100%' }}>

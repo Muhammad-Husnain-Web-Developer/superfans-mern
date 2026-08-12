@@ -131,13 +131,11 @@ export function GuestHeader({ usernameUrl }: { usernameUrl: string }) {
               style={{ position: 'absolute', top: 10, right: 0, listStyleType: 'none' }}
             >
               <li className="nav-item mx-2">
+                {/* not btn-danger: its :hover flashed the button red over the purple
+                    inline background. login-btn-top carries both states now. */}
                 <a
-                  className="btn btn-danger login-btn-top"
-                  style={{
-                    borderRadius: 20,
-                    backgroundColor: '#724abb',
-                    borderColor: '#724abb',
-                  }}
+                  className="btn login-btn-top"
+                  style={{ borderRadius: 20 }}
                   href={`/login?username=${usernameUrl}`}
                 >
                   <b>Login</b> | <i className="fa fa-power-off" aria-hidden="true"></i>

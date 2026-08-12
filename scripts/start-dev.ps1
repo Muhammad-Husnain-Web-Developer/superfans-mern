@@ -2,7 +2,9 @@
 #   MySQL (XAMPP), MongoDB, Laravel reference app :8000, MERN API :5000, MERN frontend :5173
 $ErrorActionPreference = 'Continue'
 
+# The MERN app was moved out of the Laravel folder; they are siblings now.
 $root = "c:\Users\LAPTOPS HUB\Documents\superfans"
+$mern = "c:\Users\LAPTOPS HUB\Documents\superfans-mern"
 $mongoBin = "$env:USERPROFILE\mongodb\mongodb-win32-x86_64-windows-8.0.12\bin\mongod.exe"
 $logDir = "$env:USERPROFILE\mongodb"
 
@@ -34,13 +36,13 @@ if (-not (Test-Port 8000)) {
 
 # MERN backend :5000
 if (-not (Test-Port 5000)) {
-    Start-Process -FilePath "powershell" -ArgumentList "-NoProfile","-WindowStyle","Hidden","-Command","Set-Location '$root\superfans-mern\backend'; npm run dev" -WindowStyle Hidden
+    Start-Process -FilePath "powershell" -ArgumentList "-NoProfile","-WindowStyle","Hidden","-Command","Set-Location '$mern\backend'; npm run dev" -WindowStyle Hidden
     Write-Host "API :5000 starting..."
 } else { Write-Host "API :5000 already up" }
 
 # MERN frontend :5173
 if (-not (Test-Port 5173)) {
-    Start-Process -FilePath "powershell" -ArgumentList "-NoProfile","-WindowStyle","Hidden","-Command","Set-Location '$root\superfans-mern\frontend'; npm run dev" -WindowStyle Hidden
+    Start-Process -FilePath "powershell" -ArgumentList "-NoProfile","-WindowStyle","Hidden","-Command","Set-Location '$mern\frontend'; npm run dev" -WindowStyle Hidden
     Write-Host "Frontend :5173 starting..."
 } else { Write-Host "Frontend :5173 already up" }
 

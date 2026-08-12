@@ -545,3 +545,44 @@ input.login-modal-input,
 input.login-modal-input:focus {
   border: 0px solid #000 !important;
 }
+
+/* ===== Open animation =====
+   The blade's #register_Modal is a plain `.modal` (no `.fade`), so it popped in
+   with no transition. Every other modal in footer.blade.php uses `.modal fade`,
+   whose bootstrap.css rules are the house animation:
+     .modal.fade .modal-dialog { transform: translate(0, -25%); transition: transform .3s ease-out }
+     .modal.in   .modal-dialog { transform: translate(0, 0) }
+   Those exact values are reproduced here, plus the `.fade` opacity ramp. */
+.register-modal {
+  opacity: 0;
+  transition: opacity 0.15s linear;
+}
+
+.register-modal.in {
+  opacity: 1;
+}
+
+.register-modal .modal-dialog {
+  margin: 30px auto;
+  transform: translate(0, -25%);
+  transition: transform 0.3s ease-out;
+}
+
+.register-modal.in .modal-dialog {
+  transform: translate(0, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .register-modal,
+  .register-modal .modal-dialog {
+    transition: none;
+  }
+}
+
+/* Phones: the dialog spans the full viewport, so it sat flush against both
+   edges. Bootstrap gives narrow screens a 10px gutter; keep that shape here. */
+@media (max-width: 767px) {
+  .register-modal .modal-dialog {
+    margin: 30px 15px;
+  }
+}
