@@ -1547,3 +1547,28 @@ font-weight: 100 !important;
 #fh5co-aside .arrow {
   font-weight: 700;
 }
+/* ===== Sidebar overflow bar =====
+   The blade styles this with ::-webkit-scrollbar only (grey #777 thumb with a
+   4px blueviolet edge). Chrome now defaults to overlay scrollbars, which ignore
+   that and draw a faint grey sliver instead, so the bar was effectively
+   invisible. scrollbar-color is the standard property overlay scrollbars do
+   honour — same two colours, stated in the modern syntax. */
+#fh5co-aside,
+#fh5co-aside.js-fullheight {
+  scrollbar-width: thin;
+  scrollbar-color: #7500a8 #f1f1f1; /* purple thumb on the grey track */
+}
+
+#fh5co-aside::-webkit-scrollbar {
+  width: 11px;
+}
+
+#fh5co-aside::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#fh5co-aside::-webkit-scrollbar-thumb {
+  background-color: #777;
+  border-radius: 20px;
+  border-right: 4px solid blueviolet;
+}

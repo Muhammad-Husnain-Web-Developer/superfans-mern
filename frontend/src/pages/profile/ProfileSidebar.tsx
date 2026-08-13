@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { closeOffcanvas } from '../../components/NavToggle';
 import { api } from '../../api/client';
+import { NetworkSlider } from '../../components/NetworkSlider';
 import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
 
@@ -241,52 +242,16 @@ export function FooterLanguageSelector() {
   );
 }
 
-/** Per-network icon tweaks copied from the Blade slider markup. */
-function networkIconStyle(id: number): React.CSSProperties {
-  if (id === 3 || id === 4) return { maxWidth: 69, maxHeight: 69, marginTop: 10 };
-  if (id === 1) return { width: 75, marginTop: -2 };
-  if (id === 73) return { width: 75, marginTop: 17 };
-  if (id === 71) return { maxWidth: 69, maxHeight: 69, marginRight: 5 };
-  if (id === 81 || id === 61) return { maxWidth: 69, maxHeight: 69, marginTop: 5 };
-  if (id === 41) return { maxWidth: 69, maxHeight: 69, marginTop: 9 };
-  return { maxWidth: 69, maxHeight: 69 };
-}
-
 /** Sidebar social-networks slider (#slider_id) with prev/next controls. */
 function NetworksSlider({ networks }: { networks: NetworkDetail[] }) {
-  const [index, setIndex] = useState(0);
   if (networks.length === 0) return null;
-  const current = networks[((index % networks.length) + networks.length) % networks.length];
-
   return (
     <>
       <div>
-        <div
-          id="slider_id"
-          className="slider"
-          style={{ width: '100%', margin: 0, height: 120, boxShadow: 'none' }}
-        >
-          <div className="slider-control next play-sound2" onClick={() => setIndex((i) => i + 1)}>
-            <i className="fa fa-angle-right" aria-hidden="true" style={{ color: '#060605' }}></i>
-          </div>
-          <div className="slider-control prev play-sound2" onClick={() => setIndex((i) => i - 1)}>
-            <i className="fa fa-angle-left" aria-hidden="true" style={{ color: '#060605' }}></i>
-          </div>
-          <div className="item active">
-            <div className="item-content">
-              <a href={current.link}>
-                <img
-                  src={assetImage(current.image)}
-                  width={69}
-                  style={networkIconStyle(current.id)}
-                  alt=""
-                />
-                <br />
-                &nbsp;&nbsp;<b>{current.name}</b>
-              </a>
-            </div>
-          </div>
-        </div>
+        <NetworkSlider
+          items={networks.map((n) => ({ name: n.name, href: n.link, img: n.image }))}
+          soundClass="play-sound2"
+        />
       </div>
       <hr style={{ marginBottom: 20 }} />
     </>

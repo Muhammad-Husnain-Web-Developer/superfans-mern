@@ -1,0 +1,28 @@
+/* Report-reasons dropdown.
+
+   On a phone the reasons are full sentences, so the menu is tall — anchored to
+   the little arrow it opened from, it ran off the bottom of the screen. Below
+   768px it is pinned to the top of the viewport instead, as the client asked,
+   and scrolls internally if the language makes it taller still. */
+
+@media (max-width: 768px) {
+  .report-menu,
+  .post-fs-report-menu {
+    position: fixed !important;
+    top: 12px !important;
+    left: 12px !important;
+    right: 12px !important;
+    bottom: auto !important;
+    width: auto !important;
+    max-width: none !important;
+    transform: none !important;
+    max-height: 70vh;
+    overflow-y: auto;
+    z-index: 100000 !important;
+  }
+
+  /* the wrapper the menu is positioned inside must not clip or offset it */
+  .report-menu-anchor {
+    position: static !important;
+  }
+}

@@ -5,6 +5,7 @@ import { api } from '../../api/client';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from './Profile';
+import '../../styles/report-menu.css';
 
 interface FsPost {
   id: string;
@@ -17,6 +18,7 @@ interface FsPost {
   viewerHated: boolean;
   canView: boolean;
   viewerFollowing: boolean;
+  createdAt: string;
   prevId: string | null;
   nextId: string | null;
   influencer: {
@@ -74,7 +76,7 @@ export function PostFullscreen() {
   // not the influencer's own posts. Absent → fall back to the backend's sibling prev/next.
   const worldSeq = (location.state as { world?: string[] } | null)?.world ?? null;
   const { t: tReport } = useTranslation('report');
-  const { t: tContent } = useTranslation('content');
+  const { t: tContent, i18n } = useTranslation('content');
   const { user: authUser } = useAuth();
 
   const [post, setPost] = useState<FsPost | null>(null);
@@ -333,6 +335,14 @@ export function PostFullscreen() {
   // Locked: reached (via swipe) a post the viewer can't see — show the subscribe/follow tile
   // instead of the media (David's "blocked post" full-screen state).
   const locked = !post.canView;
+  /* day first, as the client's design shows it — plain "en" would render the
+     American "November 26, 2022" */
+  const dateLocale = (i18n.resolvedLanguage ?? 'en') === 'en' ? 'en-GB' : (i18n.resolvedLanguage ?? 'en');
+  const postedOn = new Date(post.createdAt).toLocaleDateString(dateLocale, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <div className="post-fullscreen-wrap">
@@ -340,11 +350,13 @@ export function PostFullscreen() {
         .post-fullscreen-wrap{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
         .post-fs-topbar{position:absolute;top:0;left:0;right:0;height:52px;background:#888;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
         .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:8px}
-        .post-fs-bottombar{position:absolute;bottom:0;left:-12px;right:0;min-height:72px;display:flex;align-items:center;padding:12px 16px;gap:12px;z-index:10}
+        .post-fs-bottombar{position:absolute;bottom:0;left:0;right:0;min-height:72px;display:flex;align-items:center;padding:12px 16px;gap:12px;z-index:10}
         .post-fs-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#555;flex-shrink:0}
-        .post-fs-nickname{color:#fff;font-weight:600;font-size:16px;flex:1;min-width:0}
-        .post-fs-follow-btn{background:#555;color:#fff;border:none;padding:8px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
-        .post-fs-follow-btn:hover{background:#666;color:#fff}
+        .post-fs-author{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1;gap:2px}
+        .post-fs-nickname{color:#fff;font-weight:700;font-size:17px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .post-fs-date{color:#fff;font-size:12px;line-height:1.1;opacity:.85}
+        .post-fs-follow-btn{background:#c9c9c9;color:#1a1a1a;border:none;padding:11px 18px;border-radius:4px;font-size:15px;font-weight:700;letter-spacing:.5px;cursor:pointer;white-space:nowrap}
+        .post-fs-follow-btn:hover{background:#dcdcdc;color:#1a1a1a}
         .post-fs-rightbar{position:absolute;right:0;bottom:96px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 12px;z-index:10}
         .post-fs-heart{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px}
         .post-fs-heart svg{width:32px;height:32px;display:block}
@@ -358,6 +370,10 @@ export function PostFullscreen() {
         .post-fs-poop.hated{opacity:1;filter:brightness(.4)}
         .post-fs-media-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;touch-action:none}
         .post-fullscreen-media,.post-fullscreen-media video,.post-fullscreen-media img{width:100%;height:100%;object-fit:contain}
+        /* The locked tile is a square graphic. Left to the rule above it stretched
+           to the full height of the viewer, and object-fit letterboxed the artwork
+           inside, so the border framed the empty box instead of the image. */
+        .post-fullscreen-media img.post-fs-locked{height:auto;object-fit:fill}
         .post-fs-video-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
         .post-fs-video-wrap video{width:100%;height:100%;object-fit:contain}
         .post-fs-heart-pop-wrap{position:absolute;inset:0;pointer-events:none;z-index:7}
@@ -379,11 +395,21 @@ export function PostFullscreen() {
 
       {/* Top bar: back + report */}
       <div className="post-fs-topbar">
+        {/* Back to wherever the viewer was opened from — the profile, the posts
+            grid, the feed — at the scroll position it was left at, not always to
+            World. prev/next replace the entry rather than pushing, so one step
+            back leaves the reel. Falling back to World covers a direct link,
+            where there is nothing behind this page. */}
         <a
           href={worldBack}
           className="post-fs-back"
-          title="Back to World"
-          onClick={(e) => { e.preventDefault(); navigate(worldBack); }}
+          title="Back"
+          onClick={(e) => {
+            e.preventDefault();
+            const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+            if (idx > 0) navigate(-1);
+            else navigate(worldBack);
+          }}
         >
           <BackIcon />
         </a>
@@ -431,7 +457,12 @@ export function PostFullscreen() {
           {locked ? (
             /* blocked post: locked tile + subscribe/follow CTA (no media) */
             <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
-              <img src={assetImage('blue24.png')} alt="Locked" style={{ width: 220, maxWidth: '60%', borderRadius: 26, border: '7px solid lightgray' }} />
+              <img
+                src={assetImage('blue24.png')}
+                alt="Locked"
+                className="post-fs-locked"
+                style={{ width: 220, maxWidth: '60%', borderRadius: 26, border: '7px solid lightgray' }}
+              />
               <a
                 href={author?.usernameUrl ? `/${author.usernameUrl}` : '#'}
                 onClick={(e) => { e.preventDefault(); if (author?.usernameUrl) navigate(`/${author.usernameUrl}`); }}
@@ -482,10 +513,15 @@ export function PostFullscreen() {
             src={author?.profilePicture ? assetImage(author.profilePicture) : assetImage('SUPERHEROINA.svg')}
             alt=""
           />
-          <span className="post-fs-nickname">@ {author?.usernameUrl ?? 'Nickname'}</span>
+          {/* handle over the post's date, per the client's design (the blade has
+              the handle only, and prints it as "@ name") */}
+          <span className="post-fs-author">
+            <span className="post-fs-nickname">@{author?.usernameUrl ?? 'Nickname'}</span>
+            <span className="post-fs-date">{postedOn}</span>
+          </span>
         </a>
         {authUser && !isOwner && !following && (
-          <button type="button" className="post-fs-follow-btn" onClick={follow}>+ Follow</button>
+          <button type="button" className="post-fs-follow-btn" onClick={follow}>FOLLOW +</button>
         )}
       </div>
 

@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
+import { useScrollMemory, rememberScroll } from '../../utils/useScrollMemory';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { assetImage, formatNumberRounded, isVideoFile, videoMime } from '../../utils/format';
@@ -9,26 +11,28 @@ import { FooterLanguageSelector, GuestHeader, InfluencerSearch, LoggedInNav } fr
 import { VolumeButton } from '../../components/VolumeButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PostHeading } from '../../components/PostHeading';
+import { NetworkSlider } from '../../components/NetworkSlider';
 import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { SwalResult } from '../profile/Profile';
 import '../../styles/profile-page.css';
 import '../../styles/world-page.css';
+import '../../styles/report-menu.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { ControlPanelHost } from '../profile/ControlPanelHost';
 
 /* The hardcoded network slider of world.blade.php (11 items, per-item icon styles) */
-const WORLD_NETWORKS: { name: string; href: string; img: string; style?: React.CSSProperties }[] = [
+const WORLD_NETWORKS: { name: string; href: string; img: string }[] = [
   { name: 'TikTok', href: 'https://www.tiktok.com/', img: 'b05db292060a4b42799ad7abaf5d6130.png' },
-  { name: 'Twitch', href: 'https://www.twitch.tv/', img: 'twitch_.png', style: { width: 75, marginTop: -6 } },
-  { name: 'Youtube', href: 'https://www.youtube.com/', img: 'Youtube_logo.png', style: { marginTop: 10 } },
+  { name: 'Twitch', href: 'https://www.twitch.tv/', img: 'twitch_.png' },
+  { name: 'Youtube', href: 'https://www.youtube.com/', img: 'Youtube_logo.png' },
   { name: 'Twitter', href: 'https://twitter.com/', img: 'twitter-logo-6.png' },
   { name: 'Netflix', href: 'https://www.netflix.com/', img: 'netflix_logo_icon_170919.png' },
-  { name: 'Spotify', href: 'https://www.spotify.com/', img: 'spotify-logoEdited.png', style: { width: 75, marginTop: -6 } },
+  { name: 'Spotify', href: 'https://www.spotify.com/', img: 'spotify-logoEdited.png' },
   { name: 'iTunes', href: 'https://www.apple.com/itunes/', img: 'ituneslogo.png' },
   { name: '21Buttons', href: 'https://www.21buttons.com/', img: 'cbd6803ce32d2bbc9b4f00a6a92932bf.jpg' },
-  { name: 'Discord', href: 'https://discord.com/', img: 'Discord-Logo.png', style: { width: 75, marginTop: 4 } },
+  { name: 'Discord', href: 'https://discord.com/', img: 'Discord-Logo.png' },
   { name: 'Amazon', href: 'https://www.amazon.com/', img: 'Logotipo-Amazon.jpg' },
   { name: 'Instagram', href: 'https://www.instagram.com/', img: 'Instagram_icon.png' },
 ];
@@ -47,7 +51,6 @@ export function WorldSidebar({
   const { t: tNav } = useTranslation('nav');
   const { user: authUser } = useAuth();
   const { t: tFooter } = useTranslation('footer');
-  const [slide, setSlide] = useState(0);
   const navigate = useNavigate();
   // Streaming modal — port of #streamingModalCenter. Guests see "NOT ON AIR"; a logged-in
   // creator gets the Go-Live bio/tags form (→ /create-room → /start-stream/:room).
@@ -71,7 +74,6 @@ export function WorldSidebar({
   }
   const monoFont =
     "Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif";
-  const current = WORLD_NETWORKS[((slide % WORLD_NETWORKS.length) + WORLD_NETWORKS.length) % WORLD_NETWORKS.length];
 
   return (
     <>
@@ -180,32 +182,7 @@ export function WorldSidebar({
 
             <li>
               <div>
-                <div
-                  id="slider_id"
-                  className="slider"
-                  style={{ width: '100%', margin: 0, height: 120, boxShadow: 'none', marginTop: 30 }}
-                >
-                  <div className="slider-control next" onClick={() => setSlide((s) => s + 1)}>
-                    <i className="fa fa-angle-right" aria-hidden="true" style={{ color: '#060605' }}></i>
-                  </div>
-                  <div className="slider-control prev" onClick={() => setSlide((s) => s - 1)}>
-                    <i className="fa fa-angle-left" aria-hidden="true" style={{ color: '#060605' }}></i>
-                  </div>
-                  <div className="item active">
-                    <div className="item-content">
-                      <a href={current.href}>
-                        <img
-                          src={assetImage(current.img)}
-                          width={69}
-                          style={{ maxWidth: 69, maxHeight: 69, display: 'inline-block', ...current.style }}
-                          alt=""
-                        />
-                        <br />
-                        &nbsp;&nbsp;<b>{current.name}</b>
-                      </a>
-                    </div>
-                  </div>
-                </div>
+                <NetworkSlider items={WORLD_NETWORKS} style={{ marginTop: 30 }} />
               </div>
             </li>
 
@@ -402,6 +379,12 @@ function WorldPostCard({
   worldIds: string[];
 }) {
   const { user: authUser } = useAuth();
+  const { t: tReport } = useTranslation('report');
+  /* pinned to the top of the screen on a phone (report-menu.css); it must leave
+     the card to do that, since an ancestor's transform would otherwise become
+     the containing block for `position: fixed` */
+  const onPhone = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const renderReportMenu = (node: React.ReactNode) => (onPhone ? createPortal(node, document.body) : node);
   const registerModal = useRegisterModal();
   const navigate = useNavigate();
   const [reportOpen, setReportOpen] = useState(false);
@@ -455,11 +438,12 @@ function WorldPostCard({
         clickTimer.current = null;
         api
           .post(`/posts/${item.id}/visit`)
-          .finally(() =>
+          .finally(() => {
             /* World context: full-screen scroll navigates the WORLD feed sequence
                (David) — passed via router state, not the profile's own posts. */
-            navigate(`/user/post_detail/${item.id}`, { state: { world: worldIds } }),
-          );
+            rememberScroll(); // so closing the viewer returns to this row
+            navigate(`/user/post_detail/${item.id}`, { state: { world: worldIds } });
+          });
       }, 350);
     }
   }
@@ -526,20 +510,25 @@ function WorldPostCard({
           </a>
         )}
 
-        {reportOpen && (
+        {reportOpen && renderReportMenu(
           <div
+            className="report-menu"
             onClick={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              bottom: 45,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'white',
-              border: '1px solid #ccc',
-              borderRadius: 6,
-              width: '90%',
-              zIndex: 10,
-            }}
+            style={
+              onPhone
+                ? { background: 'white', border: '1px solid #ccc', borderRadius: 6 }
+                : {
+                    position: 'absolute',
+                    bottom: 45,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: 'white',
+                    border: '1px solid #ccc',
+                    borderRadius: 6,
+                    width: '90%',
+                    zIndex: 10,
+                  }
+            }
           >
             <ul
               style={{
@@ -552,10 +541,10 @@ function WorldPostCard({
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 overflow: 'hidden',
                 width: '100%',
-                fontSize: 11,
+                fontSize: onPhone ? 14 : 11,
               }}
             >
-              {REPORT_REASONS.map(([reason]) => (
+              {REPORT_REASONS.map(([reason, key]) => (
                 <li key={reason} style={{ borderBottom: '1px solid #eee' }}>
                   <a
                     href="#"
@@ -567,7 +556,7 @@ function WorldPostCard({
                     }}
                     style={{ display: 'block', padding: '10px 15px', textDecoration: 'none', color: '#333' }}
                   >
-                    {reason}
+                    {tReport(`reasons.${key}`, { defaultValue: reason })}
                   </a>
                 </li>
               ))}
@@ -619,6 +608,8 @@ export function World() {
   const { t: tReport } = useTranslation('report');
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
   const [items, setItems] = useState<WorldItem[]>([]);
+  /* come back from the viewer beside the post that was opened, not at the top */
+  useScrollMemory(items.length > 0);
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [loading, setLoading] = useState(false);

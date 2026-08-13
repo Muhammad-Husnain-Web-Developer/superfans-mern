@@ -18,6 +18,7 @@ import { PostReportButton } from '../../components/PostReportButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PageLoader } from '../../components/PageLoader';
 import { PostHeading } from '../../components/PostHeading';
+import { rememberScroll } from '../../utils/useScrollMemory';
 import { NotFoundPage } from '../errors/ErrorPage';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
@@ -167,6 +168,11 @@ export function PostItem({
     borderRadius: 26,
     border: '7px solid lightgray',
     width: '100%',
+    /* the handle strip is positioned and overlaps the top of the media, so the
+       media has to paint over it — otherwise the strip sits on the post instead
+       of tucking behind it (videos already got this from their wrapper) */
+    position: 'relative',
+    zIndex: 1,
   };
 
   /* Blade behavior: single click (350ms) opens the full-screen viewer
@@ -185,6 +191,7 @@ export function PostItem({
     } else {
       clickTimer.current = setTimeout(() => {
         clickTimer.current = null;
+        rememberScroll(); // so closing the viewer returns to this row
         navigate(`/user/post_detail/${post.id}`);
       }, 350);
     }

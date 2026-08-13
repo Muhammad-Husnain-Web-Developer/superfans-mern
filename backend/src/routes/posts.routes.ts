@@ -200,8 +200,11 @@ postsRouter.get(
     if (!post) throw ApiError.notFound('Post not found');
 
     const influencer = await User.findById(post.influencer).lean();
+    /* Newest first, the order the wall and the posts grid render. The viewer used
+       to walk these ascending, so scrolling down — towards the post drawn below
+       the one you tapped — actually stepped backwards through the profile. */
     const siblings = await Post.find({ influencer: post.influencer }, { _id: 1 })
-      .sort({ mysqlId: 1, createdAt: 1 })
+      .sort({ mysqlId: -1, createdAt: -1 })
       .lean();
     const idx = siblings.findIndex((s) => String(s._id) === String(post._id));
     const prevId = idx > 0 ? String(siblings[idx - 1]._id) : null;
@@ -214,9 +217,13 @@ postsRouter.get(
       req.auth ? Hate.exists({ post: post._id, user: req.auth.userId }).then(Boolean) : false,
     ]);
 
-    // Blade rule: owner sees everything; influencer content needs a subscription,
-    // regular-user content needs a followership; guests always see the lock.
-    let canView = false;
+    /* A post the grids show to everyone must not turn into a lock the moment it
+       is opened. post_detail.blade.php renders its media unconditionally — the
+       subscription it looks up only drives the +Follow button — and both grids
+       gate purely on `visible`. So a visible post is open to all; a hidden one
+       still needs the owner, a subscription (influencers) or a follow (users),
+       and keeps the locked tile. */
+    let canView = post.visible;
     let viewerFollowing = false;
     if (req.auth && influencer) {
       if (req.auth.userId === String(influencer._id)) {
@@ -226,7 +233,7 @@ postsRouter.get(
           Subscription.exists({ user: req.auth.userId, influencer: influencer._id }).then(Boolean),
           Followership.exists({ followerUser: req.auth.userId, followedUser: influencer._id }).then(Boolean),
         ]);
-        canView = influencer.role === 'influencer' ? sub : fol;
+        canView = canView || (influencer.role === 'influencer' ? sub : fol);
         // "already following" = any existing relationship (drives the +Follow button visibility)
         viewerFollowing = sub || fol;
       }

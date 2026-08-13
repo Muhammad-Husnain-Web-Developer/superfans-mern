@@ -1,0 +1,76 @@
+/* Sidebar social-network slider.
+
+   The blade centred the label by prefixing it with two &nbsp; and nudged each
+   logo with its own margin-top, so every network sat a few pixels off centre and
+   jumped as you paged through them. A fixed, centred icon box holds every logo
+   at the same size and position instead, and the item slides in from the side it
+   was paged from. */
+
+.network-slider .item-content a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.network-slider-icon {
+  height: 69px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* contain, never stretch: the logos differ in aspect and some are far wider
+   than they are tall */
+.network-slider-icon img {
+  max-height: 69px;
+  max-width: 84px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display: block;
+}
+
+.network-slider-label {
+  display: block;
+  margin-top: 8px;
+  text-align: center;
+}
+
+@keyframes networkSlideFromRight {
+  from {
+    transform: translateX(55%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes networkSlideFromLeft {
+  from {
+    transform: translateX(-55%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.network-slider .network-slide-next {
+  animation: networkSlideFromRight 0.3s ease-out;
+}
+
+.network-slider .network-slide-prev {
+  animation: networkSlideFromLeft 0.3s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-slider .network-slide-next,
+  .network-slider .network-slide-prev {
+    animation: none;
+  }
+}

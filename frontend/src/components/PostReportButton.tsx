@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 import { assetImage } from '../utils/format';
+import '../styles/report-menu.css';
 
-/** The five report reasons from the Laravel post-report dropdown (feed / post_detail). */
-const REPORT_REASONS = ['Excessive sensuality', 'Impersonation', 'Violence', 'Racism', 'Other'];
+/** The five report reasons from the Laravel post-report dropdown (feed / post_detail).
+    The value sent to the API stays the blade's English string; the label shown is the
+    full sentence from report.json, in the viewer's language. */
+const REPORT_REASONS: [string, string][] = [
+  ['Excessive sensuality', 'sensuality'],
+  ['Impersonation', 'impersonation'],
+  ['Violence', 'violence'],
+  ['Racism', 'racism'],
+  ['Other', 'other'],
+];
 
 /**
  * Per-post report control — the arrow button that reveals a reasons dropdown and POSTs to
@@ -27,7 +38,14 @@ export function PostReportButton({
   variant?: 'overlay' | 'inline';
   label?: string;
 }) {
+  const { t: tReport } = useTranslation('report');
   const [open, setOpen] = useState(false);
+  /* On a phone the menu is pinned to the top of the screen (report-menu.css). It
+     has to leave the card to do that: an ancestor of the feed card carries a
+     transform, which would make `position: fixed` resolve against that box
+     instead of the viewport. */
+  const onPhone = typeof window !== 'undefined' && window.innerWidth <= 768;
+  const renderMenu = (node: React.ReactNode) => (onPhone ? createPortal(node, document.body) : node);
   const wrapRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
@@ -89,18 +107,23 @@ export function PostReportButton({
         {label ? ` ${label}` : null}
       </button>
 
-      {open && (
+      {open && renderMenu(
         <div
+          className="report-menu"
           onClick={(e) => e.stopPropagation()}
-          style={{
-            position: 'absolute',
-            bottom: isOverlay ? '100%' : undefined,
-            top: isOverlay ? undefined : '100%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 10000,
-            marginBottom: isOverlay ? 6 : undefined,
-          }}
+          style={
+            onPhone
+              ? { zIndex: 10000 }
+              : {
+                  position: 'absolute',
+                  bottom: isOverlay ? '100%' : undefined,
+                  top: isOverlay ? undefined : '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 10000,
+                  marginBottom: isOverlay ? 6 : undefined,
+                }
+          }
         >
           <ul
             style={{
@@ -112,11 +135,11 @@ export function PostReportButton({
               borderRadius: 8,
               boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               overflow: 'hidden',
-              width: 170,
-              fontSize: 11,
+              width: onPhone ? 'auto' : 170,
+              fontSize: onPhone ? 14 : 11,
             }}
           >
-            {REPORT_REASONS.map((reason) => (
+            {REPORT_REASONS.map(([reason, key]) => (
               <li key={reason} style={{ borderBottom: '1px solid #eee' }}>
                 <a
                   href="#"
@@ -127,7 +150,7 @@ export function PostReportButton({
                   }}
                   style={{ display: 'block', padding: '10px 15px', textDecoration: 'none', color: '#333' }}
                 >
-                  {reason}
+                  {tReport(`reasons.${key}`, { defaultValue: reason })}
                 </a>
               </li>
             ))}

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useScrollMemory } from '../../utils/useScrollMemory';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, fetchProfilePosts, type ProfileData, type ProfilePost } from '../../api/profiles';
@@ -73,6 +74,8 @@ export function Posts() {
   const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [ads, setAds] = useState<FeedAd[]>([]);
   const [state, setState] = useState<'loading' | 'ok' | 'notfound'>('loading');
+  /* come back from the viewer beside the post that was opened, not at the top */
+  useScrollMemory(state === 'ok' && posts.length > 0);
 
   useEffect(() => {
     let cancelled = false;
