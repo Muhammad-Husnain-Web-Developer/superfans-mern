@@ -1,12 +1,11 @@
 import { useRef, useState, type CSSProperties } from 'react';
-import { assetImage } from '../utils/format';
 import '../styles/network-slider.css';
 
 export interface NetworkSlide {
   name: string;
   href: string;
-  /** file name under /assets/images */
-  img: string;
+  /** already-resolved image URL — the client's SVG, or a legacy asset path */
+  src: string;
 }
 
 /**
@@ -54,7 +53,7 @@ export function NetworkSlider({
         <div className="item-content">
           <a href={current.href}>
             <span className="network-slider-icon">
-              <img src={assetImage(current.img)} alt="" />
+              <img src={current.src} alt="" />
             </span>
             <span className="network-slider-label">
               <b>{current.name}</b>

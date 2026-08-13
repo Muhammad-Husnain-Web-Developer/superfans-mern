@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { closeOffcanvas } from '../../components/NavToggle';
 import { api } from '../../api/client';
 import { NetworkSlider } from '../../components/NetworkSlider';
+import { networkLogo } from '../../utils/networkLogo';
 import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
 
@@ -249,7 +250,11 @@ function NetworksSlider({ networks }: { networks: NetworkDetail[] }) {
     <>
       <div>
         <NetworkSlider
-          items={networks.map((n) => ({ name: n.name, href: n.link, img: n.image }))}
+          items={networks.map((n) => ({
+            name: n.name,
+            href: n.link,
+            src: networkLogo(n.name, 'scroll') ?? assetImage(n.image),
+          }))}
           soundClass="play-sound2"
         />
       </div>

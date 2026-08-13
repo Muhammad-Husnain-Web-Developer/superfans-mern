@@ -21,13 +21,13 @@
   justify-content: center;
 }
 
-/* contain, never stretch: the logos differ in aspect and some are far wider
-   than they are tall */
+/* A fixed square with object-fit: contain. The client's SVGs carry only a
+   viewBox — no width/height — so an auto-sized replaced element collapses to
+   zero inside this flex box. Stating the box keeps every logo the same size
+   without stretching any of them. */
 .network-slider-icon img {
-  max-height: 69px;
-  max-width: 84px;
-  width: auto;
-  height: auto;
+  width: 69px;
+  height: 69px;
   object-fit: contain;
   display: block;
 }

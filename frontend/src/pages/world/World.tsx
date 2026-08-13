@@ -12,6 +12,7 @@ import { VolumeButton } from '../../components/VolumeButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PostHeading } from '../../components/PostHeading';
 import { NetworkSlider } from '../../components/NetworkSlider';
+import { networkLogo } from '../../utils/networkLogo';
 import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
@@ -182,7 +183,15 @@ export function WorldSidebar({
 
             <li>
               <div>
-                <NetworkSlider items={WORLD_NETWORKS} style={{ marginTop: 30 }} />
+                <NetworkSlider
+                  items={WORLD_NETWORKS.map((n) => ({
+                    name: n.name,
+                    href: n.href,
+                    /* the client's SVG set; the legacy bitmap stays as the fallback */
+                    src: networkLogo(n.name, 'scroll') ?? assetImage(n.img),
+                  }))}
+                  style={{ marginTop: 30 }}
+                />
               </div>
             </li>
 

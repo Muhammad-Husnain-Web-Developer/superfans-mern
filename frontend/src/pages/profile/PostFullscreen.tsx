@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from './Profile';
 import '../../styles/report-menu.css';
@@ -458,7 +459,7 @@ export function PostFullscreen() {
             /* blocked post: locked tile + subscribe/follow CTA (no media) */
             <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
               <img
-                src={assetImage('blue24.png')}
+                src={LOCKED_POST_IMAGE}
                 alt="Locked"
                 className="post-fs-locked"
                 style={{ width: 220, maxWidth: '60%', borderRadius: 26, border: '7px solid lightgray' }}
@@ -489,7 +490,7 @@ export function PostFullscreen() {
               </video>
             </div>
           ) : (
-            <img src={media ? assetImage(media) : assetImage('blue24.png')} alt="Post" className="post-fullscreen-media" />
+            <img src={media ? assetImage(media) : LOCKED_POST_IMAGE} alt="Post" className="post-fullscreen-media" />
           )}
         </div>
         <div className="post-fs-heart-pop-wrap">

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, type ProfileData } from '../../api/profiles';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
 import { SwalResult } from './Profile';
@@ -185,7 +186,7 @@ export function PostDetail() {
                     )
                   ) : (
                     <img
-                      src={assetImage('blue24.png')}
+                      src={LOCKED_POST_IMAGE}
                       className="img-responsive"
                       style={{ ...frame, display: 'inline-block' }}
                       alt=""

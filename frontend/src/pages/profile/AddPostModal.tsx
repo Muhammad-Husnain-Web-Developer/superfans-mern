@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import type { ProfilePost } from '../../api/profiles';
 
 interface TagHit {
@@ -294,7 +295,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
                         </video>
                       ) : (
                         <img
-                          src={p.imageVideo ? assetImage(p.imageVideo) : assetImage('blue24.png')}
+                          src={p.imageVideo ? assetImage(p.imageVideo) : LOCKED_POST_IMAGE}
                           style={{ maxWidth: 70, display: 'inline-block' }}
                           alt=""
                         />

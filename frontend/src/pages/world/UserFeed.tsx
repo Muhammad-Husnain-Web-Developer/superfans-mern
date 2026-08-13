@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { fetchFeed, type FeedPost } from '../../api/profiles';
 import { assetImage, isVideoFile, formatNumber, videoMime } from '../../utils/format';
+import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { api } from '../../api/client';
 import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
@@ -193,7 +194,7 @@ function FeedCard({ post }: { post: FeedPost }) {
           </video>
         ) : (
           <img
-            src={media ? assetImage(media) : assetImage('blue24.png')}
+            src={media ? assetImage(media) : LOCKED_POST_IMAGE}
             className="feed-card-media img-responsive"
             alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!"
           />

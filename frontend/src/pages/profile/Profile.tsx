@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, fetchProfilePosts, type ProfileData, type ProfilePost } from '../../api/profiles';
 import { assetImage, formatNumber, formatNumberRounded, isVideoFile, videoMime } from '../../utils/format';
+import { LOCKED_POST_IMAGE, networkLogo } from '../../utils/networkLogo';
 import { observeNewVideos } from '../../utils/video';
 import { useAuth } from '../../context/AuthContext';
 import { usePaymentReturn } from '../../utils/usePaymentReturn';
@@ -208,7 +209,7 @@ export function PostItem({
         tagged={taggedPairs.map(([usernameUrl, profilePicture]) => ({ usernameUrl, profilePicture }))}
       />
       {locked || !media ? (
-        <img src={assetImage('blue24.png')} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
+        <img src={LOCKED_POST_IMAGE} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
       ) : isVideoFile(media) ? (
         <div className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
           <video
@@ -927,7 +928,8 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                   <br />
                   <a href={network.link}>
                     <img
-                      src={assetImage(network.feedImage)}
+                      /* the grey card artwork from the client's BLUE 24 set */
+                      src={networkLogo(network.name, 'card') ?? assetImage(network.feedImage)}
                       alt=""
                       className="img-responsive"
                       style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}

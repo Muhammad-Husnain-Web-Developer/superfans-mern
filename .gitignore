@@ -24,3 +24,6 @@ _*.txt
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+
+# client asset deliveries — the SVGs inside them live in frontend/public/brand
+/*.zip

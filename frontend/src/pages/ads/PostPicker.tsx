@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import { assetImage } from '../../utils/format';
+import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 
 interface AdPost {
   id: string;
@@ -30,7 +31,7 @@ export function PostPicker({ value, onSelect }: { value: string; onSelect: (id: 
         {posts.slice(0, shown).map((p) => (
           <img
             key={p.id}
-            src={p.imageVideo ? assetImage(p.imageVideo) : assetImage('blue24.png')}
+            src={p.imageVideo ? assetImage(p.imageVideo) : LOCKED_POST_IMAGE}
             alt=""
             className={`selectPost${value === p.id ? ' selected' : ''}`}
             onClick={() => onSelect(p.id)}

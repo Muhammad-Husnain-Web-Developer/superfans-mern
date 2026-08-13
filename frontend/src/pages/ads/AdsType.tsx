@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { api } from '../../api/client';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 
 interface Campaign {
@@ -157,7 +158,7 @@ export function AdsType() {
                           {p.imageVideo && isVideoFile(p.imageVideo) ? (
                             <video className="card-img-top" muted><source src={assetImage(p.imageVideo)} type={videoMime(p.imageVideo)} /></video>
                           ) : (
-                            <img className="card-img-top" src={p.imageVideo ? assetImage(p.imageVideo) : assetImage('blue24.png')} alt="" />
+                            <img className="card-img-top" src={p.imageVideo ? assetImage(p.imageVideo) : LOCKED_POST_IMAGE} alt="" />
                           )}
                           <div className="card-body p-2 text-center"><small>#{p.id.slice(-6)}</small></div>
                         </div>
