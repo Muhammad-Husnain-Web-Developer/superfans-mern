@@ -304,6 +304,11 @@
 .language-dropdownz .dropdown-menu {
   display: none;
   position: absolute;
+  /* bootstrap's .dropdown-menu sets top:100% and left:0; left alone they combine
+     with the bottom/right below into a box stretched between both edges, which
+     collapses to ~18px and drops all seven flags off the bottom of the screen. */
+  top: auto;
+  left: auto;
   bottom: calc(100% + 6px);
   right: 0;
   min-width: 100%;

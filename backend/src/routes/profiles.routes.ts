@@ -199,6 +199,9 @@ profilesRouter.get(
         noOfLikes: p.noOfLikes,
         visible: p.visible,
         tags: p.tags,
+        /* the wall shows the tagged handles too (user/index.blade.php:1675),
+           and the avatars beside them come from here */
+        taggedProfilePictures: p.taggedProfilePictures,
         createdAt: p.createdAt,
       })),
     });

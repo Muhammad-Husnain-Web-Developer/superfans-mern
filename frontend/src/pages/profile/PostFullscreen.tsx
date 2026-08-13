@@ -96,22 +96,38 @@ export function PostFullscreen() {
   const wheelLock = useRef(false);
   const [pops, setPops] = useState<{ id: number; x: number; y: number }[]>([]);
   const mediaWrapRef = useRef<HTMLDivElement>(null);
+  /* Reels behaviour: neighbours are fetched and their media warmed while the
+     current post is on screen, so moving to one swaps instantly instead of
+     blanking to the loading state. slideDir drives the entry animation. */
+  const cache = useRef(new Map<string, FsPost>());
+  const slideDir = useRef<'next' | 'prev' | null>(null);
+
+  function applyPost(d: FsPost) {
+    setPost(d);
+    setLiked(d.viewerLiked);
+    setHated(d.viewerHated);
+    setFollowing(d.viewerFollowing);
+    setLikes(d.likesCount);
+    setHates(d.hatesCount);
+    setState('ok');
+  }
 
   useEffect(() => {
     let cancelled = false;
+    const cached = cache.current.get(id);
+    if (cached) {
+      applyPost(cached);
+      void api.post(`/posts/${id}/visit`).catch(() => undefined);
+      return;
+    }
     setState('loading');
     api
       .get<{ success: boolean; data: FsPost }>(`/posts/${id}`)
       .then((r) => {
         if (cancelled) return;
         const d = r.data.data;
-        setPost(d);
-        setLiked(d.viewerLiked);
-        setHated(d.viewerHated);
-        setFollowing(d.viewerFollowing);
-        setLikes(d.likesCount);
-        setHates(d.hatesCount);
-        setState('ok');
+        cache.current.set(d.id, d);
+        applyPost(d);
         void api.post(`/posts/${id}/visit`).catch(() => undefined);
       })
       .catch(() => {
@@ -121,6 +137,35 @@ export function PostFullscreen() {
       cancelled = true;
     };
   }, [id]);
+
+  /* Warm both neighbours: their JSON, and the first frame / image itself. */
+  useEffect(() => {
+    if (!post) return;
+    const ids = [post.prevId, post.nextId];
+    if (worldSeq) {
+      const i = worldSeq.indexOf(id);
+      if (i >= 0) ids.push(worldSeq[i - 1] ?? null, worldSeq[i + 1] ?? null);
+    }
+    for (const nid of ids) {
+      if (!nid || cache.current.has(nid)) continue;
+      api
+        .get<{ success: boolean; data: FsPost }>(`/posts/${nid}`)
+        .then((r) => {
+          const d = r.data.data;
+          cache.current.set(d.id, d);
+          if (!d.imageVideo || !d.canView) return;
+          if (isVideoFile(d.imageVideo)) {
+            const v = document.createElement('video');
+            v.preload = 'auto';
+            v.muted = true;
+            v.src = assetImage(d.imageVideo);
+          } else {
+            new Image().src = assetImage(d.imageVideo);
+          }
+        })
+        .catch(() => undefined);
+    }
+  }, [post, id, worldSeq]);
 
   function playLike() {
     const el = likeSound.current;
@@ -227,7 +272,12 @@ export function PostFullscreen() {
   };
   const go = (dir: 'next' | 'prev') => {
     const t = targetId(dir);
-    if (t) navigate(`/user/post_detail/${t}`, worldSeq ? { state: { world: worldSeq } } : undefined);
+    if (!t) return;
+    slideDir.current = dir;
+    navigate(`/user/post_detail/${t}`, {
+      replace: true, // a reel is one screen, not a history trail
+      ...(worldSeq ? { state: { world: worldSeq } } : {}),
+    });
   };
   const goNext = () => go('next');
   const goPrev = () => go('prev');
@@ -238,9 +288,10 @@ export function PostFullscreen() {
   function onTouchEnd(e: React.TouchEvent) {
     const dx = touchStart.current.x - e.changedTouches[0].clientX;
     const dy = touchStart.current.y - e.changedTouches[0].clientY;
-    if (Math.abs(dy) > 80 && Math.abs(dy) >= Math.abs(dx)) {
-      if (dy > 80) goNext();
-      else if (dy < -80) goPrev();
+    /* 50px, not 80 — a reel should answer a flick, not demand a full drag */
+    if (Math.abs(dy) > 50 && Math.abs(dy) >= Math.abs(dx)) {
+      if (dy > 0) goNext();
+      else goPrev();
     }
   }
 
@@ -248,7 +299,7 @@ export function PostFullscreen() {
   function onWheel(e: React.WheelEvent) {
     if (Math.abs(e.deltaY) < 20 || wheelLock.current) return;
     wheelLock.current = true;
-    setTimeout(() => { wheelLock.current = false; }, 600);
+    setTimeout(() => { wheelLock.current = false; }, 320);
     if (e.deltaY > 0) goNext();
     else goPrev();
   }
@@ -319,10 +370,11 @@ export function PostFullscreen() {
         .post-fs-report-menu li:last-child{border-bottom:none}
         .post-fs-report-menu a{display:block;padding:10px 16px;color:#333;text-decoration:none}
         .post-fs-report-menu a:hover{background:#f5f5f5}
-        .post-fs-nav-arrow{position:absolute;left:26px;z-index:11;width:44px;height:44px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s}
-        .post-fs-nav-arrow:hover{background:rgba(255,255,255,.35)}
-        .post-fs-nav-arrow.up{top:calc(50% - 60px)}
-        .post-fs-nav-arrow.down{top:calc(50% + 16px)}
+        .post-fs-enter-next{animation:fsEnterNext .3s cubic-bezier(.22,.61,.36,1)}
+        .post-fs-enter-prev{animation:fsEnterPrev .3s cubic-bezier(.22,.61,.36,1)}
+        @keyframes fsEnterNext{from{transform:translateY(55%);opacity:.4}to{transform:translateY(0);opacity:1}}
+        @keyframes fsEnterPrev{from{transform:translateY(-55%);opacity:.4}to{transform:translateY(0);opacity:1}}
+        @media (prefers-reduced-motion:reduce){.post-fs-enter-next,.post-fs-enter-prev{animation:none}}
       `}</style>
 
       {/* Top bar: back + report */}
@@ -360,17 +412,8 @@ export function PostFullscreen() {
         )}
       </div>
 
-      {/* Up / Down navigation arrows (David's scroll up/down) — left side */}
-      {targetId('prev') && (
-        <button type="button" className="post-fs-nav-arrow up" title="Previous" onClick={(e) => { e.stopPropagation(); goPrev(); }}>
-          <svg viewBox="0 0 24 24" width={26} height={26} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M18 15l-6-6-6 6" /></svg>
-        </button>
-      )}
-      {targetId('next') && (
-        <button type="button" className="post-fs-nav-arrow down" title="Next" onClick={(e) => { e.stopPropagation(); goNext(); }}>
-          <svg viewBox="0 0 24 24" width={26} height={26} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-        </button>
-      )}
+      {/* The up/down arrow buttons are gone at the client's request — prev/next
+          is swipe on touch, and wheel or ArrowUp/ArrowDown on desktop. */}
 
       {/* Media: double-click like, single click mute, swipe / wheel prev-next */}
       <div
@@ -381,7 +424,10 @@ export function PostFullscreen() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <div className="post-fullscreen-media">
+        <div
+          className={`post-fullscreen-media${slideDir.current ? ` post-fs-enter-${slideDir.current}` : ''}`}
+          key={post.id}
+        >
           {locked ? (
             /* blocked post: locked tile + subscribe/follow CTA (no media) */
             <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>

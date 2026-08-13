@@ -150,6 +150,10 @@ export function PostItem({
   const media = post.imageVideo;
   const navigate = useNavigate();
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* pair each tag with its avatar by position, keeping only the complete ones */
+  const taggedPairs = (post.tags ?? [])
+    .map((name, i) => [name.trim(), (post.taggedProfilePictures?.[i] ?? '').trim()] as const)
+    .filter(([name, picture]) => name && picture);
   const [heart, setHeart] = useState(false);
   const [likes, setLikes] = useState(post.noOfLikes);
   const frame: React.CSSProperties = {
@@ -182,7 +186,39 @@ export function PostItem({
   return (
     <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item image-hover-wrapper" onClick={onMediaClick} style={{ position: 'relative', cursor: 'pointer' }}>
       <div className={`animated-heart${heart ? ' show' : ''}`} id={`heart-${post.id}`}></div>
-      <br />
+      {/* Tagged handles ride above the media on the wall too, not just in the
+          feeds — user/index.blade.php:1675. The blade drops a <br> instead when
+          a post has none, and only prints a tag that has an avatar with it. */}
+      {taggedPairs.length > 0 ? (
+        <p
+          className="feed_posts_heading_p"
+          style={{ overflow: 'hidden', position: 'relative', width: '70%', height: 55, top: 25, fontSize: 14 }}
+        >
+          <span
+            className="marquee-text"
+            style={{ display: 'inline-block', whiteSpace: 'nowrap', animation: 'scroll-left 10s linear infinite' }}
+          >
+            {taggedPairs.map(([name, picture]) => (
+              <Link
+                key={name}
+                to={`/${name}`}
+                onClick={(e) => e.stopPropagation()}
+                style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
+              >
+                <img
+                  className="feed_posts_heading_img"
+                  src={assetImage(picture)}
+                  alt=""
+                  style={{ marginRight: 10, marginBottom: 0 }}
+                />
+                <span>@{name}</span>
+              </Link>
+            ))}
+          </span>
+        </p>
+      ) : (
+        <br />
+      )}
       {locked || !media ? (
         <img src={assetImage('blue24.png')} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
       ) : isVideoFile(media) ? (

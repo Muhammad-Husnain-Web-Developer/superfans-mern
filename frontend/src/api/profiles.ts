@@ -54,6 +54,7 @@ export interface ProfilePost {
   noOfLikes: number;
   visible: boolean;
   tags: string[];
+  taggedProfilePictures: string[];
   createdAt: string;
 }
 

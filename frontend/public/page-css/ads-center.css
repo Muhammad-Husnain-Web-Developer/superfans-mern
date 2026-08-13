@@ -143,7 +143,10 @@ input[type="range"]::-webkit-slider-thumb {
   border-right: 4px solid rgba(0,0,0,0.65);
   position: fixed; top: 0; bottom: 0; left: 0; width: 256px; overflow-y: auto; z-index: 50;
 }
-.ads-sidebar h6 { margin: 1px 0 15px; text-align: center; font-size: 17px; color: #333; font-weight: 550; letter-spacing: -0.3px; font-family: "Anton", sans-serif !important; font-style: normal; }
+/* The "SUPER ADS CENTER" subtitle goes back to the old typography the client
+   asked for — Impact, still sitting commented out above the Anton line that
+   replaced it in ads/sidebar.blade.php:65. */
+.ads-sidebar h6 { margin: 1px 0 15px; text-align: center; font-size: 17px; color: #333; font-weight: 550; letter-spacing: -0.3px; font-family: impact, Arial, sans-serif !important; font-style: normal; }
 .ads-sidebar .side_logo { display: block; text-align: center; }
 .ads-sidebar .upper-links a, .ads-sidebar .footer-links a {
   display: block; color: #777; padding: 12px 45px; text-decoration: none;
