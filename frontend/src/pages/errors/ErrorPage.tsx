@@ -56,13 +56,9 @@ export function NotFoundPage() {
     <ErrorPage
       documentTitle="Superfans | 404 Not Found"
       title="404 Not Found"
-      message={
-        <>
-          ¡Ups! La página o perfil de usuario que estabas buscando no ha sido encontrada.
-          <br />
-          El servidor no encontró la ruta requerida.
-        </>
-      }
+      /* the blade's second line, "El servidor no encontró la ruta requerida",
+         is dropped at the client's request */
+      message="¡Ups! La página o perfil de usuario que estabas buscando no ha sido encontrada."
     />
   );
 }
