@@ -531,3 +531,10 @@ display: inline-block;
              margin-right: 30px !important;
          }
     }
+
+/* ===== Nicknames read bold =====
+   Client change, matching the profile and world-feed handles. */
+.inline-m,
+.mobile-p {
+    font-weight: 700;
+}

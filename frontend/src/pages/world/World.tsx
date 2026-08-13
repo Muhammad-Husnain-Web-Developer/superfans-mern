@@ -215,7 +215,13 @@ export function WorldSidebar({
                  here carries only the control panel */
               <LoggedInNav active={activeNav} hrMarginTop={-17} onControlPanel={onControlPanel} />
             ) : (
-              <li className="login_btn world_after" style={{ marginTop: -5, marginBottom: 20 }}>
+              /* world.blade.php:1492 marks this item fh5co-active on the world
+                 page — black text plus the permanently drawn red rule. The
+                 logged-in nav already does this; the guest one never did. */
+              <li
+                className={`${activeNav === 'world' ? 'fh5co-active ' : ''}login_btn world_after`}
+                style={{ marginTop: -5, marginBottom: 20 }}
+              >
                 <a href="/world">
                   <b>{tNav('world', { defaultValue: 'World' })}</b>
                 </a>
@@ -402,11 +408,34 @@ function WorldPostCard({
   const [likesTotal, setLikesTotal] = useState(item.likesTotal ?? item.noOfLikes ?? 0);
   const [heartShow, setHeartShow] = useState(false);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /* world-page.css animates .feed_posts_heading_marquee once its container
+     carries .is-overflowing, but nothing ever added that class, so the heading
+     never scrolled. Measure the run of text against the 150px slot and let the
+     ones that do not fit scroll, LED-sign style. */
+  const headingRef = useRef<HTMLSpanElement | null>(null);
+  const [headingOverflows, setHeadingOverflows] = useState(false);
   const username = item.influencer?.usernameUrl ?? 'unknown';
   const profilePicture = item.influencer?.profilePicture || 'output-onlinepngtools (2).png';
   const media = item.imageVideo ?? '';
   const taggedUsers = (item.tags ?? []).map((s) => s.trim()).filter(Boolean);
   const taggedPics = item.taggedProfilePictures ?? [];
+
+  useEffect(() => {
+    const run = headingRef.current;
+    const slot = run?.parentElement;
+    if (!run || !slot) return;
+    const measure = () => setHeadingOverflows(run.scrollWidth > slot.clientWidth + 1);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(slot);
+    /* the avatars land after the first paint and lengthen the run */
+    const avatars = Array.from(run.querySelectorAll('img'));
+    avatars.forEach((img) => img.addEventListener('load', measure));
+    return () => {
+      observer.disconnect();
+      avatars.forEach((img) => img.removeEventListener('load', measure));
+    };
+  }, [username, taggedUsers.length]);
   /* blade: videos only get native controls if the viewer follows the creator (or owns the post). */
   const canControlVideo = !!authUser && item.influencer?.viewerFollowing === true;
 
@@ -463,8 +492,8 @@ function WorldPostCard({
         className="feed_posts_heading_p feed-heading-flex"
         style={{ position: 'relative', top: 25, fontSize: 14, marginBottom: 12 }}
       >
-        <span className="feed_posts_heading_left">
-          <span className="feed_posts_heading_marquee">
+        <span className={`feed_posts_heading_left${headingOverflows ? ' is-overflowing' : ''}`}>
+          <span className="feed_posts_heading_marquee" ref={headingRef}>
             <Link
               style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
               to={`/${username}`}

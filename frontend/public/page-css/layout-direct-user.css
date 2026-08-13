@@ -1529,3 +1529,21 @@ font-weight: 100 !important;
 .typeahead .dropdown-item::after {
   bottom: 0 !important;
 }
+
+/* ===== Post text banner is square =====
+   Client change: the grey @username strip above each post carried
+   `border-radius: 5px 5px 0 0 !important` (main.blade.php:375). Nothing in this
+   design is rounded, so the corners come off. !important to match. */
+.feed_posts_heading_p {
+  border-radius: 0 !important;
+}
+
+/* ===== Nicknames read bold =====
+   Client change. The world feed already renders them at 700 through
+   .feed_posts_heading_p; the sidebar handle inherited the layout's 300. Both
+   classes are the same element — .arrow is only swapped in for long handles,
+   which get the marquee treatment. */
+#fh5co-aside .arrow_small_username,
+#fh5co-aside .arrow {
+  font-weight: 700;
+}
