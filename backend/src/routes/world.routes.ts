@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { optionalAuth } from '../middleware/auth.js';
 import { Post } from '../models/Post.js';
+import { resolveTaggedAvatars } from '../utils/tagged-avatars.js';
 import { User } from '../models/User.js';
 import { Like } from '../models/Like.js';
 import { Hate } from '../models/Hate.js';
@@ -156,6 +157,8 @@ worldRouter.get(
       { $project: { media: 1, link: 1 } },
     ]);
 
+    const taggedAvatars = await resolveTaggedAvatars(pagePosts);
+
     const items: unknown[] = [];
     pagePosts.forEach((post, index) => {
       const owner = userMap.get(String(post.influencer));
@@ -168,7 +171,7 @@ worldRouter.get(
         likesTotal: post.noOfLikes + (likesMap.get(String(post._id)) ?? 0),
         hatesCount: hatesMap.get(String(post._id)) ?? 0,
         tags: post.tags,
-        taggedProfilePictures: post.taggedProfilePictures,
+        taggedProfilePictures: taggedAvatars[index],
         viewerLiked: likedSet.has(String(post._id)),
         influencer: owner
           ? {

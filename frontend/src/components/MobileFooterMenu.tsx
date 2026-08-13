@@ -104,10 +104,15 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
         </>
       ) : (
         /* Add post, Stream and Mensajes all need an account, and the blade sent
-           guests from each of them to /login. One Login button replaces the three
-           — this is also the bottom-bar login the top-right button defers to on
-           mobile (see .login-btn-top in parity.css). */
-        <div className="footer-btn-login" onClick={registerModal.open} style={{ cursor: 'pointer' }}>
+           guests from each of them to /login. One Login button replaces the three.
+           It carries .login-btn-top — the very control from the top-right corner,
+           same rounded purple and same bold Roboto — because only its position
+           moved. .footer-btn-login just lets the bar collapse it with the rest. */
+        <div
+          className="btn login-btn-top footer-btn-login"
+          onClick={registerModal.open}
+          style={{ borderRadius: 20, cursor: 'pointer' }}
+        >
           <b>Login</b> | <i className="fa fa-power-off" aria-hidden="true"></i>
         </div>
       )}

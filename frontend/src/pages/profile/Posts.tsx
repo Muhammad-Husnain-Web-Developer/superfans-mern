@@ -228,6 +228,11 @@ export function Posts() {
                     <PostItem
                       post={post}
                       locked={!isOwner && !post.visible && !viewerHasAccess}
+                      author={{
+                        usernameUrl: profile.usernameUrl,
+                        profilePicture: profile.profilePicture,
+                        verified: profile.verified,
+                      }}
                       /* The posts-grid blades (user_posts / influencer_posts) have no report
                          control at all — reporting only exists on the feed and the full-screen
                          post viewer. So the grid never shows it. */

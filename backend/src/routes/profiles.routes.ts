@@ -3,6 +3,7 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { ApiError } from '../middleware/errors.js';
 import { User } from '../models/User.js';
 import { Post } from '../models/Post.js';
+import { resolveTaggedAvatars } from '../utils/tagged-avatars.js';
 import { Like } from '../models/Like.js';
 import { Followership } from '../models/Followership.js';
 import { Subscription } from '../models/Subscription.js';
@@ -189,10 +190,11 @@ profilesRouter.get(
     if (!user) throw ApiError.notFound('Profile not found');
 
     const posts = await Post.find({ influencer: user._id }).sort({ mysqlId: -1, createdAt: -1 }).lean();
+    const taggedAvatars = await resolveTaggedAvatars(posts);
 
     res.json({
       success: true,
-      data: posts.map((p) => ({
+      data: posts.map((p, i) => ({
         id: String(p._id),
         imageVideo: p.imageVideo ?? null,
         thumbnail: p.thumbnail ?? null,
@@ -201,7 +203,7 @@ profilesRouter.get(
         tags: p.tags,
         /* the wall shows the tagged handles too (user/index.blade.php:1675),
            and the avatars beside them come from here */
-        taggedProfilePictures: p.taggedProfilePictures,
+        taggedProfilePictures: taggedAvatars[i],
         createdAt: p.createdAt,
       })),
     });

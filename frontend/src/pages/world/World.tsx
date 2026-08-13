@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { FooterLanguageSelector, GuestHeader, InfluencerSearch, LoggedInNav } from '../profile/ProfileSidebar';
 import { VolumeButton } from '../../components/VolumeButton';
 import { useRegisterModal } from '../../components/RegisterModal';
+import { PostHeading } from '../../components/PostHeading';
 import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
@@ -408,34 +409,12 @@ function WorldPostCard({
   const [likesTotal, setLikesTotal] = useState(item.likesTotal ?? item.noOfLikes ?? 0);
   const [heartShow, setHeartShow] = useState(false);
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /* world-page.css animates .feed_posts_heading_marquee once its container
-     carries .is-overflowing, but nothing ever added that class, so the heading
-     never scrolled. Measure the run of text against the 150px slot and let the
-     ones that do not fit scroll, LED-sign style. */
-  const headingRef = useRef<HTMLSpanElement | null>(null);
-  const [headingOverflows, setHeadingOverflows] = useState(false);
   const username = item.influencer?.usernameUrl ?? 'unknown';
   const profilePicture = item.influencer?.profilePicture || 'output-onlinepngtools (2).png';
   const media = item.imageVideo ?? '';
   const taggedUsers = (item.tags ?? []).map((s) => s.trim()).filter(Boolean);
   const taggedPics = item.taggedProfilePictures ?? [];
 
-  useEffect(() => {
-    const run = headingRef.current;
-    const slot = run?.parentElement;
-    if (!run || !slot) return;
-    const measure = () => setHeadingOverflows(run.scrollWidth > slot.clientWidth + 1);
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(slot);
-    /* the avatars land after the first paint and lengthen the run */
-    const avatars = Array.from(run.querySelectorAll('img'));
-    avatars.forEach((img) => img.addEventListener('load', measure));
-    return () => {
-      observer.disconnect();
-      avatars.forEach((img) => img.removeEventListener('load', measure));
-    };
-  }, [username, taggedUsers.length]);
   /* blade: videos only get native controls if the viewer follows the creator (or owns the post). */
   const canControlVideo = !!authUser && item.influencer?.viewerFollowing === true;
 
@@ -488,54 +467,14 @@ function WorldPostCard({
   return (
     <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item" style={{ marginBottom: 20 }}>
       <div className={`animated-heart${heartShow ? ' show' : ''}`} id={`heart-${item.id}`}></div>
-      <p
-        className="feed_posts_heading_p feed-heading-flex"
-        style={{ position: 'relative', top: 25, fontSize: 14, marginBottom: 12 }}
-      >
-        <span className={`feed_posts_heading_left${headingOverflows ? ' is-overflowing' : ''}`}>
-          <span className="feed_posts_heading_marquee" ref={headingRef}>
-            <Link
-              style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
-              to={`/${username}`}
-            >
-              <img
-                className="feed_posts_heading_img"
-                src={assetImage(profilePicture)}
-                alt=""
-                style={{ marginRight: 10, marginBottom: 0 }}
-              />
-              <span>@</span>
-              {username}
-              {item.influencer?.verified && (
-                <img
-                  src={assetImage('verified.png')}
-                  alt="Verified"
-                  width={18}
-                  height={18}
-                  style={{ marginLeft: 5, verticalAlign: 'middle', display: 'inline-block' }}
-                />
-              )}
-            </Link>
-            {taggedUsers.map((tagged, i) =>
-              taggedPics[i] ? (
-                <Link
-                  key={tagged}
-                  style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
-                  to={`/${tagged}`}
-                >
-                  <img
-                    className="feed_posts_heading_img"
-                    src={assetImage(taggedPics[i].trim())}
-                    alt=""
-                    style={{ marginRight: 10, marginBottom: 0 }}
-                  />
-                  <span>@{tagged}</span>
-                </Link>
-              ) : null,
-            )}
-          </span>
-        </span>
-        <span className="feed_posts_heading_right">
+      <PostHeading
+        author={{
+          usernameUrl: username,
+          profilePicture,
+          verified: item.influencer?.verified,
+        }}
+        tagged={taggedUsers.map((name, i) => ({ usernameUrl: name, profilePicture: taggedPics[i]?.trim() || null }))}
+        right={
           <button
             className="report-button-inline report-mobile"
             onClick={(e) => {
@@ -550,8 +489,8 @@ function WorldPostCard({
               style={{ width: 12, height: 12, position: 'relative', bottom: 3, right: 2, display: 'inline-block' }}
             />
           </button>
-        </span>
-      </p>
+        }
+      />
 
       <div className="image-hover-wrapper" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
         {isVideoFile(media) ? (

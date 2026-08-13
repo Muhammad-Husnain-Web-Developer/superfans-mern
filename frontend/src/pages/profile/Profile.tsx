@@ -17,6 +17,8 @@ import { VolumeButton } from '../../components/VolumeButton';
 import { PostReportButton } from '../../components/PostReportButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PageLoader } from '../../components/PageLoader';
+import { PostHeading } from '../../components/PostHeading';
+import { NotFoundPage } from '../errors/ErrorPage';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { localeLogo } from '../auth/AuthShell';
@@ -140,20 +142,25 @@ export function PostItem({
   post,
   locked,
   showReport = false,
+  author,
 }: {
   post: ProfilePost;
   locked: boolean;
   /* Laravel shows the per-post report control on the POSTS grid and the feed, but not on
      the profile WALL/activity view — so it is opt-in. */
   showReport?: boolean;
+  /** whose wall this is — its handle heads every post, as in the world feed */
+  author?: { usernameUrl: string; profilePicture: string | null; verified?: boolean };
 }) {
   const media = post.imageVideo;
   const navigate = useNavigate();
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  /* pair each tag with its avatar by position, keeping only the complete ones */
+  /* pair each tag with its avatar by position. The blade drops a handle whose
+     avatar is missing; the client wants the nickname on every post, so only the
+     name is required and the avatar is optional. */
   const taggedPairs = (post.tags ?? [])
     .map((name, i) => [name.trim(), (post.taggedProfilePictures?.[i] ?? '').trim()] as const)
-    .filter(([name, picture]) => name && picture);
+    .filter(([name]) => name);
   const [heart, setHeart] = useState(false);
   const [likes, setLikes] = useState(post.noOfLikes);
   const frame: React.CSSProperties = {
@@ -186,39 +193,13 @@ export function PostItem({
   return (
     <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item image-hover-wrapper" onClick={onMediaClick} style={{ position: 'relative', cursor: 'pointer' }}>
       <div className={`animated-heart${heart ? ' show' : ''}`} id={`heart-${post.id}`}></div>
-      {/* Tagged handles ride above the media on the wall too, not just in the
-          feeds — user/index.blade.php:1675. The blade drops a <br> instead when
-          a post has none, and only prints a tag that has an avatar with it. */}
-      {taggedPairs.length > 0 ? (
-        <p
-          className="feed_posts_heading_p"
-          style={{ overflow: 'hidden', position: 'relative', width: '70%', height: 55, top: 25, fontSize: 14 }}
-        >
-          <span
-            className="marquee-text"
-            style={{ display: 'inline-block', whiteSpace: 'nowrap', animation: 'scroll-left 10s linear infinite' }}
-          >
-            {taggedPairs.map(([name, picture]) => (
-              <Link
-                key={name}
-                to={`/${name}`}
-                onClick={(e) => e.stopPropagation()}
-                style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
-              >
-                <img
-                  className="feed_posts_heading_img"
-                  src={assetImage(picture)}
-                  alt=""
-                  style={{ marginRight: 10, marginBottom: 0 }}
-                />
-                <span>@{name}</span>
-              </Link>
-            ))}
-          </span>
-        </p>
-      ) : (
-        <br />
-      )}
+      {/* Every post is headed by its author's handle, then anyone tagged in it —
+          the shape the world feed uses. The blade only ever printed the tagged
+          handles here, and dropped the strip entirely when there were none. */}
+      <PostHeading
+        author={author ? { ...author, verified: author.verified } : null}
+        tagged={taggedPairs.map(([usernameUrl, profilePicture]) => ({ usernameUrl, profilePicture }))}
+      />
       {locked || !media ? (
         <img src={assetImage('blue24.png')} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
       ) : isVideoFile(media) ? (
@@ -404,14 +385,9 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   }, [posts]);
 
   if (state === 'loading') return null;
-  if (state === 'notfound') {
-    return (
-      <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
-        <h1 style={{ fontSize: '4em', color: '#da1212' }}>404</h1>
-        <p>Not Found</p>
-      </div>
-    );
-  }
+  /* an unknown handle is Laravel's errors/404 — "la página o perfil de usuario
+     que estabas buscando no ha sido encontrada" names this case exactly */
+  if (state === 'notfound') return <NotFoundPage />;
   if (state === 'suspended' || !profile) {
     return (
       <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
@@ -918,6 +894,11 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                   key={post.id}
                   post={post}
                   locked={profile.role === 'influencer' && !isOwner && !post.visible}
+                  author={{
+                    usernameUrl: profile.usernameUrl,
+                    profilePicture: profile.profilePicture,
+                    verified: profile.verified,
+                  }}
                 />
               ))}
 

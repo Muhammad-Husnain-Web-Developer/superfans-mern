@@ -1,0 +1,84 @@
+/* Standalone error screen. Self-contained on purpose: these pages render when
+   something has gone wrong, so they must not depend on a page stylesheet that
+   may itself have failed to load. Values mirror the site's own controls — the
+   red outline button is the same .btn-primary.btn-outline used on profiles. */
+
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 60px 20px 0;
+  box-sizing: border-box;
+  background: #fff;
+  font-family: Roboto, Arial, sans-serif;
+  color: #333;
+}
+
+.error-page-logo-link {
+  text-decoration: none;
+}
+
+.error-page-logo {
+  width: 8.3em;
+  margin-bottom: 5px;
+}
+
+.error-page-title {
+  margin: 40px 11px 0;
+  font-family: Montserrat, Arial, sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #000;
+}
+
+.error-page-message {
+  margin: 16px 11px 0;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #555;
+  max-width: 640px;
+}
+
+.error-page-back {
+  margin-top: 32px;
+  background: transparent;
+  color: #da1212;
+  border: 2px solid #da1212;
+  border-radius: 0;
+  padding: 8px 20px;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.error-page-back:hover {
+  background: #da1212;
+  color: #fff;
+}
+
+.error-page-rule {
+  width: 100%;
+  margin: 40px 0 0;
+  border: 0;
+  border-top: 1px solid #e6e6e6;
+}
+
+@media (max-width: 600px) {
+  .error-page-title {
+    font-size: 24px;
+  }
+
+  .error-page-message {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .error-page-back {
+    transition: none;
+  }
+}

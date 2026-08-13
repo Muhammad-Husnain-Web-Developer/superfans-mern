@@ -12,6 +12,7 @@ import { BusinessLogin } from './pages/auth/BusinessLogin';
 import { BusinessRegister } from './pages/auth/BusinessRegister';
 import { Logout } from './pages/auth/Logout';
 import { Profile } from './pages/profile/Profile';
+import { NotFoundPage } from './pages/errors/ErrorPage';
 import { Posts } from './pages/profile/Posts';
 import { PostDetail } from './pages/profile/PostDetail';
 import { PostFullscreen } from './pages/profile/PostFullscreen';
@@ -173,6 +174,9 @@ function App() {
 
           {/* Vanity profile URLs — mirrors Laravel's Route::fallback → user_profile */}
           <Route path=":usernameUrl" element={<Profile />} />
+          {/* anything deeper than one segment has no route at all — the blade
+              would have served errors/404 here */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
         </RegisterModalProvider>
       </BrowserRouter>

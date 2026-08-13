@@ -41,11 +41,12 @@
   color: #fff;
 }
 
-/* Phones already carry a login control in the bottom bar (the ⏻ in
-   .fh5co-footer), so the top-right one is a duplicate there. 768px is the width
-   at which that bar becomes the primary nav in style.css. */
+/* Phones carry this button in the bottom bar instead, so the header copy stands
+   down there. Scoped to the header: the bar reuses .login-btn-top so both are
+   literally the same control, and it must stay visible. 768px is the width at
+   which that bar becomes the primary nav in style.css. */
 @media screen and (max-width: 768px) {
-  .login-btn-top {
+  .header_div .login-btn-top {
     display: none;
   }
 }
