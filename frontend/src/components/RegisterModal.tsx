@@ -19,7 +19,7 @@ import { useLayoutPageStyles } from '../components/StandalonePage';
 
 type View = 'choice' | 'creator' | 'fan' | 'login';
 
-const RegisterModalContext = createContext<{ open: () => void } | null>(null);
+const RegisterModalContext = createContext<{ open: () => void; openLogin: () => void } | null>(null);
 
 export function useRegisterModal() {
   const ctx = useContext(RegisterModalContext);
@@ -78,6 +78,14 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
 
   function open() {
     setView('choice');
+    setError(null);
+    setVisible(true);
+  }
+
+  /** Straight to the sign-in form — the bottom bar's Login button asks for this
+      one, not the "create an account" chooser. */
+  function openLogin() {
+    setView('login');
     setError(null);
     setVisible(true);
   }
@@ -535,22 +543,8 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
             onChange={(e) => setPassword(e.target.value)}
           />,
         )}
-        <div className="form-check">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            id="termsCheckboxLogin"
-            checked={terms}
-            onChange={(e) => setTerms(e.target.checked)}
-            required
-          />{' '}
-          <label className="form-check-label" htmlFor="termsCheckboxLogin">
-            I agree to the{' '}
-            <a href="https://superfans.world/terminosdeuso" target="_blank" rel="noreferrer" style={{ color: 'purple' }}>
-              Terms and Conditions
-            </a>
-          </label>
-        </div>
+        {/* the terms checkbox is gone from sign-in at the client's request;
+            registration still asks for it */}
         <button
           type="submit"
           id="sendlogin"
@@ -589,7 +583,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <RegisterModalContext.Provider value={{ open }}>
+    <RegisterModalContext.Provider value={{ open, openLogin }}>
       {children}
       {/* only the two register forms carry the ← back arrow (blade: #login_Modal has none) */}
       {visible && frame(viewContent[view], view === 'creator' || view === 'fan')}

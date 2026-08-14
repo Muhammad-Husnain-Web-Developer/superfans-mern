@@ -609,7 +609,7 @@ input.login-modal-input:focus {
     transition: max-width 0.25s ease;
   }
 
-  .mobile-footer-menu:focus-within .mobile-search-container {
+  .mobile-footer-menu.is-searching .mobile-search-container {
     max-width: 100%;
   }
 
@@ -628,14 +628,14 @@ input.login-modal-input:focus {
       border-width 0.25s ease;
   }
 
-  .mobile-footer-menu:focus-within {
+  .mobile-footer-menu.is-searching {
     gap: 0;
   }
 
-  .mobile-footer-menu:focus-within .footer-btn-square,
-  .mobile-footer-menu:focus-within .footer-btn-stream,
-  .mobile-footer-menu:focus-within .footer-btn-login,
-  .mobile-footer-menu:focus-within .footer-btn-message {
+  .mobile-footer-menu.is-searching .footer-btn-square,
+  .mobile-footer-menu.is-searching .footer-btn-stream,
+  .mobile-footer-menu.is-searching .footer-btn-login,
+  .mobile-footer-menu.is-searching .footer-btn-message {
     max-width: 0;
     min-width: 0;
     padding-left: 0;
@@ -650,6 +650,13 @@ input.login-modal-input:focus {
   .mobile-footer-menu .footer-search-input {
     border-width: 2px !important;
   }
+
+}
+
+@media (max-width: 360px) {
+}
+
+@media (max-width: 320px) {
 }
 
 /* The guest login button keeps the header control's own CSS untouched; the bar
@@ -665,9 +672,18 @@ input.login-modal-input:focus {
     margin-right: 2px;
   }
 
+  /* Match the square buttons on the same line. Height alone would leave the text
+     hugging the top, and flex would swallow the spaces around the "|", so the
+     line-height carries it: height − padding(6+6) − border(1+1). */
+  .mobile-footer-menu .footer-btn-login {
+    height: 40px;
+    line-height: 26px;
+    box-sizing: border-box;
+  }
+
   /* its padding is !important, so collapsing it needs the same weight or a 12px
      stub of the button stays behind while the search expands */
-  .mobile-footer-menu:focus-within .footer-btn-login {
+  .mobile-footer-menu.is-searching .footer-btn-login {
     padding: 0 !important;
     margin-left: 0;
     margin-right: 0;
@@ -691,5 +707,28 @@ input.login-modal-input:focus {
   .mobile-footer-menu .footer-btn-login,
   .mobile-footer-menu .footer-btn-message {
     transition: none;
+  }
+}
+
+/* Restated after the 768px block above so the narrower screens actually win:
+   the login button follows the square buttons down as they shrink. */
+@media (max-width: 480px) {
+  .mobile-footer-menu .footer-btn-login {
+    height: 36px;
+    line-height: 22px;
+  }
+}
+
+@media (max-width: 360px) {
+  .mobile-footer-menu .footer-btn-login {
+    height: 34px;
+    line-height: 20px;
+  }
+}
+
+@media (max-width: 320px) {
+  .mobile-footer-menu .footer-btn-login {
+    height: 32px;
+    line-height: 18px;
   }
 }

@@ -24,6 +24,10 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
      app a guest action raises the register modal, so these do the same */
   const registerModal = useRegisterModal();
   const [query, setQuery] = useState('');
+  /* Only the search field expanding should collapse the bar. :focus-within fired
+     for any focused child, so tapping 🌎 or 🏆 opened the search instead of
+     following the link. */
+  const [searching, setSearching] = useState(false);
   const [hits, setHits] = useState<SearchHit[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -43,7 +47,7 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
   }, [query]);
 
   return (
-    <div className={`mobile-footer-menu${authUser ? '' : ' is-guest'}`}>
+    <div className={`mobile-footer-menu${authUser ? '' : ' is-guest'}${searching ? ' is-searching' : ''}`}>
       <div className="mobile-search-container">
         <input
           type="text"
@@ -52,6 +56,8 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
           autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setSearching(true)}
+          onBlur={() => setSearching(false)}
         />
         <ul className="mobile-suggestions-list" style={{ display: hits.length ? 'block' : 'none' }}>
           {hits.map((h) => (
@@ -110,7 +116,7 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
            moved. .footer-btn-login just lets the bar collapse it with the rest. */
         <div
           className="btn login-btn-top footer-btn-login"
-          onClick={registerModal.open}
+          onClick={registerModal.openLogin}
           style={{ borderRadius: 20, cursor: 'pointer' }}
         >
           <b>Login</b> | <i className="fa fa-power-off" aria-hidden="true"></i>

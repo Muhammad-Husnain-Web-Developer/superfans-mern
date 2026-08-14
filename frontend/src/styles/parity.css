@@ -41,6 +41,20 @@
   color: #fff;
 }
 
+/* main.blade.php:1521 thickens the border to 2px on hover, which grew the button
+   — and with it the whole bottom bar — by 2px every time the pointer touched it.
+   Only the colour changes now. The element selector outranks that rule wherever
+   it loads: the button is an <a> in the header and a <div> in the bar. */
+a.login-btn-top:hover,
+a.login-btn-top:focus,
+a.login-btn-top:active,
+div.login-btn-top:hover,
+div.login-btn-top:focus,
+div.login-btn-top:active {
+  border-width: 1px !important;
+  border-style: solid !important;
+}
+
 /* Phones carry this button in the bottom bar instead, so the header copy stands
    down there. Scoped to the header: the bar reuses .login-btn-top so both are
    literally the same control, and it must stay visible. 768px is the width at
