@@ -1,4 +1,5 @@
 import { useRef, useState, type CSSProperties } from 'react';
+import { playSliderClickSound } from '../utils/clickSounds';
 import '../styles/network-slider.css';
 
 export interface NetworkSlide {
@@ -32,6 +33,9 @@ export function NetworkSlider({
   const current = items[((index % items.length) + items.length) % items.length];
 
   const page = (dir: 'next' | 'prev') => {
+    /* both arrows carry .play-sound2 in every blade that renders this slider,
+       so the sound is part of the control rather than of a caller's opt-in */
+    playSliderClickSound();
     direction.current = dir;
     setIndex((i) => (dir === 'next' ? i + 1 : i - 1));
   };
