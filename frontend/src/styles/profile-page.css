@@ -4,7 +4,12 @@
 .work-item video {
     cursor: pointer;
 }
-    .message-tag:hover {
+/* The blade writes this as plain `.message-tag:hover`, and wins on order: its
+   <style> sits in the page body, after the layout's `.add_post_item:hover`.
+   Here the layout sheet is injected into <head> at runtime, so it lands last
+   instead and painted Cards purple. Naming the element's other class settles it
+   on specificity, which no injection order can flip. */
+.dropdown-item.message-tag:hover {
     color: white !important;
     background: #5cb85c !important;
     border: 2px solid #5cb85c !important;
@@ -146,14 +151,10 @@
 
 
 
-/* ==== MERN parity shim ==== */
-/* The Blade page mounts SimpleBar on the aside (overlay scrollbar). Without it
-   the native scrollbar eats ~17px of the 15% aside width and shifts every
-   sidebar element. Hide the native bar to match SimpleBar's overlay look. */
-#fh5co-aside {
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none;
-}
-#fh5co-aside::-webkit-scrollbar {
-  display: none; /* Chrome/Edge/Safari */
-}
+/* The aside's scrollbar is NOT hidden here.
+   An earlier shim did that, on the reading that the blade mounts SimpleBar over
+   the aside. It does not: main.blade.php:1691 sets data-simplebar only when the
+   browser is an iPhone and strips it everywhere else, so desktop Laravel shows
+   the plain native bar styled by .js-fullheight::-webkit-scrollbar (11px, #777
+   thumb, blueviolet right edge). Those rules are carried in
+   public/page-css/layout-direct-user.css and need the bar to exist. */

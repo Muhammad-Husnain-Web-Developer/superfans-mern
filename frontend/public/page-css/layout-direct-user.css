@@ -1548,27 +1548,27 @@ font-weight: 100 !important;
   font-weight: 700;
 }
 /* ===== Sidebar overflow bar =====
-   The blade styles this with ::-webkit-scrollbar only (grey #777 thumb with a
-   4px blueviolet edge). Chrome now defaults to overlay scrollbars, which ignore
-   that and draw a faint grey sliver instead, so the bar was effectively
-   invisible. scrollbar-color is the standard property overlay scrollbars do
-   honour — same two colours, stated in the modern syntax. */
-#fh5co-aside,
-#fh5co-aside.js-fullheight {
-  scrollbar-width: thin;
-  scrollbar-color: #7500a8 #f1f1f1; /* purple thumb on the grey track */
-}
-
-#fh5co-aside::-webkit-scrollbar {
+   Verbatim from layouts_direct_user/main.blade.php:98 (.js-fullheight): an 11px
+   classic bar, #f1f1f1 track, #777 thumb rounded 20px with a 4px blueviolet
+   edge down its right side.
+   No `scrollbar-color` here: the standard property takes precedence over these
+   ::-webkit- rules in Chrome, and a single-colour thumb is not what the blade
+   draws. Declaring ::-webkit-scrollbar at all is what opts the element out of
+   Chrome's overlay bars, so the blade's own rules are enough. */
+#fh5co-aside::-webkit-scrollbar,
+#fh5co-aside.js-fullheight::-webkit-scrollbar {
   width: 11px;
 }
 
-#fh5co-aside::-webkit-scrollbar-track {
+#fh5co-aside::-webkit-scrollbar-track,
+#fh5co-aside.js-fullheight::-webkit-scrollbar-track {
   background: #f1f1f1;
 }
 
-#fh5co-aside::-webkit-scrollbar-thumb {
+#fh5co-aside::-webkit-scrollbar-thumb,
+#fh5co-aside.js-fullheight::-webkit-scrollbar-thumb {
   background-color: #777;
   border-radius: 20px;
   border-right: 4px solid blueviolet;
+  height: 11px !important;
 }
