@@ -11,6 +11,7 @@ import { WorldSidebar } from './World';
 import '../../styles/world-page.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { ControlPanelHost } from '../profile/ControlPanelHost';
+import { AddPostHost } from '../profile/AddPostHost';
 
 interface InfluencerCard {
   id: string;
@@ -28,6 +29,7 @@ export function Influencers() {
   useLayoutPageStyles();
   const { t: tNav } = useTranslation('nav');
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
+  const [addPostOpen, setAddPostOpen] = useState(false);
   const [influencers, setInfluencers] = useState<InfluencerCard[]>([]);
 
   useEffect(() => {
@@ -45,8 +47,13 @@ export function Influencers() {
       <MobileFooterMenu />
 
       <GuestHeader usernameUrl="" />
-      <WorldSidebar onControlPanel={() => setControlPanelOpen(true)} section={tNav('wall', { defaultValue: 'Wall' })} />
+      <WorldSidebar
+        onControlPanel={() => setControlPanelOpen(true)}
+        onAddPost={() => setAddPostOpen(true)}
+        section={tNav('wall', { defaultValue: 'Wall' })}
+      />
       <ControlPanelHost open={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
+      <AddPostHost open={addPostOpen} onClose={() => setAddPostOpen(false)} />
 
       <div id="fh5co-main">
         <div className="fh5co-narrow-content">

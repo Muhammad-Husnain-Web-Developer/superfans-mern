@@ -22,6 +22,7 @@ import '../../styles/world-page.css';
 import '../../styles/report-menu.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { ControlPanelHost } from '../profile/ControlPanelHost';
+import { AddPostHost } from '../profile/AddPostHost';
 
 /* The hardcoded network slider of world.blade.php (11 items, per-item icon styles) */
 const WORLD_NETWORKS: { name: string; href: string; img: string }[] = [
@@ -40,10 +41,12 @@ const WORLD_NETWORKS: { name: string; href: string; img: string }[] = [
 
 export function WorldSidebar({
   onControlPanel,
+  onAddPost,
   section,
   activeNav = 'world',
 }: {
   onControlPanel?: () => void;
+  onAddPost?: () => void;
   section?: string;
   activeNav?: 'world' | 'feed' | 'wall' | 'posts';
 } = {}) {
@@ -198,9 +201,18 @@ export function WorldSidebar({
             <hr style={{ marginBottom: 20, marginTop: 10 }} />
 
             {authUser ? (
-              /* user/world.blade.php L1492-1527: the logged-in nav, whose collapse
-                 here carries only the control panel */
-              <LoggedInNav active={activeNav} hrMarginTop={-17} onControlPanel={onControlPanel} />
+              /* user/world.blade.php:1492 — the logged-in nav. Its collapse carries
+                 all three entries: the control panel at :1524 plus add post at
+                 :1548 and messages at :1554, which sit after the {{-- --}} comment
+                 closes and so render too. */
+              <LoggedInNav
+                active={activeNav}
+                hrMarginTop={-17}
+                showAddPost
+                showMessages
+                onAddPost={onAddPost}
+                onControlPanel={onControlPanel}
+              />
             ) : (
               /* world.blade.php:1492 marks this item fh5co-active on the world
                  page — black text plus the permanently drawn red rule. The
@@ -616,6 +628,7 @@ export function World() {
   const { t } = useTranslation('content');
   const { t: tReport } = useTranslation('report');
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
+  const [addPostOpen, setAddPostOpen] = useState(false);
   const [items, setItems] = useState<WorldItem[]>([]);
   /* come back from the viewer beside the post that was opened, not at the top */
   useScrollMemory(items.length > 0);
@@ -678,8 +691,12 @@ export function World() {
       <MobileFooterMenu />
 
       <GuestHeader usernameUrl="" />
-      <WorldSidebar onControlPanel={() => setControlPanelOpen(true)} />
+      <WorldSidebar
+        onControlPanel={() => setControlPanelOpen(true)}
+        onAddPost={() => setAddPostOpen(true)}
+      />
       <ControlPanelHost open={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
+      <AddPostHost open={addPostOpen} onClose={() => setAddPostOpen(false)} />
 
       <div id="fh5co-main">
         <div className="fh5co-narrow-content">

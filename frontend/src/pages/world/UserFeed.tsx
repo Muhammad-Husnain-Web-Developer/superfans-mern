@@ -14,6 +14,7 @@ import { WorldSidebar } from './World';
 import '../../styles/world-page.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { ControlPanelHost } from '../profile/ControlPanelHost';
+import { AddPostHost } from '../profile/AddPostHost';
 
 /**
  * Feed — port of user/feed.blade.php. A centred header (avatar · name · @user · Subscribe ·
@@ -26,6 +27,7 @@ export function UserFeed() {
   const { t } = useTranslation('content');
   const { user: authUser, loading } = useAuth();
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
+  const [addPostOpen, setAddPostOpen] = useState(false);
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [ready, setReady] = useState(false);
 
@@ -56,8 +58,14 @@ export function UserFeed() {
       <MobileFooterMenu />
 
       <GuestHeader usernameUrl="" />
-      <WorldSidebar onControlPanel={() => setControlPanelOpen(true)} section={t('my_feed', { defaultValue: 'MY FEED' })} activeNav="feed" />
+      <WorldSidebar
+        onControlPanel={() => setControlPanelOpen(true)}
+        onAddPost={() => setAddPostOpen(true)}
+        section={t('my_feed', { defaultValue: 'MY FEED' })}
+        activeNav="feed"
+      />
       <ControlPanelHost open={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
+      <AddPostHost open={addPostOpen} onClose={() => setAddPostOpen(false)} />
 
       <div id="fh5co-main">
         <div className="fh5co-narrow-content">

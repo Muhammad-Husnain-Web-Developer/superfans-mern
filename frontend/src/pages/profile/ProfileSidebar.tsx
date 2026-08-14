@@ -271,8 +271,15 @@ const MONO_FONT =
  * collapse. Shared by every page that renders the layout chrome so the copies cannot
  * drift; the world page used to show only the guest "World" link.
  *
- * The collapse contents differ per blade: the profile page offers Add post + Control
- * panel + Messages, the world page only Control panel.
+ * Every blade puts the same three entries in the collapse — Add post, Control panel
+ * and Messages. The world/feed pages looked as though they carried only the control
+ * panel, because in user/world.blade.php:1524 it is the one entry that sits outside
+ * the {{-- --}} comment; the comment closes at :1546, so the two below it render as
+ * well.
+ *
+ * Their order follows the role, as the blades write it: a fan reads Control panel
+ * first (user/world.blade.php:1524, user/feed.blade.php:797), a creator reads Add
+ * post first (influencer/world.blade.php:1441).
  */
 export function LoggedInNav({
   active,
@@ -295,6 +302,7 @@ export function LoggedInNav({
   if (!authUser) return null;
 
   const base = authUser.role === 'influencer' ? '/influencer' : '/user';
+  const addPostFirst = authUser.role === 'influencer';
 
   /** footer.blade.php L4589: on mobile, close the offcanvas first, open 100ms later */
   function handleControlPanel() {
@@ -349,19 +357,27 @@ export function LoggedInNav({
               border: 0,
             }}
           >
-            {showAddPost && (
+            {addPostFirst && showAddPost && (
               <p className="dropdown-item add_post_item" style={COLLAPSE_ITEM} onClick={onAddPost}>
                 <i className="fa fa-plus"></i> {t('add_post', { defaultValue: 'Add post' })}
               </p>
             )}
+            {/* the blade leaves this one without a margin-top of its own; the
+                layout's `.control_panel_item { margin-top: 10px !important }`
+                supplies it either way, so the spacing holds in both orders */}
             <p
               className="dropdown-item control_panel_item"
-              style={{ ...COLLAPSE_ITEM, marginTop: showAddPost ? 0 : 10 }}
+              style={COLLAPSE_ITEM}
               onClick={handleControlPanel}
             >
               <i className="far fa-user-circle"></i>{' '}
               {t('control_panel', { defaultValue: 'Control Panel' })}
             </p>
+            {!addPostFirst && showAddPost && (
+              <p className="dropdown-item add_post_item" style={COLLAPSE_ITEM} onClick={onAddPost}>
+                <i className="fa fa-plus"></i> {t('add_post', { defaultValue: 'Add post' })}
+              </p>
+            )}
             {showMessages && (
               <p
                 className="dropdown-item add_post_item message-tag"
