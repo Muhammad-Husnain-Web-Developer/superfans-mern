@@ -59,7 +59,7 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
           onFocus={() => setSearching(true)}
           onBlur={() => setSearching(false)}
         />
-        <ul className="mobile-suggestions-list" style={{ display: hits.length ? 'block' : 'none' }}>
+        <ul className="mobile-suggestions-list" style={{ display: hits.length ? 'flex' : 'none' }}>
           {hits.map((h) => (
             <li
               key={h.name}

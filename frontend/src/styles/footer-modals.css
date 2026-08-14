@@ -736,3 +736,41 @@ input.login-modal-input:focus {
     line-height: 18px;
   }
 }
+
+/* ===== Bottom-bar suggestions =====
+   The search sits at the bottom of the screen, so the list reads upwards from
+   it: column-reverse puts the first match against the input and starts the
+   scroll there. It is anchored to the bar itself rather than the search box, so
+   it spans the full width and touches the bar with no gap, and it keeps its
+   scroll to itself instead of dragging the page along. */
+@media (max-width: 768px) {
+  .mobile-footer-menu .mobile-search-container {
+    /* static, so the list below resolves against the fixed bar */
+    position: static;
+  }
+
+  .mobile-footer-menu .mobile-suggestions-list {
+    position: absolute !important;
+    bottom: 100% !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+    flex-direction: column-reverse;
+    border-radius: 0 !important;
+    border-left: 0;
+    border-right: 0;
+    border-bottom: 0;
+    max-height: 50vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .mobile-footer-menu .mobile-suggestions-list li:last-child {
+    border-bottom: 1px solid #eee;
+  }
+
+  .mobile-footer-menu .mobile-suggestions-list li:first-child {
+    border-bottom: none;
+  }
+}
