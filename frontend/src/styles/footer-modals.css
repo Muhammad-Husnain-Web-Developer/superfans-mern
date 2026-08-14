@@ -670,6 +670,10 @@ input.login-modal-input:focus {
     white-space: nowrap;
     margin-left: 2px;
     margin-right: 2px;
+    /* .btn brings a 4px bottom margin, and the row centres each item's margin
+       box — so the button rode 2px above the search field and the squares. */
+    margin-bottom: 0;
+    margin-top: 0;
   }
 
   /* Match the square buttons on the same line. Height alone would leave the text
