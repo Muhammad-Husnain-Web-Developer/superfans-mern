@@ -20,7 +20,8 @@
             font-weight: 300;
         }
         
-    .message-tag:hover {
+    /* specificity, not order — see the same rule in profile-page.css */
+    .dropdown-item.message-tag:hover {
     color: white !important;
     background: #5cb85c !important;
     border: 2px solid #5cb85c !important;
