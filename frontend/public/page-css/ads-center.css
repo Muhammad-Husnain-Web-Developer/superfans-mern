@@ -1,3 +1,8 @@
+/* The face for the "SUPER ADS CENTER" subtitle below. Every ads blade links it
+   in the head (ads/index.blade.php:23); imported here so the pages that load
+   this sheet get it without a change of their own. */
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=BBH+Sans+Bogle&display=swap');
+
 body { background: #f9f9f9; font-family: Arial, sans-serif; margin: 0; }
 
 label { margin-right: 10px; }
@@ -143,10 +148,12 @@ input[type="range"]::-webkit-slider-thumb {
   border-right: 4px solid rgba(0,0,0,0.65);
   position: fixed; top: 0; bottom: 0; left: 0; width: 256px; overflow-y: auto; z-index: 50;
 }
-/* The "SUPER ADS CENTER" subtitle goes back to the old typography the client
-   asked for — Impact, still sitting commented out above the Anton line that
-   replaced it in ads/sidebar.blade.php:65. */
-.ads-sidebar h6 { margin: 1px 0 15px; text-align: center; font-size: 17px; color: #333; font-weight: 550; letter-spacing: -0.3px; font-family: impact, Arial, sans-serif !important; font-style: normal; }
+/* The "SUPER ADS CENTER" subtitle, set in Anton as ads/sidebar.blade.php:66 has
+   it. It had been moved to the Impact line commented out just above that one;
+   the client has asked for Anton back.
+   No letter-spacing: the blade writes `-0.3` with no unit (sidebar.blade.php:62),
+   which is invalid, so Laravel renders this at the default spacing. */
+.ads-sidebar h6 { margin: 1px 0 15px; text-align: center; font-size: 17px; color: #333; font-weight: 550; font-family: "Anton", sans-serif !important; font-style: normal; }
 .ads-sidebar .side_logo { display: block; text-align: center; }
 .ads-sidebar .upper-links a, .ads-sidebar .footer-links a {
   display: block; color: #777; padding: 12px 45px; text-decoration: none;

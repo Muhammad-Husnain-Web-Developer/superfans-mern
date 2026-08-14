@@ -5,6 +5,7 @@ import { isAxiosError } from 'axios';
 import { register as apiRegister, type RegisterInput } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import { AuthShell, localeLogo } from './AuthShell';
+import { useStandalonePageStyles } from '../../components/StandalonePage';
 import { CropModal } from './CropModal';
 import { CustomFile, readAndValidateImage } from './RegisterForm';
 
@@ -24,6 +25,11 @@ function Swal({ message, onClose }: { message: string; onClose: () => void }) {
 
 /** Pixel parity with resources/views/auth/business_register.blade.php */
 export function BusinessRegister() {
+  /* business_register.blade.php:24 — same Anton link as the business login page */
+  useStandalonePageStyles(
+    ['https://fonts.googleapis.com/css2?family=Anton&family=BBH+Sans+Bogle&display=swap'],
+    false,
+  );
   const { t, i18n } = useTranslation('auth');
   const { setUser } = useAuth();
   const navigate = useNavigate();
@@ -105,7 +111,8 @@ export function BusinessRegister() {
             alt="Superfans World"
           />
         </a>
-        <h6 style={{ fontFamily: '"Anton", sans-serif', fontWeight: 550, fontSize: 19, color: '#333', letterSpacing: '-0.3px', marginBottom: 21 }}>
+        {/* unitless `letter-spacing: -0.3` in the blade — see BusinessLogin */}
+        <h6 style={{ fontFamily: '"Anton", sans-serif', fontWeight: 550, fontSize: 19, color: '#333', marginBottom: 21 }}>
           SUPER ADS CENTER
         </h6>
       </div>

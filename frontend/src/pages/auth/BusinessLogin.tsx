@@ -5,10 +5,19 @@ import { isAxiosError } from 'axios';
 import { login } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import { AuthShell, localeLogo } from './AuthShell';
+import { useStandalonePageStyles } from '../../components/StandalonePage';
 import { postLoginPath } from '../../utils/postLoginRedirect';
 
 /** Pixel parity with resources/views/auth/business_login.blade.php (grey business button). */
 export function BusinessLogin() {
+  /* business_login.blade.php:22 links Anton for the subtitle below. The two
+     business pages are the only auth blades that do — login and register carry
+     no such link — so it belongs here rather than in AuthShell. The layout
+     sheets are left alone. */
+  useStandalonePageStyles(
+    ['https://fonts.googleapis.com/css2?family=Anton&family=BBH+Sans+Bogle&display=swap'],
+    false,
+  );
   const { t, i18n } = useTranslation('auth');
   const { setUser } = useAuth();
   const navigate = useNavigate();
@@ -48,7 +57,9 @@ export function BusinessLogin() {
               alt="Superfans World"
             />
           </a>
-          <h6 style={{ fontFamily: '"Anton", sans-serif', fontWeight: 550, fontSize: 19, color: '#333', letterSpacing: '-0.3px', marginBottom: 21 }}>
+          {/* no letterSpacing: the blade's `letter-spacing: -0.3` has no unit and
+              is invalid, so Laravel renders this at the default spacing */}
+          <h6 style={{ fontFamily: '"Anton", sans-serif', fontWeight: 550, fontSize: 19, color: '#333', marginBottom: 21 }}>
             SUPER ADS CENTER
           </h6>
         </div>
