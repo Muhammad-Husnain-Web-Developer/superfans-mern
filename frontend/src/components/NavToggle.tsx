@@ -49,49 +49,136 @@ export function NavToggle() {
     };
   }, []);
 
-  /* Drag anywhere on the page to work the menu, as main.blade.php:1727 does:
-     below 760px, with no modal open, a horizontal move of more than 100px opens
-     the menu going right and closes it going left. The listeners sit on <body>,
-     which is what the blade watches, and screenX is the coordinate it reads.
+  /* Drag the page to work the menu, below 760px, as main.blade.php:1727 does.
+     The blade only reads the finger where it is lifted and asks for 100px of
+     travel before it acts on anything, which is the "you have to move a lot of
+     finger" the client is describing: a short or quick drag does nothing at
+     all, and nothing moves under the finger to say the menu is coming.
 
-     This used to take its numbers from assets/js/swipe.js -- 30px past a 100ms
-     timer, and only from the leftmost 60px -- but no blade ever loads that file.
-     Starting the drag inside a 60px strip is the movement the client is
-     describing; without it the longer 100px reaches far more of the screen. */
+     The panel now follows the finger from the first pixels and is released on
+     whichever comes first -- a fifth of its width, or a flick. Nothing here is
+     a threshold to cross before the menu reacts. */
   useEffect(() => {
-    const MIN_DISTANCE = 100;
-    let touchStartX = 0;
+    const PANEL = 270; // style.css:107 — the sidebar's width, and its travel
+    const INTENT = 6; // px of horizontal lead before the drag is ours
+    const RELEASE = PANEL * 0.1; // 27px — a tenth of the way is a clear intent
+    const FLICK = 0.2; // px/ms — a quick drag carries on its own, however short
 
-    const onTouchStart = (e: TouchEvent) => {
-      const touch = e.changedTouches[0];
-      if (touch) touchStartX = touch.screenX;
+    let startX = 0;
+    let startY = 0;
+    let startedAt = 0;
+    let lastX = 0;
+    let lastAt = 0;
+    let dragging = false;
+    let decided = false;
+    let openAtStart = false;
+    let panels: HTMLElement[] = [];
+
+    const held = () =>
+      [
+        document.getElementById('fh5co-aside'),
+        document.getElementById('fh5co-main'),
+        document.querySelector<HTMLElement>('.fh5co-nav-toggle'),
+      ].filter((el): el is HTMLElement => el !== null);
+
+    /** Slide everything to `shift` px along its travel, 0…PANEL. */
+    const paint = (shift: number) => {
+      for (const el of panels) {
+        const base = el.id === 'fh5co-aside' ? -PANEL : 0;
+        el.style.transition = 'none';
+        el.style.transform = `translateX(${base + shift}px)`;
+      }
     };
 
-    const onTouchEnd = (e: TouchEvent) => {
-      const touch = e.changedTouches[0];
+    /** Hand the elements back to the stylesheet, which animates the rest. */
+    const release = (open: boolean) => {
+      for (const el of panels) {
+        el.style.transition = '';
+        el.style.transform = '';
+      }
+      document.body.classList.toggle('offcanvas', open);
+      setActive(open);
+      panels = [];
+    };
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0];
       if (!touch) return;
       if (window.innerWidth >= 760) return;
       /* a swipe over an open modal belongs to the modal, not to the menu */
       if (document.querySelector('.modal.in')) return;
+      startX = lastX = touch.clientX;
+      startY = touch.clientY;
+      startedAt = lastAt = Date.now();
+      openAtStart = document.body.classList.contains('offcanvas');
+      dragging = true;
+      decided = false;
+    };
 
-      const dx = touch.screenX - touchStartX;
-      if (Math.abs(dx) <= MIN_DISTANCE) return;
+    const onTouchMove = (e: TouchEvent) => {
+      if (!dragging) return;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
 
-      const isOpen = document.body.classList.contains('offcanvas');
-      if (dx > 0 && !isOpen) {
-        document.body.classList.add('offcanvas');
-        setActive(true);
-      } else if (dx < 0 && isOpen) {
-        document.body.classList.remove('offcanvas');
-        setActive(false);
+      if (!decided) {
+        /* wait until the finger has said which way it is going, so a scroll
+           down the page is never mistaken for a reach at the menu */
+        if (Math.abs(dy) > Math.abs(dx)) {
+          dragging = false;
+          return;
+        }
+        if (Math.abs(dx) < INTENT) return;
+        if (dx > 0 === openAtStart) {
+          dragging = false; // pushing further open, or further closed
+          return;
+        }
+        decided = true;
+        panels = held();
       }
+
+      lastX = touch.clientX;
+      lastAt = Date.now();
+      const shift = openAtStart ? PANEL + dx : dx;
+      paint(Math.max(0, Math.min(PANEL, shift)));
+      /* the page must not scroll sideways under a drag we have taken over */
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!dragging) return;
+      dragging = false;
+      if (!decided) return;
+
+      const touch = e.changedTouches[0];
+      const endX = touch ? touch.clientX : lastX;
+      const dx = endX - startX;
+      const elapsed = Math.max(1, Date.now() - startedAt);
+      const speed = Math.abs(dx) / elapsed;
+      const recent = Math.abs(endX - lastX) / Math.max(1, Date.now() - lastAt);
+
+      const far = Math.abs(dx) >= RELEASE;
+      const flicked = speed >= FLICK || recent >= FLICK;
+      const carries = far || flicked;
+
+      release(openAtStart ? !carries : carries);
+    };
+
+    const onTouchCancel = () => {
+      if (decided) release(openAtStart);
+      dragging = false;
     };
 
     document.body.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.body.addEventListener('touchmove', onTouchMove, { passive: false });
     document.body.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.body.addEventListener('touchcancel', onTouchCancel, { passive: true });
     return () => {
       document.body.removeEventListener('touchstart', onTouchStart);
+      document.body.removeEventListener('touchmove', onTouchMove);
       document.body.removeEventListener('touchend', onTouchEnd);
+      document.body.removeEventListener('touchcancel', onTouchCancel);
     };
   }, []);
 
