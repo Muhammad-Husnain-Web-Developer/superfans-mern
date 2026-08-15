@@ -47,7 +47,7 @@ export function BusinessLogin() {
   }
 
   return (
-    <AuthShell variant="login">
+    <AuthShell variant="login" swAdsLoader>
       <form onSubmit={(e) => void onSubmit(e)}>
         <div className="auth-logo-wrap">
           <a href="https://superfans.world/">

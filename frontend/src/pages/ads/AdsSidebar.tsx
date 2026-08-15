@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
+import { SwAdsLoader } from '../../components/SwAdsLoader';
 
 /** Fixed left nav for the Super-Ads area — port of resources/views/ads/sidebar.blade.php. */
 export function AdsSidebar({ active }: { active?: 'center' | 'my-ads' | 'clients' | 'info' }) {
@@ -10,6 +11,8 @@ export function AdsSidebar({ active }: { active?: 'center' | 'my-ads' | 'clients
 
   return (
     <div className="ads-sidebar">
+      {/* the blade puts the loading screen at the head of the sidebar partial */}
+      <SwAdsLoader />
       <center>
         <Link className="side_logo" to="/super-ads">
           <img src="/assets/images/Superworld-13.svg" alt="Super Ads" style={{ width: '59%' }} />

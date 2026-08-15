@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import './auth.css';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
+import { SwAdsLoader } from '../../components/SwAdsLoader';
 
 /** Locale → logo mapping from the Blade templates (fallback: English). */
 const LOGOS: Record<string, string> = {
@@ -107,6 +108,8 @@ interface AuthShellProps {
   variant?: 'login' | 'register';
   /** long registration forms: row grows with content instead of clipping at 90vh */
   tall?: boolean;
+  /** the Super-Ads business pages load behind the SW ADS icon */
+  swAdsLoader?: boolean;
 }
 
 /**
@@ -114,7 +117,12 @@ interface AuthShellProps {
  * white page, centered borderless 30px-radius card at 90vh, loader overlay,
  * flag dropdown bottom-right, bounty-hunter mail link (login only).
  */
-export function AuthShell({ children, variant = 'login', tall = false }: AuthShellProps) {
+export function AuthShell({
+  children,
+  variant = 'login',
+  tall = false,
+  swAdsLoader = false,
+}: AuthShellProps) {
   /* The auth blades are standalone: no @extends, Bootstrap 4 from the CDN. Without
      this the local Bootstrap 3 keeps applying (it sets html { font-size: 10px },
      which halves every rem on the page). */
@@ -122,7 +130,10 @@ export function AuthShell({ children, variant = 'login', tall = false }: AuthShe
 
   return (
     <div className={`auth-page${variant === 'register' ? ' auth-page--register' : ''}`}>
-      <PageLoader />
+      {/* the two Super-Ads business pages load behind the SW ADS icon instead
+          (client request); every other page that shares this shell keeps the
+          Superworld logo the blades show */}
+      {swAdsLoader ? <SwAdsLoader /> : <PageLoader />}
       {variant === 'login' && (
         <div className="cazarrecompensas">
           <span>

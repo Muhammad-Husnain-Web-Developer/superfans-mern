@@ -142,6 +142,9 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .cancel-btn:hover { background: #b51628; border-color: #b51628; }
 
+/* The SW ADS loading screen lives in components/sw-ads-loader.css, shared with
+   the business auth pages. */
+
 /* ads sidebar */
 .ads-sidebar {
   background: #fff; color: #000; padding-top: 20px;

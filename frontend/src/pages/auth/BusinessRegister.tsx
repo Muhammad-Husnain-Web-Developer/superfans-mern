@@ -90,7 +90,7 @@ export function BusinessRegister() {
   }
 
   return (
-    <AuthShell variant="register" tall>
+    <AuthShell variant="register" tall swAdsLoader>
       {swal && <Swal message={swal} onClose={() => setSwal(null)} />}
       {cropSrc && (
         <CropModal

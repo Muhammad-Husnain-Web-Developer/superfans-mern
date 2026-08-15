@@ -1,0 +1,31 @@
+/* SW ADS loading screen — values taken from ads/sidebar.blade.php:5-17.
+   The icon is revealed from its top edge downwards, then the sheet fades. */
+@keyframes revealTopToBottom {
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0% 0); }
+}
+
+.sw-ads-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999999;
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+.sw-ads-loader.is-faded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sw-ads-loader img {
+  width: 40%;
+  animation: revealTopToBottom 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
