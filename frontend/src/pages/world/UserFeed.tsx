@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchFeed, type FeedPost } from '../../api/profiles';
 import { assetImage, isVideoFile, formatNumber, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
+import { rememberScroll, useScrollMemory } from '../../utils/useScrollMemory';
 import { api } from '../../api/client';
 import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
@@ -30,6 +31,9 @@ export function UserFeed() {
   const [addPostOpen, setAddPostOpen] = useState(false);
   const [posts, setPosts] = useState<FeedPost[]>([]);
   const [ready, setReady] = useState(false);
+  /* come back from the viewer beside the post that was opened, as the wall and
+     the world feed do */
+  useScrollMemory(ready && posts.length > 0);
 
   useEffect(() => {
     document.title = 'Superfans | Feed';
@@ -134,6 +138,9 @@ function FeedCard({ post }: { post: FeedPost }) {
         .then((r) => setViews(r.data.data.likesTotal))
         .catch(() => undefined);
     } else {
+      /* noted in the click itself: once the double-click window has closed the
+         page is laid out for the viewer and the position reads 0 */
+      rememberScroll(); // so closing the viewer returns to this row
       clickTimer.current = setTimeout(() => {
         clickTimer.current = null;
         navigate(`/user/post_detail/${post.id}`);
@@ -149,7 +156,7 @@ function FeedCard({ post }: { post: FeedPost }) {
         <span style={{ display: 'inline-block', whiteSpace: 'nowrap', animation: 'feedScrollLeft 10s linear infinite' }}>
           <a
             href={`/${author.usernameUrl ?? ''}`}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (author.usernameUrl) navigate(`/${author.usernameUrl}`); }}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); rememberScroll(); if (author.usernameUrl) navigate(`/${author.usernameUrl}`); }}
             style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10, textDecoration: 'none' }}
           >
             <img className="feed_posts_heading_img" src={author.profilePicture ? assetImage(author.profilePicture) : assetImage('output-onlinepngtools (2).png')} alt="" />
@@ -163,7 +170,7 @@ function FeedCard({ post }: { post: FeedPost }) {
               <a
                 key={tag}
                 href={`/${tag.trim()}`}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); navigate(`/${tag.trim()}`); }}
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); rememberScroll(); navigate(`/${tag.trim()}`); }}
                 style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10, textDecoration: 'none' }}
               >
                 <img className="feed_posts_heading_img" src={assetImage(pic.trim())} alt="" />
@@ -177,7 +184,7 @@ function FeedCard({ post }: { post: FeedPost }) {
       <p
         className="feed_posts_heading_p feed_posts_heading_pi"
         style={{ cursor: 'pointer', marginBottom: 12 }}
-        onClick={(e) => { e.stopPropagation(); if (author.usernameUrl) navigate(`/${author.usernameUrl}`); }}
+        onClick={(e) => { e.stopPropagation(); rememberScroll(); if (author.usernameUrl) navigate(`/${author.usernameUrl}`); }}
       >
         <img className="feed_posts_heading_img" src={author.profilePicture ? assetImage(author.profilePicture) : assetImage('output-onlinepngtools (2).png')} alt="" />
         <span>@</span>{author.usernameUrl}

@@ -19,7 +19,7 @@ import { PostReportButton } from '../../components/PostReportButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PageLoader } from '../../components/PageLoader';
 import { PostHeading } from '../../components/PostHeading';
-import { rememberScroll } from '../../utils/useScrollMemory';
+import { rememberScroll, useScrollMemory } from '../../utils/useScrollMemory';
 import { NotFoundPage } from '../errors/ErrorPage';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
@@ -190,9 +190,12 @@ export function PostItem({
         .then((r) => setLikes(r.data.data.likesTotal))
         .catch(() => undefined);
     } else {
+      /* noted in the click itself, not inside the timer: by the time the
+         double-click window closes the page has been laid out for the viewer
+         and the position reads 0 */
+      rememberScroll(); // so closing the viewer returns to this row
       clickTimer.current = setTimeout(() => {
         clickTimer.current = null;
-        rememberScroll(); // so closing the viewer returns to this row
         navigate(`/user/post_detail/${post.id}`);
       }, 350);
     }
@@ -262,6 +265,9 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [state, setState] = useState<'loading' | 'ok' | 'notfound' | 'suspended'>('loading');
+  /* the wall already recorded where it was when a post was opened; without this
+     it never played the position back, and every return started at the top */
+  useScrollMemory(state === 'ok' && posts.length > 0);
   const [reportOpen, setReportOpen] = useState(false);
   const [addPostOpen, setAddPostOpen] = useState(false);
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
