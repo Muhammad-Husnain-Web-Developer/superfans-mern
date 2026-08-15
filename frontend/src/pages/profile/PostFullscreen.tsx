@@ -356,8 +356,18 @@ export function PostFullscreen() {
         .post-fs-author{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1;gap:2px}
         .post-fs-nickname{color:#fff;font-weight:700;font-size:17px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .post-fs-date{color:#fff;font-size:12px;line-height:1.1;opacity:.85}
-        .post-fs-follow-btn{background:#c9c9c9;color:#1a1a1a;border:none;padding:11px 18px;border-radius:4px;font-size:15px;font-weight:700;letter-spacing:.5px;cursor:pointer;white-space:nowrap}
-        .post-fs-follow-btn:hover{background:#dcdcdc;color:#1a1a1a}
+        /* dressed as the @nickname tag that sits above every post
+           (.feed_posts_heading_p): darkgray ground, black text, the same
+           lightgray edge that is thinner along the bottom, and Consolas */
+        .post-fs-follow-btn{background:#a9a9a9;color:#000;border:7px solid #d3d3d3;border-radius:0;padding:10px;font:700 14px Consolas,Menlo,Monaco,monospace;white-space:nowrap;flex-shrink:0;cursor:pointer}
+        .post-fs-authorlink{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;min-width:0;flex:1}
+        /* A phone's bar is narrow enough that the name and the button end up
+           side by side whatever this does. A desktop's is not: the author link
+           was taking all the free width and shoving the button against the far
+           edge, half a screen away from the name it belongs to. */
+        @media (min-width: 769px){
+          .post-fs-authorlink{flex:0 1 auto}
+        }
         .post-fs-rightbar{position:absolute;right:0;bottom:96px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 12px;z-index:10}
         .post-fs-heart{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px}
         .post-fs-heart svg{width:32px;height:32px;display:block}
@@ -507,7 +517,7 @@ export function PostFullscreen() {
         <a
           href={`/${author?.usernameUrl ?? ''}`}
           onClick={(e) => { e.preventDefault(); if (author?.usernameUrl) navigate(`/${author.usernameUrl}`); }}
-          style={{ display: 'flex', alignItems: 'center', gap: 12, textDecoration: 'none', color: 'inherit', flex: 1, minWidth: 0 }}
+          className="post-fs-authorlink"
         >
           <img
             className="post-fs-avatar"
@@ -522,7 +532,13 @@ export function PostFullscreen() {
           </span>
         </a>
         {authUser && !isOwner && !following && (
-          <button type="button" className="post-fs-follow-btn" onClick={follow}>FOLLOW +</button>
+          <button
+            type="button"
+            className="post-fs-follow-btn"
+            onClick={follow}
+          >
+            FOLLOW +
+          </button>
         )}
       </div>
 
