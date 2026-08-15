@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { markFeedReturn } from '../utils/feedMemory';
+import { rememberScroll } from '../utils/useScrollMemory';
 import { assetImage } from '../utils/format';
 import '../styles/post-heading.css';
 
@@ -61,7 +63,15 @@ export function PostHeading({
             <Link
               key={h.usernameUrl}
               to={`/${h.usernameUrl}`}
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                /* the client asks for the world feed to be waiting unchanged if
+                   the reader opens a creator from it and comes back. Marks the
+                   listing being left, whichever one it is; only that listing
+                   ever reads its own mark. */
+                rememberScroll();
+                markFeedReturn();
+              }}
               style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
             >
               {h.profilePicture && (

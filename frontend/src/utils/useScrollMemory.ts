@@ -36,17 +36,36 @@ export function useScrollMemory(ready: boolean): void {
   const [target] = useState(() => Number(sessionStorage.getItem(key) ?? 0));
   const done = useRef(navigationType !== 'POP' || target === 0);
 
+  /* The browser restores the scroll of a popped entry itself, after this hook
+     has run, and what it recorded for the feed is 0 -- the viewer is fixed, so
+     the document had collapsed by the time the reader left. That overwrote the
+     restore every time. Hand the job over entirely; nothing else here relies on
+     the browser's copy. */
+  useEffect(() => {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  }, []);
+
   useEffect(() => {
     if (done.current || !ready) return;
 
-    /* images and videos settle in over several frames, so wait until the page is
-       actually tall enough rather than scrolling into a page that is still short */
+    /* Images and videos settle in over several frames. Being merely tall enough
+       is not the moment to jump: the page keeps growing above the target, and
+       the browser's scroll anchoring then carries the position past it -- a
+       1400px offset was landing at 2056. Wait for the height to hold steady
+       instead, and only then scroll. */
     let frame = 0;
+    let steady = 0;
+    let height = 0;
     let cancelled = false;
+    const STEADY_FRAMES = 5;
     const settle = () => {
       if (cancelled) return;
-      const reachable = document.documentElement.scrollHeight - window.innerHeight;
-      if (reachable >= target || frame > 90) {
+      const current = document.documentElement.scrollHeight;
+      steady = current === height ? steady + 1 : 0;
+      height = current;
+
+      const reachable = current - window.innerHeight;
+      if ((reachable >= target && steady >= STEADY_FRAMES) || frame > 180) {
         window.scrollTo(0, target);
         done.current = true;
         sessionStorage.removeItem(key);

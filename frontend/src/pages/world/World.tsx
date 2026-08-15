@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useScrollMemory, rememberScroll } from '../../utils/useScrollMemory';
+import { markFeedReturn, recallFeed, rememberFeed } from '../../utils/feedMemory';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { assetImage, formatNumberRounded, isVideoFile, videoMime } from '../../utils/format';
@@ -455,6 +456,12 @@ function WorldPostCard({
       clickTimer.current = null;
       fireHeart();
     } else {
+      /* Note the row and the hand of posts here, in the click itself. Reading
+         them from inside the callbacks below recorded a scroll of 0: by then
+         the 350ms double-click window and the visit request have passed, and
+         the page has been laid out for the viewer. */
+      rememberScroll(); // so closing the viewer returns to this row
+      markFeedReturn(); // ...beside the same posts, not a fresh shuffle
       clickTimer.current = setTimeout(() => {
         clickTimer.current = null;
         api
@@ -462,7 +469,6 @@ function WorldPostCard({
           .finally(() => {
             /* World context: full-screen scroll navigates the WORLD feed sequence
                (David) — passed via router state, not the profile's own posts. */
-            rememberScroll(); // so closing the viewer returns to this row
             navigate(`/user/post_detail/${item.id}`, { state: { world: worldIds } });
           });
       }, 350);
@@ -629,14 +635,25 @@ export function World() {
   const { t: tReport } = useTranslation('report');
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
   const [addPostOpen, setAddPostOpen] = useState(false);
-  const [items, setItems] = useState<WorldItem[]>([]);
+  /* Stepping back into the feed replays the posts that were on screen, rather
+     than asking for a fresh shuffle that would put strangers where the reader
+     left off. Clicking World or reloading still deals a new hand. Read once, at
+     the first render, so the decision cannot change underneath the effects. */
+  const [remembered] = useState(() => recallFeed<WorldItem>(window.location.pathname));
+
+  const [items, setItems] = useState<WorldItem[]>(remembered?.items ?? []);
   /* come back from the viewer beside the post that was opened, not at the top */
   useScrollMemory(items.length > 0);
-  const [page, setPage] = useState(1);
-  const [lastPage, setLastPage] = useState(1);
+  const [page, setPage] = useState(remembered?.page ?? 1);
+  const [lastPage, setLastPage] = useState(remembered?.lastPage ?? 1);
   const [loading, setLoading] = useState(false);
   const [swal, setSwal] = useState<{ icon: 'success' | 'error'; title: string; text: string } | null>(null);
-  const loadedPages = useRef(new Set<number>());
+  /* the replayed pages are already in hand, so infinite scroll resumes past them */
+  const loadedPages = useRef(
+    new Set<number>(
+      remembered ? Array.from({ length: remembered.page }, (_, i) => i + 1) : [],
+    ),
+  );
 
   const loadPage = useCallback((p: number) => {
     if (loadedPages.current.has(p)) return;
@@ -654,8 +671,14 @@ export function World() {
 
   useEffect(() => {
     document.title = 'Superfans | World';
-    loadPage(1);
-  }, [loadPage]);
+    if (!remembered) loadPage(1);
+  }, [loadPage, remembered]);
+
+  /* keep the saved copy level with what is on screen, so a step away at any
+     point in the scroll comes back to the same place */
+  useEffect(() => {
+    if (items.length) rememberFeed({ items, page, lastPage });
+  }, [items, page, lastPage]);
 
   /* videos have no autoplay attr — the IntersectionObserver drives playback (blade parity) */
   useEffect(() => {
