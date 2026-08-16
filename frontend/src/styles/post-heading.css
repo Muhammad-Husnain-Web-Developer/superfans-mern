@@ -55,3 +55,15 @@
     animation: none;
   }
 }
+
+/* The strip tucks behind the media, which paints over its lower edge. A post
+   uploaded as a transparent PNG paints nothing there, so the tail of the strip
+   showed through the top of the picture.
+   The media carries the tile's own white so those transparent pixels cover the
+   strip like any other post's would. .work-item is already white underneath —
+   this puts the same colour on the layer that needs it, and an opaque post,
+   which is nearly all of them, looks exactly as it did. */
+.work-item img.img-responsive,
+.work-item video {
+  background: #fff;
+}
