@@ -50,13 +50,6 @@ const HeartIcon = ({ size = 32 }: { size?: number }) => (
   </svg>
 );
 
-/** Back chevron (arrow-left-back.png is missing from the asset set). */
-const BackIcon = () => (
-  <svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M15 18l-6-6 6-6" />
-  </svg>
-);
-
 function likePct(likes: number, hates: number): number {
   const total = likes + hates;
   return total > 0 ? Math.round((likes / total) * 100) : 0;
@@ -349,7 +342,12 @@ export function PostFullscreen() {
     <div className="post-fullscreen-wrap">
       <style>{`
         .post-fullscreen-wrap{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
-        .post-fs-topbar{position:absolute;top:0;left:0;right:0;height:52px;background:#888;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
+        /* The bar itself is see-through now, at the client's request; the grey
+           it used to carry moved onto the report control alone. */
+        .post-fs-topbar{position:absolute;top:0;left:0;right:0;height:52px;background:transparent;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
+        .post-fs-report-wrap{background:#888}
+        /* the client's own arrow, 31x30 — drawn at its natural size */
+        .post-fs-back-img{width:31px;height:30px;display:block}
         .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:8px}
         .post-fs-bottombar{position:absolute;bottom:0;left:0;right:0;min-height:72px;display:flex;align-items:center;padding:12px 16px;gap:12px;z-index:10}
         .post-fs-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#555;flex-shrink:0}
@@ -422,7 +420,7 @@ export function PostFullscreen() {
             else navigate(worldBack);
           }}
         >
-          <BackIcon />
+          <img src="/brand/arrow-left-back.png" alt="Back" className="post-fs-back-img" />
         </a>
         {authUser && (
           <div className="post-fs-report-wrap">
