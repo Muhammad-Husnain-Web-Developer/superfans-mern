@@ -1572,3 +1572,21 @@ font-weight: 100 !important;
   border-right: 4px solid blueviolet;
   height: 11px !important;
 }
+
+/* ===== Room at the foot of the nav for the bottom bar =====
+   style.css:86 ends the sidebar with 40px of padding, written before the phone
+   bar existed. That bar is fixed to the bottom of the screen and stands over
+   the last 8px of the sidebar, which is the logout button and the copyright
+   the client cannot reach. Laravel has the same gap -- measured identical on
+   both -- so this is new work rather than a regression.
+
+   The bar has no set height: it is as tall as its buttons, which step down
+   40/36/34/32px across the breakpoints, so its total runs to about 56px at the
+   widest. 96px = the original 40 plus that, which clears the bar at every size.
+   Overshooting costs nothing: this is trailing space in a scrolling panel, so
+   it is simply scrolled past, never a visible gap. */
+@media screen and (max-width: 768px) {
+  #fh5co-aside {
+    padding-bottom: 96px;
+  }
+}
