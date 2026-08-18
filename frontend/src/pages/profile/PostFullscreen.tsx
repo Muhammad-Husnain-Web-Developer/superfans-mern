@@ -163,6 +163,39 @@ export function PostFullscreen() {
     }
   }, [post, id, worldSeq]);
 
+  /**
+   * Start every clip with its sound on — the client does not want to tap for it.
+   *
+   * A browser will not autoplay a loud video unless the page has been
+   * interacted with. Arriving here from the feed counts, since the tap that
+   * opened the post lands on this same document; opening the URL cold does not.
+   * So it asks for sound first and, only if that is refused, falls back to a
+   * muted playback and lifts the mute on the reader's next touch — which is
+   * better than a video that sits still.
+   */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+
+    let cancelled = false;
+    /* only the mute is ours to set — the volume is the reader's, and it already
+       starts at full */
+    v.muted = false;
+
+    void v.play().catch(() => {
+      /* refused for being loud — play it quietly rather than not at all. The
+         tap that already toggles the sound lifts this, so nothing extra
+         listens for it and nothing fights that toggle. */
+      if (cancelled) return;
+      v.muted = true;
+      void v.play().catch(() => {});
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [post?.id]);
+
   function playLike() {
     const el = likeSound.current;
     if (el) { el.currentTime = 0; void el.play().catch(() => {}); }
@@ -485,11 +518,13 @@ export function PostFullscreen() {
             </div>
           ) : media && isVideoFile(media) ? (
             <div className="post-fs-video-wrap">
+              {/* no `muted`: the client wants the sound on from the first frame,
+                  without the tap it used to take. The effect above puts it back
+                  only if the browser refuses to start a loud video. */}
               <video
                 ref={videoRef}
                 className="post-fullscreen-media"
                 autoPlay
-                muted
                 loop
                 playsInline
                 poster={post.thumbnail ? assetImage(`thumbnails/${post.thumbnail}`) : undefined}
