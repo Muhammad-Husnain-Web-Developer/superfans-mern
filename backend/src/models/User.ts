@@ -2,7 +2,9 @@ import { Schema, model, type Document, type Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 export type UserRole = 'user' | 'influencer' | 'business' | 'admin';
-export type UserStatus = 'active' | 'suspended';
+/* 'deleted' is a state, not a removal: InfluencerController::deleteUser flips the
+   column and offers Restore beside it, so nothing is ever taken off the table. */
+export type UserStatus = 'active' | 'suspended' | 'deleted';
 
 export interface IUser extends Document {
   // Identity
@@ -84,7 +86,7 @@ const userSchema = new Schema<IUser>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
     role: { type: String, enum: ['user', 'influencer', 'business', 'admin'], default: 'user', index: true },
-    status: { type: String, enum: ['active', 'suspended'], default: 'active' },
+    status: { type: String, enum: ['active', 'suspended', 'deleted'], default: 'active' },
     usernameUrl: { type: String, unique: true, sparse: true, trim: true },
     emailVerifiedAt: Date,
     acceptedTermsAndConditions: { type: Boolean, default: false },

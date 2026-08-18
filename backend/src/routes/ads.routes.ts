@@ -739,7 +739,13 @@ async function buildAd(
     await AdCampaignDetail.create({ campaign: campaign._id, fieldKey: 'post_id', fieldValue: str(body.post_id) });
   }
 
+  /* ids in this collection are the migrated MySQL ones, and the owner's Ad
+     Management panel prints them as the ID column; a row created here keeps the
+     run going rather than landing without one. */
+  const highestAd = await Ad.findOne({}, { mysqlId: 1 }).sort({ mysqlId: -1 }).lean();
+
   const ad = await Ad.create({
+    mysqlId: (highestAd?.mysqlId ?? 0) + 1,
     user: userId,
     adType: t,
     media: mediaName ?? undefined,

@@ -6,16 +6,29 @@ import { ApiError } from '../middleware/errors.js';
 import { saveBase64Image } from '../services/storage.js';
 import { User } from '../models/User.js';
 import { Subscription } from '../models/Subscription.js';
-import { AdPayment } from '../models/ads.js';
+import { Ad, AdPayment } from '../models/ads.js';
 import { Post } from '../models/Post.js';
 import { Coupon, Package, PackageInclude, Modal, Asset, WaterMark, Cart } from '../models/adminEntities.js';
 
 export const adminRouter = Router();
 
-/** Admin guard — Laravel gates the panel on the `admin` middleware (role admin / id 4465). */
+/**
+ * Admin guard — Laravel gates the panel on the `admin` middleware (role admin /
+ * id 4465).
+ *
+ * Id 100 is here for the same reason it is written into the blade's own
+ * controller: InfluencerController::all_users answers only `$logged == '100'`,
+ * and that account is the owner's. His role stays `influencer`, which is what
+ * his public profile is built on, so the id is what grants the panel.
+ */
+const OWNER_MYSQL_ID = 100;
+const ADS_ADMIN_MYSQL_ID = 4465;
+
 async function requireAdmin(userId: string): Promise<void> {
   const u = await User.findById(userId, { role: 1, mysqlId: 1 });
-  if (!u || (u.role !== 'admin' && u.mysqlId !== 4465)) throw ApiError.forbidden('Admin access only');
+  const allowed =
+    u && (u.role === 'admin' || u.mysqlId === ADS_ADMIN_MYSQL_ID || u.mysqlId === OWNER_MYSQL_ID);
+  if (!allowed) throw ApiError.forbidden('Admin access only');
 }
 
 /** Wrap every admin route: auth + admin check, then the handler. */
@@ -82,7 +95,7 @@ adminRouter.put(
         email: z.string().email().optional(),
         usernameUrl: z.string().optional(),
         role: z.enum(['user', 'influencer', 'business', 'admin']).optional(),
-        status: z.enum(['active', 'suspended']).optional(),
+        status: z.enum(['active', 'suspended', 'deleted']).optional(),
         verified: z.boolean().optional(),
         vip: z.boolean().optional(),
       })
@@ -98,6 +111,233 @@ adminRouter.delete(
   admin(async (req, res) => {
     await User.deleteOne({ _id: req.params.id });
     res.json({ success: true, message: 'User deleted successfully' });
+  }),
+);
+
+/** The panel's own list: everyone, 700 to a page, in id order (User::paginate(700)).
+    This is not admin/users, which drops admins and dummies (AdminController:76). */
+adminRouter.get(
+  '/all-users',
+  requireAuth,
+  admin(async (req, res) => {
+    const perPage = 700;
+    const page = Math.max(1, Number(req.query.page ?? 1));
+    const [total, users] = await Promise.all([
+      User.countDocuments({}),
+      User.find({})
+        .select('name usernameUrl email role status verified vip noOfFollowers growthStatus growthGearLevel createdAt')
+        .sort({ mysqlId: 1, createdAt: 1 })
+        .skip((page - 1) * perPage)
+        .limit(perPage)
+        .lean(),
+    ]);
+    res.json({
+      success: true,
+      users: users.map(userDto),
+      page,
+      perPage,
+      total,
+      lastPage: Math.max(1, Math.ceil(total / perPage)),
+    });
+  }),
+);
+
+/* ================= all_users panel =================
+   The actions behind influencer/all_users.blade.php. Each answers with the very
+   sentence the blade flashes, since those are what the page prints back. */
+
+/** suspendUser — a toggle, not a setter (InfluencerController:1990). */
+adminRouter.post(
+  '/users/:id/suspend',
+  requireAuth,
+  admin(async (req, res) => {
+    const u = await User.findById(req.params.id);
+    if (!u) throw ApiError.notFound('User not found');
+    const suspended = u.status === 'suspended';
+    u.status = suspended ? 'active' : 'suspended';
+    await u.save();
+    res.json({
+      success: true,
+      status: u.status,
+      message: suspended ? 'User unsuspended successfully.' : 'User suspended successfully.',
+    });
+  }),
+);
+
+/** deleteUser — also a toggle: the row stays, only its status moves (:2007). */
+adminRouter.post(
+  '/users/:id/delete-toggle',
+  requireAuth,
+  admin(async (req, res) => {
+    const u = await User.findById(req.params.id);
+    if (!u) throw ApiError.notFound('User not found');
+    const deleted = u.status === 'deleted';
+    u.status = deleted ? 'active' : 'deleted';
+    await u.save();
+    res.json({
+      success: true,
+      status: u.status,
+      message: deleted ? 'User restored successfully.' : 'User deleted successfully.',
+    });
+  }),
+);
+
+/** update_followers — add, or remove without ever going below what is there (:1885). */
+adminRouter.post(
+  '/users/:id/followers',
+  requireAuth,
+  admin(async (req, res) => {
+    const { action, amount } = z
+      .object({ action: z.enum(['add', 'remove']), amount: z.coerce.number().int() })
+      .parse(req.body);
+
+    const u = await User.findById(req.params.id);
+    if (!u) throw ApiError.notFound('User not found');
+    const current = u.noOfFollowers ?? 0;
+
+    if (action === 'add') {
+      u.noOfFollowers = current + amount;
+      await u.save();
+      res.json({ success: true, noOfFollowers: u.noOfFollowers, message: 'Followers Added Succesfully' });
+      return;
+    }
+
+    if (current < amount) {
+      throw ApiError.badRequest('remove followers value must be equal to or less than followers');
+    }
+    u.noOfFollowers = current - amount;
+    await u.save();
+    res.json({ success: true, noOfFollowers: u.noOfFollowers, message: 'Followers Removed Successfully' });
+  }),
+);
+
+/** all_user_posts — every post of one user, newest first (:1943). */
+adminRouter.get(
+  '/users/:id/posts',
+  requireAuth,
+  admin(async (req, res) => {
+    const u = await User.findById(req.params.id, { mysqlId: 1, usernameUrl: 1 }).lean();
+    if (!u) throw ApiError.notFound('User not found');
+    /* the panel is the one place that should see everything, including the
+       posts whose media went missing in the migration */
+    const posts = await Post.find({ influencer: req.params.id })
+      .select('mysqlId imageVideo noOfLikes createdAt')
+      .sort({ mysqlId: -1, createdAt: -1 })
+      .setOptions({ withMissing: true })
+      .lean();
+
+    res.json({
+      success: true,
+      user: { id: String(u._id), usernameUrl: u.usernameUrl, mysqlId: u.mysqlId },
+      posts: posts.map((p) => ({
+        id: String(p._id),
+        postId: p.mysqlId ?? null,
+        imageVideo: p.imageVideo ?? null,
+        noOfLikes: p.noOfLikes ?? 0,
+      })),
+    });
+  }),
+);
+
+/** update_likes — the same add/remove pair, on a post (:2077). */
+adminRouter.post(
+  '/posts/:id/likes',
+  requireAuth,
+  admin(async (req, res) => {
+    const { action, amount } = z
+      .object({ action: z.enum(['add', 'remove']), amount: z.coerce.number().int() })
+      .parse(req.body);
+
+    const p = await Post.findById(req.params.id).setOptions({ withMissing: true });
+    if (!p) throw ApiError.notFound('Post not found');
+    const current = p.noOfLikes ?? 0;
+
+    if (action === 'add') {
+      p.noOfLikes = current + amount;
+      await p.save();
+      res.json({ success: true, noOfLikes: p.noOfLikes, message: 'Likes Added Succesfully' });
+      return;
+    }
+
+    if (current < amount) {
+      throw ApiError.badRequest('remove likes value must be equal to or less than likes');
+    }
+    p.noOfLikes = current - amount;
+    await p.save();
+    res.json({ success: true, noOfLikes: p.noOfLikes, message: 'Likes Removed Successfully' });
+  }),
+);
+
+/* ================= influencer/ads — Ad Management =================
+   The owner's ad list (InfluencerController::ads, gated on id 100 as the users
+   panel is). Rows are the `ads` table itself, newest id first. */
+
+adminRouter.get(
+  '/ad-management',
+  requireAuth,
+  admin(async (_req, res) => {
+    const ads = await Ad.find({}, { mysqlId: 1, media: 1, link: 1, status: 1 })
+      .sort({ mysqlId: -1 })
+      .lean();
+    res.json({
+      success: true,
+      ads: ads.map((a) => ({
+        id: String(a._id),
+        adId: a.mysqlId ?? null,
+        media: a.media ?? null,
+        link: a.link ?? null,
+        /* the column is a 0/1 in MySQL and a boolean here; both read as "is it
+           running" */
+        status: !!a.status,
+      })),
+    });
+  }),
+);
+
+/** addAd — the upload form under the "Add New Ad" button (:2208). */
+adminRouter.post(
+  '/ad-management',
+  requireAuth,
+  admin(async (req, res) => {
+    const { media, link } = z
+      .object({ media: z.string().min(1), link: z.string().url().optional().or(z.literal('')) })
+      .parse(req.body);
+
+    const filename = await resolveImage(media);
+    if (!filename) throw ApiError.badRequest('Media file is required');
+
+    /* ids here are the migrated MySQL ones, so a new row continues that run */
+    const highest = await Ad.findOne({}, { mysqlId: 1 }).sort({ mysqlId: -1 }).lean();
+    await Ad.create({
+      mysqlId: (highest?.mysqlId ?? 0) + 1,
+      media: filename,
+      link: link || undefined,
+      status: false, // the blade inserts status 0
+    });
+    res.json({ success: true, message: 'Ad added successfully' });
+  }),
+);
+
+/** toggleAd — running <-> stopped (:2231). */
+adminRouter.post(
+  '/ad-management/:id/toggle',
+  requireAuth,
+  admin(async (req, res) => {
+    const ad = await Ad.findById(req.params.id);
+    if (!ad) throw ApiError.notFound('Ad not found');
+    ad.status = !ad.status;
+    await ad.save();
+    res.json({ success: true, status: ad.status, message: 'Ad status changed' });
+  }),
+);
+
+/** deleteAd — the row goes, as the blade's does (:2243). */
+adminRouter.post(
+  '/ad-management/:id/delete',
+  requireAuth,
+  admin(async (req, res) => {
+    await Ad.deleteOne({ _id: req.params.id });
+    res.json({ success: true, message: 'Ad deleted' });
   }),
 );
 

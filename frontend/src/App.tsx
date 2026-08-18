@@ -39,6 +39,9 @@ import { AdminAssets } from './pages/admin/AdminAssets';
 import { AdminPackages } from './pages/admin/AdminPackages';
 import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminGrowth } from './pages/admin/AdminGrowth';
+import { AllUsers } from './pages/admin/AllUsers';
+import { AllUserPosts } from './pages/admin/AllUserPosts';
+import { AdManagement } from './pages/admin/AdManagement';
 import { Merchandising } from './pages/merch/Merchandising';
 import { MerchandisingShow } from './pages/merch/MerchandisingShow';
 import { RegisterModalProvider } from './components/RegisterModal';
@@ -135,7 +138,9 @@ function App() {
               <Route path="user/:usernameUrl" element={<Profile />} />
               <Route path="influencer_posts/:usernameUrl" element={<Posts />} />
               <Route path="user_posts/:usernameUrl" element={<Posts />} />
-              <Route path="all_user_posts/:usernameUrl" element={<Posts />} />
+              {/* all_user_posts is not one of these: routes/web.php:487 gives it a
+                  POST and hands it to the owner's panel, not a public profile
+                  grid. It is routed below, next to all_users. */}
               <Route path="post_detail/:id" element={<PostFullscreen />} />
             </Route>
           ))}
@@ -169,6 +174,13 @@ function App() {
           <Route path="admin/packages" element={<NewsGuard><AdminPackages /></NewsGuard>} />
           <Route path="admin/orders" element={<NewsGuard><AdminOrders /></NewsGuard>} />
           <Route path="admin/growth" element={<NewsGuard><AdminGrowth /></NewsGuard>} />
+          {/* The owner's own panel, at the addresses the blade gives it
+              (routes/web.php:470, :487) so his existing links keep working. */}
+          <Route path="influencer/all_users" element={<NewsGuard><AllUsers /></NewsGuard>} />
+          <Route path="influencer/all_user_posts/:id" element={<NewsGuard><AllUserPosts /></NewsGuard>} />
+          <Route path="influencer/ads" element={<NewsGuard><AdManagement /></NewsGuard>} />
+          {/* all-ads lives under super-ads here; the blade's address redirects to it */}
+          <Route path="influencer/all-ads" element={<Navigate to="/super-ads/all-ads" replace />} />
           <Route path="merchandising" element={<Merchandising />} />
           <Route path="merchandising/:slug" element={<MerchandisingShow />} />
 

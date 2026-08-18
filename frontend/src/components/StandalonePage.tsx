@@ -73,6 +73,15 @@ export function useLayoutPageStyles(enabled = true) {
 
 /** Bootstrap 4.0.0 CDN — the exact build the standalone blades link. */
 export const BOOTSTRAP4_CDN = 'https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css';
+/** Bootstrap 4.6.0 — what influencer/ads.blade.php links, a later build than
+    the 4.0.0 the other standalone blades use. */
+export const BOOTSTRAP46_CDN = 'https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css';
+
+/** DataTables' Bootstrap 4 skin — the sheet that draws the sort arrows on a
+    sortable header. Linked by the admin panel blades (all_users.blade.php:11). */
+export const DATATABLES_BOOTSTRAP4_CSS =
+  'https://cdn.datatables.net/1.13.1/css/dataTables.bootstrap4.min.css';
+
 /** Google fonts the rankings blade loads. */
 export const RANKINGS_FONTS =
   'https://fonts.googleapis.com/css2?family=Anton&family=BBH+Sans+Bogle&display=swap';
