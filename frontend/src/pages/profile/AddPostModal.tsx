@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import type { ProfilePost } from '../../api/profiles';
+import '../../styles/add-post-modal.css';
 
 interface TagHit {
   name: string;
@@ -92,9 +93,10 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
       }}
       onClick={onClose}
     >
+      {/* the margin lives in the stylesheet: it has to change at 768px, which an
+          inline style cannot express */}
       <div
-        className="modal-dialog modal-dialog-centered"
-        style={{ margin: '30px auto', maxWidth: 600 }}
+        className="modal-dialog modal-dialog-centered add-post-dialog"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content" style={{ borderRadius: 20, background: 'red' }}>

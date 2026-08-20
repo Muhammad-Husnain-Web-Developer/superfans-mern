@@ -238,13 +238,26 @@ body{
   inset: 0;
   background: rgba(0,0,0,.8);
   z-index: 999999;
+  /* The blade leaves this out, and the panel is 754px tall: on a 680px window
+     it hung 37px past the top and the bottom at once, taking the close button
+     with it and leaving no way out. Asked for by the client. */
+  overflow-y: auto;
 }
 .sm-modal.open { display: block; }
 .sm-modal-dialog {
   display: flex;
   justify-content: center;
+  /* centred while it fits, and from the top once it does not -- centring a box
+     taller than the window pushes its head out of reach */
   align-items: center;
-  height: 100%;
+  min-height: 100%;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+@media (max-height: 820px) {
+  .sm-modal-dialog {
+    align-items: flex-start;
+  }
 }
 .sm-modal-content {
   background: blueviolet;

@@ -4,6 +4,8 @@ import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { useRegisterModal } from './RegisterModal';
 import { assetImage } from '../utils/format';
+import { AddPostHost } from '../pages/profile/AddPostHost';
+import { StreamModal } from './StreamModal';
 import '../styles/footer-modals.css';
 
 interface SearchHit {
@@ -19,6 +21,14 @@ interface SearchHit {
  */
 export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
   const { user: authUser } = useAuth();
+  /* The blade hangs #add_post_modal and #streamingModalCenter off the layout
+     footer, so both buttons work on every page that shows this bar. Here they
+     were left to each page to provide, and only the profile ever did — which is
+     why the client found them dead on World and everywhere else. The bar now
+     carries them itself. A page that already owns an add-post dialog still
+     passes onAddPost and keeps using its own. */
+  const [addPostOpen, setAddPostOpen] = useState(false);
+  const [streamOpen, setStreamOpen] = useState(false);
   const navigate = useNavigate();
   /* the blade sent guests to the /login page from here; everywhere else in the
      app a guest action raises the register modal, so these do the same */
@@ -95,11 +105,15 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
 
       {authUser ? (
         <>
-          <div className="footer-btn-square footer-btn-addpost" onClick={onAddPost} style={{ cursor: 'pointer' }}>
+          <div
+            className="footer-btn-square footer-btn-addpost"
+            onClick={onAddPost ?? (() => setAddPostOpen(true))}
+            style={{ cursor: 'pointer' }}
+          >
             <strong style={{ fontSize: 25 }}>+</strong>
           </div>
 
-          <div className="footer-btn-stream" style={{ cursor: 'pointer' }}>
+          <div className="footer-btn-stream" onClick={() => setStreamOpen(true)} style={{ cursor: 'pointer' }}>
             <span className="stream-indicator"></span>
             Stream
           </div>
@@ -122,6 +136,9 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
           <b>Login</b> | <i className="fa fa-power-off" aria-hidden="true"></i>
         </div>
       )}
+
+      {!onAddPost && <AddPostHost open={addPostOpen} onClose={() => setAddPostOpen(false)} />}
+      <StreamModal open={streamOpen} onClose={() => setStreamOpen(false)} />
     </div>
   );
 }

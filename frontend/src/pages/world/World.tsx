@@ -24,6 +24,7 @@ import '../../styles/report-menu.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { ControlPanelHost } from '../profile/ControlPanelHost';
 import { AddPostHost } from '../profile/AddPostHost';
+import { StreamModal } from '../../components/StreamModal';
 
 /* The hardcoded network slider of world.blade.php (11 items, per-item icon styles) */
 const WORLD_NETWORKS: { name: string; href: string; img: string }[] = [
@@ -56,27 +57,9 @@ export function WorldSidebar({
   const { t: tNav } = useTranslation('nav');
   const { user: authUser } = useAuth();
   const { t: tFooter } = useTranslation('footer');
-  const navigate = useNavigate();
   // Streaming modal — port of #streamingModalCenter. Guests see "NOT ON AIR"; a logged-in
   // creator gets the Go-Live bio/tags form (→ /create-room → /start-stream/:room).
   const [streamOpen, setStreamOpen] = useState(false);
-  const [streamBio, setStreamBio] = useState('');
-  const [streamTags, setStreamTags] = useState('');
-  const [streamBusy, setStreamBusy] = useState(false);
-  async function submitGoLive(e: React.FormEvent) {
-    e.preventDefault();
-    if (!streamBio.trim() || !streamTags.trim() || streamBusy) return;
-    setStreamBusy(true);
-    try {
-      const { data } = await api.post<{ roomName: string }>('/create-room', {
-        bio: streamBio.trim(),
-        tags: streamTags.trim(),
-      });
-      if (data.roomName) navigate(`/start-stream/${data.roomName}`);
-    } catch {
-      setStreamBusy(false);
-    }
-  }
   const monoFont =
     "Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif";
 
@@ -285,78 +268,7 @@ export function WorldSidebar({
       </center>
     </aside>
 
-    {streamOpen && (
-      <div
-        onClick={() => setStreamOpen(false)}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 123112311231, overflowY: 'auto' }}
-      >
-        {/* modal-dialog: 600px, margin 30px auto (top-aligned, horizontally centered) */}
-        <div
-          onClick={(e) => e.stopPropagation()}
-          style={{ width: 600, maxWidth: 'calc(100% - 20px)', margin: '30px auto', position: 'relative' }}
-        >
-          <div className="modal-content" style={{ borderRadius: 20, background: 'blueviolet' }}>
-            {/* modal-header: padding 15px */}
-            <div style={{ border: 0, padding: 15, position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => setStreamOpen(false)}
-                aria-label="Close"
-                style={{ float: 'right', fontSize: 45, fontWeight: 700, lineHeight: 1, opacity: 1, color: '#fff', background: 'none', border: 'none', cursor: 'pointer', marginTop: -2, padding: 0 }}
-              >
-                ×
-              </button>
-              <div style={{ textAlign: 'center', height: 20, marginTop: 35 }}>
-                <img src="/assets/images/superman2.png" style={{ display: 'inline-block', height: 51 }} alt="" />
-                <h5 style={{ fontSize: 30, textAlign: 'center', color: '#fff', display: 'inline-block', margin: 0 }}>
-                  Message
-                </h5>
-              </div>
-            </div>
-            {/* modal-body: padding 15px */}
-            <div style={{ border: 0, padding: 15, position: 'relative' }}>
-              {authUser ? (
-                <form onSubmit={submitGoLive}>
-                  <div className="form-group" style={{ display: 'flex' }}>
-                    <label style={{ color: '#fff', width: 50 }}>{t('stream_bio')}:</label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      required
-                      placeholder={t('stream_bio_placeholder')}
-                      value={streamBio}
-                      onChange={(e) => setStreamBio(e.target.value)}
-                      style={{ backgroundColor: '#fff', color: '#000' }}
-                    />
-                  </div>
-                  <div className="form-group mt-3" style={{ display: 'flex', marginTop: 20 }}>
-                    <label style={{ color: '#fff', width: 50 }}>{t('stream_tags')}:</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      required
-                      placeholder={t('stream_tags_placeholder')}
-                      value={streamTags}
-                      onChange={(e) => setStreamTags(e.target.value)}
-                      style={{ backgroundColor: '#fff', color: '#000' }}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-                    <button type="submit" className="btn btn-light" disabled={streamBusy} style={{ padding: '10px 20px' }}>
-                      🔴 {t('stream_start_button')}
-                    </button>
-                  </div>
-                </form>
-              ) : (
-                <h3 style={{ color: '#fff', textAlign: 'center', marginTop: 15, fontSize: 24, fontWeight: 700 }}>
-                  THIS USER IS NOT ON 🔴 AIR.
-                </h3>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    )}
+    <StreamModal open={streamOpen} onClose={() => setStreamOpen(false)} />
     </>
   );
 }

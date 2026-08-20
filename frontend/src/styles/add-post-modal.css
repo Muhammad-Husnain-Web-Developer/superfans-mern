@@ -1,0 +1,19 @@
+/* ===== Room around the add-post dialog =====
+   The dialog carried `margin: 30px auto` with a 600px cap. On a phone the cap
+   is wider than the screen, so the box filled it end to end and the auto
+   margins collapsed to nothing — the client's "no margin between screen and
+   modal".
+
+   Bootstrap's own rule is what the blade renders: 10px all round below 768px,
+   30px auto above it. Measured on Laravel at 390px: left 10, right 10, top 10,
+   box 370 wide. */
+.add-post-dialog {
+  margin: 10px;
+  max-width: 600px;
+}
+
+@media (min-width: 768px) {
+  .add-post-dialog {
+    margin: 30px auto;
+  }
+}
