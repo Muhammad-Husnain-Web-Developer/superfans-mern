@@ -7,6 +7,12 @@
         "racism": "Dieser Beitrag enthält rassistische Botschaften, die diffamieren und zu Hass anstiften.",
         "other": "Andere"
     },
+    "share": {
+        "post": "Beitragslink teilen/kopieren",
+        "profile": "Profil teilen",
+        "copied": "Link kopiert",
+        "failed": "Der Link konnte nicht kopiert werden"
+    },
     "sent_title": "Meldung gesendet",
     "thank_you": "Ihre Meldung wurde erfolgreich übermittelt. Danke, dass Sie dieses soziale Netzwerk verbessern.",
     "failed_title": "Hoppla!",

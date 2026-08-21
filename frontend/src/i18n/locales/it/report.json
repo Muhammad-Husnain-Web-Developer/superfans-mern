@@ -7,6 +7,12 @@
         "racism": "Questo post contiene messaggi razzisti che diffamano e incitano all’odio.",
         "other": "Altro"
     },
+    "share": {
+        "post": "Condividi/copia link del post",
+        "profile": "Condividi profilo",
+        "copied": "Link copiato",
+        "failed": "Impossibile copiare il link"
+    },
     "sent_title": "Segnalazione Inviata",
     "thank_you": "La tua segnalazione è stata inviata con successo. Grazie per aver contribuito a rendere migliore questo social network.",
     "failed_title": "Ops!",

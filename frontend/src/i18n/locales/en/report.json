@@ -7,6 +7,12 @@
         "racism": "This post contains racist messages that defame and incite hatred.",
         "other": "Others"
     },
+    "share": {
+        "post": "Share/copy link post",
+        "profile": "Share profile",
+        "copied": "Link copied",
+        "failed": "The link could not be copied"
+    },
     "sent_title": "Report Sent",
     "thank_you": "Your report has been successfully submitted. Thanks for making this social network better.",
     "failed_title": "Oops!",

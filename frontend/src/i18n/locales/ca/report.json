@@ -7,6 +7,12 @@
         "racism": "Aquesta publicació conté missatges racistes que difamen i inciten a l’odi.",
         "other": "Altres"
     },
+    "share": {
+        "post": "Comparteix/copia l’enllaç del post",
+        "profile": "Comparteix el perfil",
+        "copied": "Enllaç copiat",
+        "failed": "No s’ha pogut copiar l’enllaç"
+    },
     "sent_title": "Informe Enviat",
     "thank_you": "El teu informe s’ha enviat correctament. Gràcies per ajudar a millorar aquesta xarxa social.",
     "failed_title": "Ups!",

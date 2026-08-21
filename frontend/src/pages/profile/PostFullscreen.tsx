@@ -82,6 +82,10 @@ export function PostFullscreen() {
   const [following, setFollowing] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [swal, setSwal] = useState<{ icon?: 'success' | 'error'; title: string; text?: string } | null>(null);
+  /* Expanded: the media alone, every control out of the way. Tied to the
+     browser's own full screen so Escape (and the phone's back gesture) is the
+     way out -- the client asked for no controls to be left on screen. */
+  const [expanded, setExpanded] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const likeSound = useRef<HTMLAudioElement>(null);
@@ -196,6 +200,21 @@ export function PostFullscreen() {
     };
   }, [post?.id]);
 
+  useEffect(() => {
+    const onChange = () => setExpanded(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  function toggleExpanded() {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen().catch(() => {});
+      return;
+    }
+    /* if the browser refuses, still clear the controls so the tap does something */
+    void document.documentElement.requestFullscreen().catch(() => setExpanded(true));
+  }
+
   function playLike() {
     const el = likeSound.current;
     if (el) { el.currentTime = 0; void el.play().catch(() => {}); }
@@ -248,6 +267,23 @@ export function PostFullscreen() {
         setSwal({ title: 'Followed Successfully' });
       })
       .catch(() => setSwal({ icon: 'error', title: 'Something went wrong' }));
+  }
+
+  /* The client asked for a share row at the head of the report list. It copies this
+     page's own address: /post/:id renders the old sidebar detail page instead of the
+     reel, and greets a signed-out visitor with a Login link, while this route opens
+     the same full-screen view for everyone, guests included. */
+  function copyPostLink() {
+    if (!post) return;
+    setReportOpen(false);
+    const write = navigator.clipboard?.writeText(`${window.location.origin}/user/post_detail/${post.id}`);
+    if (!write) {
+      setSwal({ icon: 'error', title: tReport('share.failed') });
+      return;
+    }
+    void write
+      .then(() => setSwal({ icon: 'success', title: tReport('share.copied') }))
+      .catch(() => setSwal({ icon: 'error', title: tReport('share.failed') }));
   }
 
   function submitReport(reason: string) {
@@ -380,8 +416,8 @@ export function PostFullscreen() {
         .post-fs-topbar{position:absolute;top:0;left:0;right:0;height:52px;background:transparent;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
         .post-fs-report-wrap{background:#888}
         /* the client's own arrow, 31x30 — drawn at its natural size */
-        .post-fs-back-img{width:31px;height:30px;display:block}
-        .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:8px}
+        .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:8px;font-size:22px}
+        .post-fs-back:hover,.post-fs-back:focus{color:#fff;text-decoration:none}
         .post-fs-bottombar{position:absolute;bottom:0;left:0;right:0;min-height:72px;display:flex;align-items:center;padding:12px 16px;gap:12px;z-index:10}
         .post-fs-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#555;flex-shrink:0}
         .post-fs-author{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1;gap:2px}
@@ -399,7 +435,25 @@ export function PostFullscreen() {
         @media (min-width: 769px){
           .post-fs-authorlink{flex:0 1 auto}
         }
+        /* the expand control sits in the bottom-right corner, clear of the
+           bottom bar; while expanded it is the only thing left on screen so
+           there is a way back */
+        /* translateZ puts this on its own compositing layer. A playing video is
+           handed to the GPU as an overlay plane, and anything left on the normal
+           layer can be painted underneath it however high its z-index -- which is
+           why the control vanished a second into every video, once playback took
+           over, and only on video posts. */
+        .post-fs-expand{position:absolute;right:16px;bottom:24px;z-index:11;background:none;border:none;color:#fff;font-size:20px;padding:8px;cursor:pointer;opacity:.9;transform:translateZ(0);will-change:transform}
+        .post-fs-expand:hover{opacity:1}
         .post-fs-rightbar{position:absolute;right:0;bottom:96px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 12px;z-index:10}
+        /* On a phone the bottom-right corner belongs to FOLLOW, so this cannot
+           stay where the client drew it. It goes to the foot of the heart rail
+           instead, under the Hate pill, and the rail lifts by its height to open
+           that slot. Wider screens keep the corner. */
+        @media (max-width:768px){
+          .post-fs-expand{bottom:96px;right:14px}
+          .post-fs-rightbar{bottom:148px}
+        }
         .post-fs-heart{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px}
         .post-fs-heart svg{width:32px;height:32px;display:block}
         .post-fs-heart.empty{color:#fff}
@@ -417,7 +471,14 @@ export function PostFullscreen() {
            inside, so the border framed the empty box instead of the image. */
         .post-fullscreen-media img.post-fs-locked{height:auto;object-fit:fill}
         .post-fs-video-wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-        .post-fs-video-wrap video{width:100%;height:100%;object-fit:contain}
+        /* A playing video is handed to the GPU as an overlay plane, which paints
+           over page content no matter its z-index -- so the expand control was
+           swallowed wherever the picture reached the corner, i.e. on full-width
+           videos but not on portrait ones with black bars beside them. An opacity
+           below 1 makes the frame ineligible for that plane and sends it back
+           through normal compositing, where z-index is respected again. .999 is
+           indistinguishable on screen. */
+        .post-fs-video-wrap video{width:100%;height:100%;object-fit:contain;opacity:.999}
         .post-fs-heart-pop-wrap{position:absolute;inset:0;pointer-events:none;z-index:7}
         .post-fs-heart-pop{position:absolute;transform:translate(-50%,-50%);font-size:80px;line-height:1;color:#e32626;text-shadow:0 0 30px rgba(227,38,38,.8);animation:postFsHeartPop .8s ease-out forwards}
         @keyframes postFsHeartPop{0%{transform:translate(-50%,-50%) scale(0);opacity:.8}15%{transform:translate(-50%,-50%) scale(1.4);opacity:1}30%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-50%) scale(1.2);opacity:0}}
@@ -436,7 +497,7 @@ export function PostFullscreen() {
       `}</style>
 
       {/* Top bar: back + report */}
-      <div className="post-fs-topbar">
+      {!expanded && <div className="post-fs-topbar">
         {/* Back to wherever the viewer was opened from — the profile, the posts
             grid, the feed — at the scroll position it was left at, not always to
             World. prev/next replace the entry rather than pushing, so one step
@@ -453,7 +514,9 @@ export function PostFullscreen() {
             else navigate(worldBack);
           }}
         >
-          <img src="/brand/arrow-left-back.png" alt="Back" className="post-fs-back-img" />
+          {/* the client asked for the plain white arrow again, from Font Awesome,
+              in place of the purple artwork */}
+          <i className="fas fa-chevron-left" aria-hidden="true"></i>
         </a>
         {authUser && (
           <div className="post-fs-report-wrap">
@@ -463,10 +526,18 @@ export function PostFullscreen() {
               title="Report"
               onClick={(e) => { e.stopPropagation(); setReportOpen((v) => !v); }}
             >
-              <img src={assetImage('arrowDown_.png')} alt="Report" style={{ width: 14, height: 14 }} />
+              {/* Font Awesome in place of assets/images/arrowDown_.png, and a caret
+                  rather than a chevron: that image was a solid filled triangle,
+                  which is the shape the client wants kept. */}
+              <i className="fas fa-caret-down" aria-hidden="true"></i>
             </button>
             {reportOpen && (
               <ul className="post-fs-report-menu">
+                <li>
+                  <a href="#" onClick={(e) => { e.preventDefault(); e.stopPropagation(); copyPostLink(); }}>
+                    📤 {tReport('share.post')}
+                  </a>
+                </li>
                 {REPORT_REASONS.map((reason) => (
                   <li key={reason}>
                     <a href="#" onClick={(e) => { e.preventDefault(); e.stopPropagation(); submitReport(reason); }}>
@@ -478,7 +549,16 @@ export function PostFullscreen() {
             )}
           </div>
         )}
-      </div>
+      </div>}
+
+      <button
+        type="button"
+        className="post-fs-expand"
+        title={expanded ? 'Exit full screen' : 'Full screen'}
+        onClick={(e) => { e.stopPropagation(); toggleExpanded(); }}
+      >
+        <i className={`fas fa-${expanded ? 'compress' : 'expand'}`} aria-hidden="true"></i>
+      </button>
 
       {/* The up/down arrow buttons are gone at the client's request — prev/next
           is swipe on touch, and wheel or ArrowUp/ArrowDown on desktop. */}
@@ -546,7 +626,7 @@ export function PostFullscreen() {
       </div>
 
       {/* Bottom bar: avatar + nickname + follow */}
-      <div className="post-fs-bottombar">
+      {!expanded && <div className="post-fs-bottombar">
         <a
           href={`/${author?.usernameUrl ?? ''}`}
           onClick={(e) => { e.preventDefault(); if (author?.usernameUrl) navigate(`/${author.usernameUrl}`); }}
@@ -573,10 +653,10 @@ export function PostFullscreen() {
             FOLLOW +
           </button>
         )}
-      </div>
+      </div>}
 
       {/* Right rail: heart / %Liked pill / poop — hidden on a locked (blocked) post */}
-      {!locked && (
+      {!locked && !expanded && (
         <div className="post-fs-rightbar">
           <span className={`post-fs-heart${liked ? '' : ' empty'}`} title="Like" onClick={(e) => { e.stopPropagation(); doLike(); }}>
             <HeartIcon />

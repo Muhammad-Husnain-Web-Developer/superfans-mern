@@ -7,6 +7,12 @@
         "racism": "Esta publicação contém mensagens racistas que difamam e incitam o ódio.",
         "other": "Outros"
     },
+    "share": {
+        "post": "Compartilhar/copiar link da publicação",
+        "profile": "Compartilhar perfil",
+        "copied": "Link copiado",
+        "failed": "Não foi possível copiar o link"
+    },
     "sent_title": "Denúncia Enviada",
     "thank_you": "Sua denúncia foi enviada com sucesso. Obrigado por ajudar a tornar esta rede social melhor.",
     "failed_title": "Ops!",

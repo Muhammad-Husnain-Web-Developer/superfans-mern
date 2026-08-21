@@ -343,6 +343,22 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
     }
   }, [paymentStatus]);
 
+  /* Head of the same dropdown, at the client's request: copies this profile's public
+     address -- the bare /{username} vanity URL, which is what Laravel's fallback route
+     serves and what a guest can open. */
+  function copyProfileLink() {
+    if (!profile) return;
+    setReportOpen(false);
+    const write = navigator.clipboard?.writeText(`${window.location.origin}/${profile.usernameUrl}`);
+    if (!write) {
+      setSwal({ icon: 'error', title: tReport('share.failed'), text: '' });
+      return;
+    }
+    void write
+      .then(() => setSwal({ icon: 'success', title: tReport('share.copied'), text: '' }))
+      .catch(() => setSwal({ icon: 'error', title: tReport('share.failed'), text: '' }));
+  }
+
   function submitUserReport(reason: string) {
     if (!profile) return;
     setReportOpen(false);
@@ -708,6 +724,26 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                       width: '100%',
                     }}
                   >
+                    <li style={{ borderBottom: '1px solid #eee' }}>
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          copyProfileLink();
+                        }}
+                        style={{
+                          display: 'block',
+                          padding: '10px 15px',
+                          textDecoration: 'none',
+                          color: '#333',
+                          fontSize: 13,
+                          textAlign: 'center',
+                        }}
+                      >
+                        📤 {tReport('share.profile')}
+                      </a>
+                    </li>
                     {REPORT_REASONS.map((reason) => {
                       const label = tReport(`reasons.${reason}`);
                       return (
