@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
 import { AddPostModal } from './AddPostModal';
+import { AddPostHost } from './AddPostHost';
 import { ControlPanelModal } from './ControlPanelModal';
 import { UserModalCenter } from './UserModalCenter';
 import { InfluencerControlPanelModal } from './InfluencerControlPanelModal';
@@ -632,9 +633,18 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
           )}
         </div>
 
-        {addPostOpen && (
-          <AddPostModal myPosts={posts} onClose={() => setAddPostOpen(false)} onChanged={refetch} />
-        )}
+        {/* "Mis publicaciones" inside this modal must always be the SIGNED-IN user's own
+            posts. The blade re-queries them in the modal itself
+            (layouts_direct_user/footer.blade.php: influencer_id = Auth::user()->id, limit 6),
+            so it never shows the profile being visited. Handing it this page's `posts`
+            did exactly that on someone else's wall. On your own wall they are the same
+            list, and keeping it lets the grid refresh after you post. */}
+        {addPostOpen &&
+          (isOwner ? (
+            <AddPostModal myPosts={posts} onClose={() => setAddPostOpen(false)} onChanged={refetch} />
+          ) : (
+            <AddPostHost open onClose={() => setAddPostOpen(false)} />
+          ))}
 
         <div className="fh5co-narrow-content" style={{ paddingTop: 0, marginTop: -54 }}>
           <center>
@@ -684,7 +694,10 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                   border: 'none',
                   background: 'transparent',
                   cursor: 'pointer',
-                  padding: '0 4px',
+                  /* client change: Laravel sets `padding: 0 4px` here and pulls the
+                     arrow 2px left again, leaving a 2px gap that reads as glued to
+                     the handle. The extra 6px on the left opens it to 8px. */
+                  padding: '0 4px 0 10px',
                   fontSize: 'inherit',
                   display: 'inline-block',
                 }}

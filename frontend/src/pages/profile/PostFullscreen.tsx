@@ -427,14 +427,10 @@ export function PostFullscreen() {
            (.feed_posts_heading_p): darkgray ground, black text, the same
            lightgray edge that is thinner along the bottom, and Consolas */
         .post-fs-follow-btn{background:#a9a9a9;color:#000;border:7px solid #d3d3d3;border-radius:0;padding:10px;font:700 14px Consolas,Menlo,Monaco,monospace;white-space:nowrap;flex-shrink:0;cursor:pointer}
-        .post-fs-authorlink{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;min-width:0;flex:1}
-        /* A phone's bar is narrow enough that the name and the button end up
-           side by side whatever this does. A desktop's is not: the author link
-           was taking all the free width and shoving the button against the far
-           edge, half a screen away from the name it belongs to. */
-        @media (min-width: 769px){
-          .post-fs-authorlink{flex:0 1 auto}
-        }
+        /* flex:0 1 auto, not flex:1 -- growing would take all the free width and
+           shove FOLLOW against the far edge, half a bar away from the name it
+           belongs to. It still shrinks, so a long nickname ellipsises. */
+        .post-fs-authorlink{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;min-width:0;flex:0 1 auto}
         /* the expand control sits in the bottom-right corner, clear of the
            bottom bar; while expanded it is the only thing left on screen so
            there is a way back */
@@ -443,16 +439,16 @@ export function PostFullscreen() {
            layer can be painted underneath it however high its z-index -- which is
            why the control vanished a second into every video, once playback took
            over, and only on video posts. */
-        .post-fs-expand{position:absolute;right:16px;bottom:24px;z-index:11;background:none;border:none;color:#fff;font-size:20px;padding:8px;cursor:pointer;opacity:.9;transform:translateZ(0);will-change:transform}
+        .post-fs-expand{position:absolute;right:16px;bottom:12px;z-index:11;background:none;border:none;color:#fff;font-size:20px;padding:8px;cursor:pointer;opacity:.9;transform:translateZ(0);will-change:transform}
+        /* 12px is the bottom bar's own padding, so this lands on the same row as the
+           handle and FOLLOW instead of hanging below them. */
         .post-fs-expand:hover{opacity:1}
         .post-fs-rightbar{position:absolute;right:0;bottom:96px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:16px 12px;z-index:10}
-        /* On a phone the bottom-right corner belongs to FOLLOW, so this cannot
-           stay where the client drew it. It goes to the foot of the heart rail
-           instead, under the Hate pill, and the rail lifts by its height to open
-           that slot. Wider screens keep the corner. */
+        /* FOLLOW now sits beside the nickname rather than in the corner, so the
+           expand control keeps the corner on a phone as well. The reserved right
+           padding stops a long nickname from pushing FOLLOW underneath it. */
         @media (max-width:768px){
-          .post-fs-expand{bottom:96px;right:14px}
-          .post-fs-rightbar{bottom:148px}
+          .post-fs-bottombar{padding-right:60px}
         }
         .post-fs-heart{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px}
         .post-fs-heart svg{width:32px;height:32px;display:block}
@@ -483,7 +479,7 @@ export function PostFullscreen() {
         .post-fs-heart-pop{position:absolute;transform:translate(-50%,-50%);font-size:80px;line-height:1;color:#e32626;text-shadow:0 0 30px rgba(227,38,38,.8);animation:postFsHeartPop .8s ease-out forwards}
         @keyframes postFsHeartPop{0%{transform:translate(-50%,-50%) scale(0);opacity:.8}15%{transform:translate(-50%,-50%) scale(1.4);opacity:1}30%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-50%) scale(1.2);opacity:0}}
         .post-fs-report-wrap{position:relative}
-        .post-fs-report-btn{background:none;border:none;color:rgba(255,255,255,.9);padding:8px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+        .post-fs-report-btn{background:none;border:none;color:rgba(255,255,255,.9);width:28px;height:28px;padding:0;line-height:1;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
         .post-fs-report-menu{position:absolute;top:100%;right:0;margin-top:8px;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);min-width:180px;z-index:20;list-style:none;margin:0;padding:0;font-size:13px}
         .post-fs-report-menu li{border-bottom:1px solid #eee}
         .post-fs-report-menu li:last-child{border-bottom:none}
