@@ -6,11 +6,16 @@ import { ApiError } from '../middleware/errors.js';
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Subscription } from '../models/Subscription.js';
-import { AdCampaign, AdPayment } from '../models/ads.js';
+import { Ad, AdCampaign, AdPayment } from '../models/ads.js';
 import { Cart } from '../models/adminEntities.js';
 import { merchProducts } from '../data/merchProducts.js';
 import { paymentProvider } from '../services/payments/index.js';
 import { logger } from '../config/logger.js';
+import { sendMail } from '../services/mailer.js';
+import { adPaymentSuccessUser, adPaymentSuccessAdmin } from '../services/adEmails.js';
+
+/* the address AdsPaymentController mails on every ad payment */
+const ADMIN_ADS_EMAIL = 'dmartinherrada@gmail.com';
 
 export const paymentsRouter = Router();
 
@@ -263,11 +268,45 @@ async function applyPayment(
         method: paymentProvider.name,
       });
     }
-    // The campaign leaves 'draft' and enters review once paid.
+    // The campaign leaves 'draft' and enters review once paid. Read first: the
+    // mail below quotes the run length it carries.
+    const campaign = await AdCampaign.findOne(
+      { user: metadata.userId, status: 'draft' },
+      { campaignDays: 1, type: 1 },
+    ).lean();
     await AdCampaign.updateOne(
       { user: metadata.userId, status: 'draft' },
       { $set: { status: 'active' } },
     );
+
+    /* AdsPaymentController:248 mails the advertiser and the admin on a
+       successful ad payment. Sent once, alongside the AdPayment row. */
+    if (!exists) {
+      const [payer, ad] = await Promise.all([
+        User.findById(metadata.userId, { name: 1, email: 1, role: 1 }).lean(),
+        Ad.findById(metadata.adId, { adType: 1, link: 1 }).lean(),
+      ]);
+      if (payer?.email) {
+        const amount = Number(metadata.amount) || 0;
+        const adType = ad?.adType ?? campaign?.type ?? '—';
+        const linkUrl = ad?.link ?? null;
+        const durationDays = campaign?.campaignDays ?? '—';
+
+        const forUser = adPaymentSuccessUser({ name: payer.name ?? '', adType, linkUrl, amount, durationDays });
+        void sendMail(payer.email, forUser.subject, forUser.html).catch(() => undefined);
+
+        const forAdmin = adPaymentSuccessAdmin({
+          name: payer.name ?? '',
+          email: payer.email,
+          role: payer.role ?? 'user',
+          adType,
+          linkUrl,
+          amount,
+          durationDays,
+        });
+        void sendMail(ADMIN_ADS_EMAIL, forAdmin.subject, forAdmin.html).catch(() => undefined);
+      }
+    }
   } else if (metadata.purpose === 'donation' && metadata.influencerId) {
     // Credit the creator's earnings once per gateway reference.
     const key = reference || externalId;

@@ -168,9 +168,12 @@ export function AllUserPosts() {
                 <th>Post Id</th>
                 <th>Post</th>
                 <th>Influencer id</th>
-                <th>Likes</th>
-                <th>Add Likes</th>
-                <th>Likes Action</th>
+                {/* The blade takes these from content.likes; the client asked the
+                    table to speak of views instead. The eye rides with the count,
+                    the way every view figure is shown across the app. */}
+                <th>👁️ Views</th>
+                <th>Add Views</th>
+                <th>Views Action</th>
               </tr>
             </thead>
             <tbody>

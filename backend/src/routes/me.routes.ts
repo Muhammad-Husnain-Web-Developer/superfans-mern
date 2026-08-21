@@ -9,6 +9,8 @@ import { Followership } from '../models/Followership.js';
 import { Subscription } from '../models/Subscription.js';
 import { Hate } from '../models/Hate.js';
 import { sendMail } from '../services/mailer.js';
+import { renderEmail } from '../services/emailTemplate.js';
+import { priceIncrease } from '../services/adEmails.js';
 
 const ADMIN_PAYOUT_EMAIL = 'dmartinherrada@gmail.com';
 import { Like } from '../models/Like.js';
@@ -87,7 +89,14 @@ meRouter.patch(
     if (input.instagramLink !== undefined) user.instagramLink = input.instagramLink;
     if (input.bankAccount !== undefined) user.bankAccount = input.bankAccount;
     if (input.paypalAccount !== undefined) user.paypalAccount = input.paypalAccount;
-    if (input.priceOfSubscription !== undefined) user.priceOfSubscription = input.priceOfSubscription;
+    /* InfluencerController:1019 mails every follower when the fee goes UP -- not
+       when it drops or stays put. The old price is read before it is replaced. */
+    const previousPrice = user.priceOfSubscription ?? 0;
+    let priceRose = false;
+    if (input.priceOfSubscription !== undefined) {
+      priceRose = input.priceOfSubscription > previousPrice;
+      user.priceOfSubscription = input.priceOfSubscription;
+    }
     if (input.earnings !== undefined) user.earnings = input.earnings;
     if (input.chatToggle !== undefined) user.chatToggle = input.chatToggle;
     if (input.profilePicture) user.profilePicture = input.profilePicture;
@@ -99,6 +108,7 @@ meRouter.patch(
     }
 
     await user.save();
+    if (priceRose) void notifyFollowersOfPriceRise(String(user._id), user.priceOfSubscription ?? 0);
     res.json({
       success: true,
       message: 'Updated successfully',
@@ -481,13 +491,43 @@ meRouter.post(
     user.earnings = balance - amount;
     await user.save();
 
-    const message = `<p>Hi Admin,<br>This influencer requests a payout.<br>
-      Username: ${user.usernameUrl}<br>
-      Bank Account: ${user.bankAccount}<br>
-      Paypal Account: ${user.paypalAccount}<br>
-      Amount: ${amount}</p>`;
-    await sendMail(ADMIN_PAYOUT_EMAIL, 'Payment request of influencer', message).catch(() => undefined);
+    await sendMail(
+      ADMIN_PAYOUT_EMAIL,
+      'Payment request of influencer',
+      renderEmail({
+        title: 'An influencer has requested a payout',
+        lines: [
+          `<b>Username:</b> @${user.usernameUrl}`,
+          `<b>Amount:</b> ${amount}`,
+          `<b>Bank account:</b> ${user.bankAccount ?? '—'}`,
+          `<b>PayPal account:</b> ${user.paypalAccount ?? '—'}`,
+        ],
+      }),
+    ).catch(() => undefined);
 
     res.json({ success: true, message: 'Payment withdrawal request sent successfully', earnings: user.earnings });
   }),
 );
+
+/**
+ * Tells every follower that a creator's fee has gone up — InfluencerController:1019.
+ *
+ * The blade pauses five seconds after each ten mails so the provider is not hit
+ * all at once; the same pacing is kept. Run detached from the request, since a
+ * creator with many followers would otherwise wait on it.
+ */
+async function notifyFollowersOfPriceRise(influencerId: string, price: number): Promise<void> {
+  const links = await Followership.find({ followerUser: influencerId }, { followedUser: 1 }).lean();
+  let sent = 0;
+  for (const link of links) {
+    const follower = await User.findById(link.followedUser, { name: 1, email: 1 }).lean();
+    if (!follower?.email) continue;
+    if (sent === 10) {
+      await new Promise((r) => setTimeout(r, 5000));
+      sent = 0;
+    }
+    const mail = priceIncrease({ subscriberName: follower.name ?? '', subscriptionPrice: price });
+    await sendMail(follower.email, mail.subject, mail.html).catch(() => undefined);
+    sent++;
+  }
+}

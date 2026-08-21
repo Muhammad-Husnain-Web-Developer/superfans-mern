@@ -5,6 +5,8 @@ import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
 import { saveBase64Image } from '../services/storage.js';
 import { paymentProvider } from '../services/payments/index.js';
+import { sendMail } from '../services/mailer.js';
+import { adCreatedUser, adCreatedAdmin, adStatusChanged } from '../services/adEmails.js';
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Post } from '../models/Post.js';
@@ -19,6 +21,9 @@ import {
   AdUserProfile,
   type AdType,
 } from '../models/ads.js';
+
+/* the address AdsPaymentController mails on every ad event */
+const ADMIN_ADS_EMAIL = 'dmartinherrada@gmail.com';
 
 export const adsRouter = Router();
 
@@ -488,12 +493,29 @@ adsRouter.get(
   }),
 );
 
+/** AdCenterController:542/566 mails the advertiser whenever an ad is approved
+    or stopped. */
+async function mailAdStatus(adId: string, approved: boolean): Promise<void> {
+  const ad = await Ad.findById(adId, { mysqlId: 1, adType: 1, user: 1 }).lean();
+  if (!ad?.user) return;
+  const owner = await User.findById(ad.user, { name: 1, email: 1 }).lean();
+  if (!owner?.email) return;
+  const mail = adStatusChanged({
+    name: owner.name ?? '',
+    adId: ad.mysqlId ?? String(ad._id),
+    adType: ad.adType ?? '',
+    approved,
+  });
+  await sendMail(owner.email, mail.subject, mail.html).catch(() => undefined);
+}
+
 adsRouter.put(
   '/:id/approve',
   requireAuth,
   asyncHandler(async (req, res) => {
     if (!(await isAdsAdmin(req.auth!.userId))) throw ApiError.forbidden();
     await Ad.updateOne({ _id: req.params.id }, { $set: { approved: true, status: true } });
+    void mailAdStatus(String(req.params.id), true);
     res.json({ success: true, message: 'Ad approved successfully.' });
   }),
 );
@@ -504,6 +526,7 @@ adsRouter.put(
   asyncHandler(async (req, res) => {
     if (!(await isAdsAdmin(req.auth!.userId))) throw ApiError.forbidden();
     await Ad.updateOne({ _id: req.params.id }, { $set: { approved: false, status: false } });
+    void mailAdStatus(String(req.params.id), false);
     res.json({ success: true, message: 'Ad marked as pending.' });
   }),
 );
@@ -775,6 +798,23 @@ async function buildAd(
       country: str(body.country),
       city: str(body.city),
     });
+  }
+
+  /* AdsPaymentController:771 mails both the advertiser and the admin the moment
+     an ad is submitted. Failures are swallowed: a mail server being down must
+     not lose the ad that was just created. */
+  const advertiser = await User.findById(userId, { name: 1, email: 1 }).lean();
+  if (advertiser) {
+    const forUser = adCreatedUser({ name: advertiser.name ?? '', adType: t, amount });
+    void sendMail(advertiser.email ?? '', forUser.subject, forUser.html).catch(() => undefined);
+
+    const forAdmin = adCreatedAdmin({
+      adType: t,
+      amount,
+      userName: advertiser.name ?? '',
+      userEmail: advertiser.email ?? '',
+    });
+    void sendMail(ADMIN_ADS_EMAIL, forAdmin.subject, forAdmin.html).catch(() => undefined);
   }
 
   return { adId: String(ad._id), campaignId: String(campaign._id) };

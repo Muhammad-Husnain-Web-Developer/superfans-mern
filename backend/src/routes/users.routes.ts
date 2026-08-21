@@ -6,6 +6,8 @@ import { ApiError } from '../middleware/errors.js';
 import { User } from '../models/User.js';
 import { UserBlock } from '../models/UserBlock.js';
 import { sendMail } from '../services/mailer.js';
+import { renderEmail } from '../services/emailTemplate.js';
+import { env } from '../config/env.js';
 
 export const usersRouter = Router();
 
@@ -48,8 +50,21 @@ usersRouter.post(
     const { username, reason } = z
       .object({ username: z.string().min(1).max(200), reason: z.string().min(1).max(200) })
       .parse(req.body);
-    const message = `A user has been reported.\n\nUser Name: ${username}\nReason: ${reason}\nProfile URL: https://live.superfanss.app/${username}`;
-    await sendMail(ADMIN_REPORT_EMAIL, 'User Report Notification', `<pre>${message}</pre>`);
+    /* the blade links these to live.superfanss.app, a domain that no longer
+       resolves; the link now points at wherever this deployment lives */
+    const target = `${env.CLIENT_ORIGIN.replace(/\/+$/, '')}/${username}`;
+    await sendMail(
+      ADMIN_REPORT_EMAIL,
+      'User Report Notification',
+      renderEmail({
+        title: 'A user has been reported',
+        lines: [
+          `<b>User name:</b> ${username}`,
+          `<b>Reason:</b> ${reason}`,
+        ],
+        action: { label: 'Open the profile', url: target },
+      }),
+    );
     res.json({ success: true });
   }),
 );
@@ -60,8 +75,21 @@ usersRouter.post(
     const { postId, reason } = z
       .object({ postId: z.string().min(1).max(64), reason: z.string().min(1).max(200) })
       .parse(req.body);
-    const message = `A post has been reported.\n\nPost ID: ${postId}\nPost URL: https://live.superfanss.app/post/${postId}\nReason: ${reason}`;
-    await sendMail(ADMIN_REPORT_EMAIL, 'Post Report Notification', `<pre>${message}</pre>`);
+    /* the blade links these to live.superfanss.app, a domain that no longer
+       resolves; the link now points at wherever this deployment lives */
+    const target = `${env.CLIENT_ORIGIN.replace(/\/+$/, '')}/user/post_detail/${postId}`;
+    await sendMail(
+      ADMIN_REPORT_EMAIL,
+      'Post Report Notification',
+      renderEmail({
+        title: 'A post has been reported',
+        lines: [
+          `<b>Post ID:</b> ${postId}`,
+          `<b>Reason:</b> ${reason}`,
+        ],
+        action: { label: 'Open the post', url: target },
+      }),
+    );
     res.json({ success: true });
   }),
 );

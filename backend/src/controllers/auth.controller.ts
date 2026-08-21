@@ -6,6 +6,7 @@ import { PasswordReset } from '../models/PasswordReset.js';
 import { ApiError } from '../middleware/errors.js';
 import { loginSchema, registerSchema } from '../validators/auth.schemas.js';
 import { sendMail } from '../services/mailer.js';
+import { renderEmail } from '../services/emailTemplate.js';
 import { env } from '../config/env.js';
 import {
   REFRESH_COOKIE,
@@ -129,10 +130,16 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
     await sendMail(
       normalized,
       'Reset Password Notification - Superfans World',
-      `<p>You are receiving this email because we received a password reset request for your account.</p>
-       <p><a href="${link}">Reset Password</a></p>
-       <p>This password reset link will expire in 60 minutes.</p>
-       <p>If you did not request a password reset, no further action is required.</p>`,
+      renderEmail({
+        title: 'Reset Your Password',
+        lines: [
+          'We received a request to reset the password for your account.',
+          'Press the button below to choose a new one.',
+        ],
+        action: { label: 'Reset Password', url: link },
+        footnote:
+          'This link expires in 60 minutes. If you did not ask for a password reset, you can ignore this email — nothing will change.',
+      }),
     );
   }
 
