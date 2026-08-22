@@ -7,7 +7,8 @@ export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 // Eagerly bundle every locale JSON converted from the Laravel app
 // (resources/lang/** → src/i18n/locales/**). Namespaces mirror the
-// original files: auth, content, footer, nav, pagination, passwords, report, validation.
+// original files: auth, content, footer, nav, pagination, passwords, report, validation —
+// plus stories, which has no Laravel original because the feature is new.
 const modules = import.meta.glob<ResourceKey>('./locales/*/*.json', {
   eager: true,
   import: 'default',
@@ -30,7 +31,7 @@ void i18n
     fallbackLng: 'en',
     supportedLngs: [...SUPPORTED_LOCALES],
     defaultNS: 'content',
-    ns: ['auth', 'content', 'footer', 'nav', 'pagination', 'passwords', 'report', 'validation'],
+    ns: ['auth', 'content', 'footer', 'nav', 'pagination', 'passwords', 'report', 'stories', 'validation'],
     interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],

@@ -1,0 +1,138 @@
+/* "Add Storie:" — mockup Pas 2 (SelectFile.Camera.png), measured off the image.
+   The mockup's red panel is 341px wide and 730 tall; every number below is that panel's
+   own pixel measurement. Vertical rhythm, as measured (panel-relative): close 27 · hero 55
+   · title 113 · "Select File:" 253 · input 293 · rule 390 · camera 465 · label 498 · button
+   634 · panel foot 730.
+
+   The gaps stay in absolute pixels rather than scaling with the panel: the type does not
+   scale either, and stretching the spacing around fixed-size text only pulls the two out
+   of step. A wider phone therefore gets the same modal with a little more air at the
+   sides, which is how the rest of the app behaves. */
+
+.add-story-panel {
+  border-radius: 20px;
+  background: red;
+  position: relative;
+  padding-bottom: 53px;
+}
+
+.add-story-close {
+  position: absolute;
+  top: 8px;
+  /* the mockup's x sits 29px in from the panel edge, measured to the glyph's centre */
+  right: 8px;
+  /* the x measures 22px of ink in the mockup, which is this size in this face */
+  font-size: 52px;
+  line-height: 1;
+  color: #fff;
+  opacity: 1;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.add-story-hero {
+  display: block;
+  margin: 52px auto 0;
+  /* the artwork carries transparent padding: 52px of box gives the mockup's 38px of ink */
+  height: 47px;
+}
+
+.add-story-title {
+  display: block;
+  text-align: center;
+  color: #fff;
+  /* ascender band measured 31px, which is this size in the heading face */
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 10px 0 0;
+}
+
+.add-story-label {
+  text-align: center;
+  color: #fff;
+  font-family: 'Rockwell Nova', 'Rockwell', Georgia, serif;
+  font-weight: 800;
+  font-size: 20px;
+  margin: 101px 0 0;
+}
+
+.add-story-file {
+  /* the native control is wider than the panel, so text-align cannot centre it: it has to
+     be allowed to shrink first. The mockup gives it 210 of the panel's 341, i.e. 62%. */
+  display: flex;
+  justify-content: center;
+  margin-top: 19px;
+}
+.add-story-file input {
+  color: #fff;
+  max-width: 62%;
+}
+
+.add-story-rule {
+  border: 0;
+  border-top: 3px solid #fff;
+  width: 66.6%;
+  margin: 73px auto 0;
+}
+
+.add-story-camera {
+  display: block;
+  margin: 66px auto 0;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: #fff;
+  text-align: center;
+}
+.add-story-camera .glyph {
+  display: block;
+  font-size: 28px;
+  line-height: 1;
+}
+.add-story-camera .label {
+  display: block;
+  font-family: 'Rockwell Nova', 'Rockwell', Georgia, serif;
+  font-weight: 800;
+  font-size: 24px;
+  margin-top: 4px;
+}
+
+.add-story-error {
+  color: #fff;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin: 18px 20px 0;
+  text-align: center;
+}
+
+.add-story-submit {
+  display: block;
+  margin: 107px auto 0;
+  width: 54.5%;
+  height: 42px;
+  background: #724abb;
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.1em;
+  outline: 0;
+  border: 3px solid #4712a6;
+  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
+  cursor: pointer;
+}
+.add-story-submit[disabled] {
+  cursor: default;
+  opacity: 0.7;
+}
+
+/* an error pushes the button down; the mockup's gap is measured from the label, so the
+   spacing collapses to something sane once a message is in the way */
+.add-story-error ~ .add-story-submit {
+  margin-top: 40px;
+}

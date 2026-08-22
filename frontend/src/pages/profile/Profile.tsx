@@ -12,6 +12,10 @@ import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
 import { AddPostModal } from './AddPostModal';
 import { AddPostHost } from './AddPostHost';
+import { AddStoryModal } from '../../components/stories/AddStoryModal';
+import { StoryViewer } from '../../components/stories/StoryViewer';
+import { fetchUserStories } from '../../api/stories';
+import '../../styles/stories.css';
 import { ControlPanelModal } from './ControlPanelModal';
 import { UserModalCenter } from './UserModalCenter';
 import { InfluencerControlPanelModal } from './InfluencerControlPanelModal';
@@ -271,6 +275,10 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   useScrollMemory(state === 'ok' && posts.length > 0);
   const [reportOpen, setReportOpen] = useState(false);
   const [addPostOpen, setAddPostOpen] = useState(false);
+  const [addStoryOpen, setAddStoryOpen] = useState(false);
+  const [storyOpen, setStoryOpen] = useState(false);
+  /* whether this profile has a story running right now — it decides the ring (Pas 5) */
+  const [hasStory, setHasStory] = useState(false);
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
   const [swal, setSwal] = useState<{ icon: 'success' | 'error'; title: string; text: string } | null>(null);
   const [boostOpen, setBoostOpen] = useState(false);
@@ -347,6 +355,20 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   /* Head of the same dropdown, at the client's request: copies this profile's public
      address -- the bare /{username} vanity URL, which is what Laravel's fallback route
      serves and what a guest can open. */
+  /* the ring only appears while a story is live, so this is asked per profile */
+  useEffect(() => {
+    if (!profile?.usernameUrl) return;
+    let cancelled = false;
+    fetchUserStories(profile.usernameUrl)
+      .then((d) => {
+        if (!cancelled) setHasStory(d.stories.length > 0);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [profile?.usernameUrl]);
+
   function copyProfileLink() {
     if (!profile) return;
     setReportOpen(false);
@@ -610,27 +632,6 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
               alt=""
             />
           )}
-          {isOwner && (
-            <i
-              className="fa fa-plus add_post_icon"
-              onClick={() => setAddPostOpen(true)}
-              style={{
-                background: 'white',
-                borderRadius: 56,
-                position: 'absolute',
-                right: 20,
-                bottom: 0,
-                marginBottom: -12,
-                cursor: 'pointer',
-                zIndex: 2,
-                boxShadow: '2px 2px 3px #e78267',
-                color: '#8a2be2',
-                fontSize: 12,
-                padding: '5.5px 6.7px',
-              }}
-              aria-hidden="true"
-            ></i>
-          )}
         </div>
 
         {/* "Mis publicaciones" inside this modal must always be the SIGNED-IN user's own
@@ -639,6 +640,16 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
             so it never shows the profile being visited. Handing it this page's `posts`
             did exactly that on someone else's wall. On your own wall they are the same
             list, and keeping it lets the grid refresh after you post. */}
+        {addStoryOpen && (
+          <AddStoryModal
+            onClose={() => setAddStoryOpen(false)}
+            onPosted={() => setHasStory(true)}
+          />
+        )}
+        {storyOpen && profile.usernameUrl && (
+          <StoryViewer usernameUrl={profile.usernameUrl} onClose={() => setStoryOpen(false)} />
+        )}
+
         {addPostOpen &&
           (isOwner ? (
             <AddPostModal myPosts={posts} onClose={() => setAddPostOpen(false)} onChanged={refetch} />
@@ -649,19 +660,38 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
         <div className="fh5co-narrow-content" style={{ paddingTop: 0, marginTop: -54 }}>
           <center>
             {/* avatar */}
-            {profile.profilePicture ? (
-              <img
-                src={assetImage(profile.profilePicture)}
-                style={{ width: 92, height: 92, borderRadius: 74, border: '4px solid white' }}
-                alt=""
-              />
-            ) : (
-              <img
-                src="/assets/images/SUPERHEROINA.svg"
-                style={{ width: 92, height: 92, borderRadius: 74 }}
-                alt=""
-              />
-            )}
+            {/* Stories, Pas 1 and Pas 5: a live story rings the picture, and the + the
+                mockup lifted off the cover sits at the picture's corner. Tapping the ring
+                plays the story; tapping the + opens Add Storie. */}
+            <span style={{ position: 'relative', display: 'inline-block', lineHeight: 0 }}>
+              <span
+                className={hasStory ? 'story-ring' : undefined}
+                onClick={hasStory ? () => setStoryOpen(true) : undefined}
+                style={hasStory ? { cursor: 'pointer' } : undefined}
+              >
+                {profile.profilePicture ? (
+                  <img
+                    src={assetImage(profile.profilePicture)}
+                    style={{ width: 92, height: 92, borderRadius: 74, border: '4px solid white' }}
+                    alt=""
+                  />
+                ) : (
+                  <img
+                    src="/assets/images/SUPERHEROINA.svg"
+                    style={{ width: 92, height: 92, borderRadius: 74 }}
+                    alt=""
+                  />
+                )}
+              </span>
+              {isOwner && (
+                <i
+                  className="fa fa-plus story-add-badge"
+                  onClick={() => setAddStoryOpen(true)}
+                  title="Add Storie"
+                  aria-hidden="true"
+                ></i>
+              )}
+            </span>
 
             <br />
             <br />

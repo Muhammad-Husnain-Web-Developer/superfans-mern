@@ -94,6 +94,38 @@ usersRouter.post(
   }),
 );
 
+/* ---------- report a story (the client asked for the post reasons here too) ---------- */
+
+usersRouter.post(
+  '/reports/story',
+  asyncHandler(async (req, res) => {
+    const { storyId, username, reason } = z
+      .object({
+        storyId: z.string().min(1).max(64),
+        username: z.string().min(1).max(200),
+        reason: z.string().min(1).max(200),
+      })
+      .parse(req.body);
+    /* a story is only reachable through its author's handle, so that is what the mail links
+       to — the story itself may well have expired by the time anyone opens it */
+    const target = `${env.CLIENT_ORIGIN.replace(/\/+$/, '')}/stories/${username}`;
+    await sendMail(
+      ADMIN_REPORT_EMAIL,
+      'Story Report Notification',
+      renderEmail({
+        title: 'A story has been reported',
+        lines: [
+          `<b>Story ID:</b> ${storyId}`,
+          `<b>Author:</b> @${username}`,
+          `<b>Reason:</b> ${reason}`,
+        ],
+        action: { label: 'Open the stories', url: target },
+      }),
+    );
+    res.json({ success: true });
+  }),
+);
+
 /* ---------- all influencers (mirrors UserController@influencers grid) ---------- */
 
 usersRouter.get(
@@ -134,7 +166,7 @@ usersRouter.get(
         usernameUrl: { $regex: escaped, $options: 'i' },
         role: { $in: ['influencer', 'user'] },
       },
-      { usernameUrl: 1, verified: 1 },
+      { usernameUrl: 1, verified: 1, profilePicture: 1 },
     )
       .sort({ verified: -1 })
       .limit(20)
@@ -142,7 +174,13 @@ usersRouter.get(
 
     res.json({
       success: true,
-      data: results.map((u) => ({ name: u.usernameUrl, verified: u.verified })),
+      /* profilePicture rides along so a picker can show a face beside the handle; the
+         existing callers simply ignore it */
+      data: results.map((u) => ({
+        name: u.usernameUrl,
+        verified: u.verified,
+        profilePicture: u.profilePicture ?? null,
+      })),
     });
   }),
 );

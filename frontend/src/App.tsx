@@ -16,6 +16,7 @@ import { NotFoundPage } from './pages/errors/ErrorPage';
 import { Posts } from './pages/profile/Posts';
 import { PostDetail } from './pages/profile/PostDetail';
 import { PostFullscreen } from './pages/profile/PostFullscreen';
+import { StoryPage } from './pages/stories/StoryPage';
 import { World } from './pages/world/World';
 import { Influencers } from './pages/world/Influencers';
 import { UserFeed } from './pages/world/UserFeed';
@@ -115,6 +116,9 @@ function App() {
 
           {/* Post detail (post_detail.blade.php) */}
           <Route path="post/:id" element={<PostDetail />} />
+
+          {/* what "Share url Storie" copies — opens that creator's live stories */}
+          <Route path="stories/:usernameUrl" element={<StoryPage />} />
 
           {/* World discovery feed (world.blade.php). Logged-in users reach the same
               component via /user/world and /influencer/world (the sidebar's links). */}

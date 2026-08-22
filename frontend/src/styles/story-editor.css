@@ -1,0 +1,432 @@
+/* Story editor — mockups Pas 3 and Pas 4, measured off the images.
+   The mockup panel is 340px wide; canvas-relative numbers below come from a 254x460 canvas.
+
+   Panel-relative:  canvas x29 y158 w254 h460 · side labels x294 w33 h34 at y158/205/251,
+   13px from the panel's right edge · Publicació x80 y637 w180 h36.
+   Canvas-relative:  tag search x102 y4 w146 h40 · link + text popups x42 y42 w206 h79 ·
+   accept x190 y126 w58 · link swatches y127 h28 at x42/74/105 · font grid 51x26 at x42/95,
+   y127/157 · colour grid 18px at x148/168, y127/146/166 · handles 23x23 above the element.
+
+   Colours, sampled: accept #30bf14 on #156b05 · field #ffffff edged #585858 · link chips
+   #00a8f3 #0ed145 #ffffff · text colours #ffffff #000000 #ec1c24 #ffaec8 #fff200 #5e3af1. */
+
+.story-editor {
+  display: flex;
+  gap: 11px;
+  padding: 0 13px 0 29px;
+  margin-top: 8px;
+}
+
+/* the canvas keeps the mockup's 254:460, so a story is framed as it will be watched */
+.story-canvas {
+  position: relative;
+  flex: 1;
+  aspect-ratio: 254 / 460;
+  background: #000;
+  overflow: hidden;
+  touch-action: none;
+}
+.story-canvas > img,
+.story-canvas > video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
+/* the three labels down the right: 33x34 white boxes carrying red text, sampled from the
+   mockup as #ffffff on the panel's red with #ec1c24 lettering */
+.story-tools {
+  /* 33px is the mockup's box and exactly what the English labels need. A language whose
+     word is longer — "Etiquetar", "Markieren" — widens the column instead of spilling out
+     of it; the canvas keeps its ratio and gives up the few pixels. */
+  min-width: 33px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 13px;
+}
+.story-tool {
+  /* min-content is the width of the longest single word, so "Tag User" folds onto the two
+     lines the mockup draws inside its 33px box, while "Markieren" — which cannot fold —
+     takes the room it needs instead of spilling. */
+  width: min-content;
+  min-width: 33px;
+  height: 34px;
+  white-space: normal;
+  background: #fff;
+  border: 0;
+  padding: 1px 2px;
+  color: #ec1c24;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------- placed items --- */
+.story-item {
+  position: absolute;
+  transform-origin: center center;
+  cursor: move;
+  user-select: none;
+}
+.story-item-handles {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 3px;
+  display: flex;
+  gap: 3px;
+  white-space: nowrap;
+}
+.story-handle {
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  border: 0;
+  background: #e9e9f5;
+  color: #333;
+  font-size: 13px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+.story-handle.rotate {
+  cursor: grab;
+}
+
+/* the chips as they are drawn in Pas 4 */
+.story-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #fff;
+  border: 2px solid #585858;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #000;
+  white-space: nowrap;
+}
+.story-chip .dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #a9a9a9;
+  flex-shrink: 0;
+}
+.story-text-box {
+  background: #fff;
+  border: 2px solid #585858;
+  padding: 8px 10px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #000;
+  max-width: 190px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ------------------------------------------------------------------ popups --- */
+/* The popup is a control panel, so it keeps the size it was drawn at rather than growing
+   with the canvas: its row is exactly 206px of fixed parts — 104 of fonts, 2, 38 of colours,
+   4, 58 of Aceptar — and any extra width would only open gaps the mockup does not have.
+   Its position stays proportional, at the mockup's 42 of 254 from the left. */
+.story-pop {
+  position: absolute;
+  left: 16.5%;              /* 42 of 254 */
+  top: 9.1%;                /* 42 of 460 */
+  width: 206px;
+  max-width: calc(100% - 12px);
+  z-index: 5;
+}
+.story-pop.search {
+  left: 40.2%;              /* 102 of 254 */
+  top: 0.9%;                /* 4 of 460 */
+  width: 146px;
+}
+
+.story-field {
+  display: block;
+  width: 100%;
+  background: #fff;
+  border: 2px solid #585858;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #000;
+  box-sizing: border-box;
+}
+.story-field + .story-field {
+  border-top: 0;
+}
+.story-textarea {
+  height: 79px;
+  resize: none;
+}
+/* A pale colour on the white field would be invisible, so the field darkens for those —
+   the preview has to show what was chosen, not a guess at it. */
+.story-textarea.on-dark {
+  background: #2b2b2b;
+}
+
+.story-pop-row {
+  display: flex;
+  align-items: flex-start;
+  /* the mockup's own spacing: 2px between the fonts and the colours, 4 before Aceptar */
+  gap: 2px;
+  margin-top: 6px;
+}
+.story-pop-spacer {
+  flex: 1;
+}
+
+.story-accept {
+  /* the row's own 2px gap already sits here; this makes up the mockup's 4 */
+  margin-left: 2px;
+  background: #30bf14;
+  border: 2px solid #156b05;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 6px 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  min-width: 58px;
+}
+
+/* every drawn part measures what the mockup says including its border, or the row adds
+   up to more than the 206 it is meant to fill */
+.story-swatch,
+.story-colour,
+.story-font,
+.story-accept {
+  box-sizing: border-box;
+}
+
+/* the link chip's three colours, 28px squares */
+.story-swatches {
+  display: flex;
+  gap: 3px;
+}
+.story-swatch {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #585858;
+  cursor: pointer;
+  padding: 0;
+}
+.story-swatch.on {
+  outline: 2px solid #000;
+  outline-offset: 1px;
+}
+
+/* four named fonts, 51x26 in a 2x2 grid */
+.story-fonts {
+  display: grid;
+  grid-template-columns: repeat(2, 51px);
+  gap: 4px 2px;
+}
+.story-font {
+  width: 51px;
+  height: 26px;
+  background: #fff;
+  border: 1px solid #585858;
+  font-size: 9px;
+  line-height: 1.05;
+  color: #000;
+  cursor: pointer;
+  padding: 1px 2px;
+  text-align: left;
+}
+.story-font.on {
+  outline: 2px solid #000;
+}
+/* the four faces the mockup names */
+.story-font.gamer,
+.story-textarea.font-gamer,
+.story-text-box.font-gamer,
+.story-chip.font-gamer {
+  font-family: 'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+}
+.story-font.spacial,
+.story-textarea.font-spacial,
+.story-text-box.font-spacial,
+.story-chip.font-spacial {
+  font-family: Impact, 'Arial Black', 'Haettenschweiler', sans-serif;
+}
+.story-font.classic,
+.story-textarea.font-classic,
+.story-text-box.font-classic,
+.story-chip.font-classic {
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.story-font.base,
+.story-textarea.font-base,
+.story-text-box.font-base,
+.story-chip.font-base {
+  font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+}
+
+/* six colours, 18px squares in a 2x3 grid */
+.story-colours {
+  display: grid;
+  grid-template-columns: repeat(2, 18px);
+  gap: 2px;
+}
+.story-colour {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #585858;
+  cursor: pointer;
+  padding: 0;
+}
+.story-colour.on {
+  outline: 2px solid #000;
+  outline-offset: 1px;
+}
+
+.story-suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+  border: 2px solid #585858;
+  border-top: 0;
+  max-height: 132px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+.story-suggestions li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 7px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  color: #000;
+  line-height: 1.2;
+}
+.story-suggestions li:last-child {
+  border-bottom: 0;
+}
+.story-suggestions li:hover {
+  background: #f2f2f2;
+}
+.story-suggestions .avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #ddd;
+  flex-shrink: 0;
+  display: block;
+}
+.story-suggestions .handle {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* the same badge the rest of the app puts beside a nickname */
+.story-suggestions .tick {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  display: block;
+}
+.story-max {
+  display: block;
+  font-size: 9px;
+  color: #000;
+  background: #fff;
+  border: 2px solid #585858;
+  border-bottom: 0;
+  padding: 1px 6px 0;
+  font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+}
+
+/* Publicació — the same purple as Edit, at the mockup's width and height */
+.story-publish {
+  display: block;
+  margin: 19px auto 0;
+  width: 180px;
+  height: 36px;
+  background: #724abb;
+  color: #fff;
+  font-weight: 900;
+  font-size: 1.1em;
+  border: 3px solid #4712a6;
+  outline: 0;
+  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
+  cursor: pointer;
+}
+.story-publish[disabled] {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------ camera --- */
+/* Pas 2's Camera, opened inside the same panel; the stage keeps the story's 9:16 */
+.story-camera {
+  padding: 8px 29px 0;
+}
+.story-camera-stage {
+  position: relative;
+  aspect-ratio: 254 / 460;
+  background: #000;
+  overflow: hidden;
+}
+.story-camera-stage video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.story-camera-timer {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+.story-camera-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 14px;
+}
+.story-camera-btn {
+  background: #fff;
+  border: 0;
+  color: #ec1c24;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 14px;
+  cursor: pointer;
+}
+.story-camera-btn.record.on {
+  background: #ec1c24;
+  color: #fff;
+}
+.story-camera-shutter {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #fff;
+  border: 4px solid #ec1c24;
+  cursor: pointer;
+  padding: 0;
+}

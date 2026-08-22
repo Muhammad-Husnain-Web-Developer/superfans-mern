@@ -1,0 +1,339 @@
+/* Stories — the ring, the feed strip and the full-screen viewer (mockups Pas 5, 6, 7).
+   No Laravel original exists for any of this; the zip in the repo root is the reference. */
+
+/* ---------------------------------------------------------------- the ring --- */
+/* A live story puts a rainbow ring round the avatar. The white band between the ring
+   and the picture is what makes it read as a ring rather than a coloured border. */
+.story-ring {
+  display: inline-block;
+  position: relative;
+  border-radius: 50%;
+  padding: 3px;
+  background: conic-gradient(
+    from 210deg,
+    #f7b500,
+    #24c04b,
+    #00b7ff,
+    #2b47ff,
+    #a028ff,
+    #ff2d55,
+    #f7b500
+  );
+  line-height: 0;
+  flex-shrink: 0;
+}
+.story-ring.seen {
+  background: #c7c7c7;
+}
+.story-ring > img,
+.story-ring > .story-ring-inner {
+  display: block;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  object-fit: cover;
+  background: #ddd;
+}
+.story-ring.as-button {
+  cursor: pointer;
+  border: none;
+  background-clip: padding-box;
+}
+
+/* --------------------------------------------------------------- the strip --- */
+/* Pas 7, measured: the bar is 76 tall on the desktop mockup and 88 on the phone one,
+   around 74px avatars set 8px apart, and the mockup carries no name under them. */
+.stories-strip-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto 24px;
+  max-width: 1290px;
+  padding: 1px 8px;
+  background: #ececec;
+  border: 1px solid #cfcfcf;
+  border-radius: 16px;
+}
+.stories-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  flex: 1;
+  /* the row is dragged or arrowed, not scrollbar-ed */
+  scrollbar-width: none;
+}
+.stories-strip::-webkit-scrollbar {
+  display: none;
+}
+/* with room to spare the circles sit in the middle of the bar; once the row overflows the
+   class comes off, because centring a scrolling row puts its start out of reach */
+.stories-strip.centred {
+  justify-content: center;
+}
+.stories-strip-item {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.stories-strip-arrow {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  color: #333;
+  padding: 4px 2px;
+  flex-shrink: 0;
+}
+.stories-strip-arrow[disabled] {
+  opacity: 0.25;
+  cursor: default;
+}
+@media (max-width: 768px) {
+  /* The phone mockup runs the strip edge to edge, without the rounded card. The feed
+     column has its own side padding, so the row breaks out of it rather than trying to
+     guess that padding: full viewport width, pulled back to the middle. The viewer is a
+     sibling of this element, so the transform here cannot trap its fixed positioning. */
+  .stories-strip-wrap {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    margin-bottom: 14px;
+    /* the phone mockup gives the row more air: an 88px bar around the same avatars */
+    padding-top: 7px;
+    padding-bottom: 7px;
+    width: 100vw;
+    margin-left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+/* -------------------------------------------------------------- the viewer --- */
+.story-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+/* The bars and the header sit above the stage, and the stage is given a layer of its own
+   so that anything placed on a story — a tag, a link chip, a line of text — cannot climb
+   out of it and cover the menu. Without the stage's own z-index those items shared the
+   viewer's root layer with the header and won on DOM order alone. */
+.story-viewer-bars {
+  display: flex;
+  /* Pas 6: a 7px bar 10px down the screen, segments 5px apart, 3px clear of each edge */
+  gap: 5px;
+  padding: 10px 3px 0;
+  flex-shrink: 0;
+  z-index: 3;
+}
+.story-viewer-bar {
+  flex: 1;
+  height: 7px;
+  border-radius: 2px;
+  /* the track's colour is set per segment in the component */
+  overflow: hidden;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  /* a 7px target is hard to hit with a finger, so the tappable area reaches above and
+     below the bar without moving it or changing the row's height */
+  position: relative;
+}
+.story-viewer-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -9px;
+  bottom: -9px;
+}
+.story-viewer-bar > span {
+  display: block;
+  height: 100%;
+  width: 0;
+}
+.story-viewer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  flex-shrink: 0;
+  z-index: 4;
+}
+.story-viewer-handle {
+  color: #fff;
+  font-size: 14px;
+  text-decoration: none;
+  flex: 0 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.story-viewer-handle:hover,
+.story-viewer-handle:focus {
+  color: #fff;
+  text-decoration: none;
+}
+.story-viewer-spacer {
+  flex: 1;
+}
+.story-viewer-menu-wrap {
+  position: relative;
+}
+/* the same square caret the post viewer uses */
+.story-viewer-caret {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  line-height: 1;
+  background: #888;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.story-viewer-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 190px;
+  z-index: 20;
+  list-style: none;
+  padding: 0;
+  font-size: 13px;
+}
+.story-viewer-menu li {
+  border-bottom: 1px solid #eee;
+}
+.story-viewer-menu li:last-child {
+  border-bottom: none;
+}
+.story-viewer-menu a {
+  display: block;
+  padding: 10px 16px;
+  color: #333;
+  text-decoration: none;
+}
+.story-viewer-menu a:hover {
+  background: #f5f5f5;
+  color: #333;
+  text-decoration: none;
+}
+/* the delete row's second step: the confirm and a way out, side by side */
+.story-viewer-confirm {
+  display: flex;
+}
+.story-viewer-confirm a {
+  flex: 1;
+  color: #ec1c24;
+  font-weight: 700;
+}
+.story-viewer-confirm a.cancel {
+  flex: 0 0 auto;
+  color: #666;
+  font-weight: 400;
+  border-left: 1px solid #eee;
+}
+.story-viewer-stage {
+  position: relative;
+  flex: 1;
+  z-index: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.story-viewer-stage img,
+.story-viewer-stage video {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  /* a playing video is handed to the GPU as an overlay plane and would paint over the
+     bars and the header; less than full opacity keeps it on the normal layer */
+  opacity: 0.999;
+}
+/* left third steps back, right two thirds step forward — the gesture everyone knows */
+.story-viewer-prev,
+.story-viewer-next {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  cursor: pointer;
+  z-index: 1;
+}
+.story-viewer-prev {
+  left: 0;
+  width: 33%;
+}
+.story-viewer-next {
+  right: 0;
+  width: 67%;
+}
+/* the mockup draws only the caret up there, so this sits beside it in the row rather
+   than floating over it */
+.story-viewer-close {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 24px;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.story-viewer-empty {
+  color: #fff;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+/* ------------------------------------------------------- the + on the avatar --- */
+/* Mockup Pas 1, measured off ButtonPositioned.png: the mockup's avatar is 92px across,
+   exactly ours, so its numbers transfer one for one — the badge's centre sits 8.5px in
+   from the picture's right edge and 11.5px up from its bottom, which puts it on the
+   lower-right of the circle rather than beside it.
+
+   It carries its own class because the legacy .add_post_icon rule forces `right: 17px
+   !important` under 767px, drawn for the badge's old home at the cover's edge. */
+.story-add-badge {
+  position: absolute;
+  right: -1px;
+  bottom: 1px;
+  z-index: 2;
+  background: #fff;
+  border-radius: 56px;
+  color: #8a2be2;
+  font-size: 12px;
+  padding: 5.5px 6.7px;
+  box-shadow: 2px 2px 3px #e78267;
+  cursor: pointer;
+}
+/* With a live story the ring pads the picture by 3px on every side, which grows the box
+   these offsets are measured against. Stepping back by the same 3px lands the badge on
+   the same spot of the picture whether or not the ring is there. */
+.story-ring + .story-add-badge {
+  right: 2px;
+  bottom: 4px;
+}

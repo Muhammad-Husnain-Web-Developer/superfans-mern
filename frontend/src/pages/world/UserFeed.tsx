@@ -10,6 +10,7 @@ import { api } from '../../api/client';
 import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
+import { StoriesStrip } from '../../components/stories/StoriesStrip';
 import { GuestHeader } from '../profile/ProfileSidebar';
 import { WorldSidebar } from './World';
 import '../../styles/world-page.css';
@@ -103,6 +104,9 @@ export function UserFeed() {
               <span>"{t('feed_of_me', { defaultValue: 'My Feed' })} <br /> Superfans World"</span>
             </h2>
           </center>
+
+          {/* Stories, Pas 7: the ringed avatars sit between the heading and the posts */}
+          <StoriesStrip />
 
           <div className="row animate-box" style={{ display: 'flex', flexWrap: 'wrap' }}>
             {ready && posts.length === 0 ? (
