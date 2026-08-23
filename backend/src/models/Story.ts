@@ -26,7 +26,7 @@ export interface IStoryElement {
   title?: string;
   /** kind 'text': the words, one of the four named fonts, and the chosen colour */
   text?: string;
-  font?: 'gamer' | 'spacial' | 'classic' | 'base';
+  font?: 'gamer' | 'anton' | 'classic' | 'base';
   color?: string;
 }
 
@@ -55,7 +55,7 @@ const storyElementSchema = new Schema<IStoryElement>(
     url: String,
     title: String,
     text: String,
-    font: { type: String, enum: ['gamer', 'spacial', 'classic', 'base'] },
+    font: { type: String, enum: ['gamer', 'anton', 'classic', 'base'] },
     color: String,
   },
   { _id: false },

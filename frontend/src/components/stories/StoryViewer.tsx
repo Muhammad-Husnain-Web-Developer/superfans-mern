@@ -10,6 +10,7 @@ import {
   type StoryOwner,
 } from '../../api/stories';
 import { api } from '../../api/client';
+import { storyTextStyle } from './textStyle';
 import { assetImage, videoMime } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from '../../pages/profile/Profile';
@@ -384,7 +385,7 @@ export function StoryViewer({
               </span>
             )}
             {el.kind === 'text' && (
-              <div className={`story-text-box font-${el.font ?? 'gamer'}`} style={{ color: el.color }}>
+              <div className={`story-text-box font-${el.font ?? 'gamer'}`} style={storyTextStyle(el.color)}>
                 {el.text}
               </div>
             )}

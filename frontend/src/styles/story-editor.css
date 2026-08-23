@@ -255,11 +255,13 @@
 .story-chip.font-gamer {
   font-family: 'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
 }
-.story-font.spacial,
-.story-textarea.font-spacial,
-.story-text-box.font-spacial,
-.story-chip.font-spacial {
-  font-family: Impact, 'Arial Black', 'Haettenschweiler', sans-serif;
+/* the client's own pick, loaded from Google in index.html; Impact keeps the same condensed
+   weight if the webfont is slow or blocked */
+.story-font.anton,
+.story-textarea.font-anton,
+.story-text-box.font-anton,
+.story-chip.font-anton {
+  font-family: 'Anton', Impact, 'Arial Black', 'Haettenschweiler', sans-serif;
 }
 .story-font.classic,
 .story-textarea.font-classic,

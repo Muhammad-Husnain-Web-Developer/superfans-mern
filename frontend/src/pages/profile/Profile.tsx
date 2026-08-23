@@ -12,6 +12,7 @@ import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
 import { AddPostModal } from './AddPostModal';
 import { AddPostHost } from './AddPostHost';
+import { ControlPanelHost } from './ControlPanelHost';
 import { AddStoryModal } from '../../components/stories/AddStoryModal';
 import { StoryViewer } from '../../components/stories/StoryViewer';
 import { fetchUserStories } from '../../api/stories';
@@ -641,7 +642,13 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
 
       {/* The modal depends on role and on which layout the page uses: creators get the
           influencer modal; fans get the fuller #userModalCenter on the wall/world pages
-          (layouts.main) and the layouts_direct_user one on the canonical /{username}. */}
+          (layouts.main) and the layouts_direct_user one on the canonical /{username}.
+
+          On someone else's wall the sidebar still belongs to the viewer, so its Control
+          Panel is the viewer's own — ControlPanelHost fetches that profile itself, the way
+          Add Post below already does. Gating the whole thing on isOwner left the item dead
+          on every profile but your own. */}
+      {controlPanelOpen && !isOwner && <ControlPanelHost open onClose={() => setControlPanelOpen(false)} />}
       {controlPanelOpen &&
         isOwner &&
         (authUser?.role === 'influencer' ? (

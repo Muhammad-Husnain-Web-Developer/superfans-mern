@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import type { StoryElement } from '../../api/stories';
 import { assetImage, videoMime } from '../../utils/format';
+import { isFieldColour, storyTextStyle } from './textStyle';
 import '../../styles/story-editor.css';
 
 /** The mockup writes "Max.11" above the search box. */
@@ -15,7 +16,8 @@ const LINK_COLOURS = ['#00a8f3', '#0ed145', '#ffffff'];
 const TEXT_COLOURS = ['#ffffff', '#000000', '#ec1c24', '#ffaec8', '#fff200', '#5e3af1'];
 const FONTS: { key: StoryElement['font']; label: string }[] = [
   { key: 'gamer', label: 'Gamer' },
-  { key: 'spacial', label: 'Spacial' },
+  /* the client replaced the mockup's "Spacial" with Anton, the Google face */
+  { key: 'anton', label: 'Anton' },
   { key: 'classic', label: 'Classic' },
   { key: 'base', label: 'Base' },
 ];
@@ -187,36 +189,36 @@ export function StoryEditor({
                     🔄
                   </button>
                   {el.kind === 'text' && (
-                    <>
-                      <button
-                        type="button"
-                        className="story-handle"
-                        title={t('edit_text')}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setText(el.text ?? '');
-                          setFont(el.font ?? 'gamer');
-                          setColour(el.color ?? TEXT_COLOURS[0]);
-                          onChange(elements.filter((_, j) => j !== i));
-                          setPop('text');
-                        }}
-                      >
-                        ▭
-                      </button>
-                      <button
-                        type="button"
-                        className="story-handle"
-                        title={t('remove')}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onChange(elements.filter((_, j) => j !== i));
-                          setSelected(null);
-                        }}
-                      >
-                        T
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      className="story-handle"
+                      title={t('edit_text')}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setText(el.text ?? '');
+                        setFont(el.font ?? 'gamer');
+                        setColour(el.color ?? TEXT_COLOURS[0]);
+                        onChange(elements.filter((_, j) => j !== i));
+                        setPop('text');
+                      }}
+                    >
+                      ▭
+                    </button>
                   )}
+                  {/* the bin belongs to every element, not only the text one — a tagged
+                      handle and a link chip have to come off the canvas too */}
+                  <button
+                    type="button"
+                    className="story-handle"
+                    title={t('remove')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(elements.filter((_, j) => j !== i));
+                      setSelected(null);
+                    }}
+                  >
+                    🗑️
+                  </button>
                 </div>
               )}
 
@@ -232,7 +234,7 @@ export function StoryEditor({
                 </span>
               )}
               {el.kind === 'text' && (
-                <div className={`story-text-box font-${el.font ?? 'gamer'}`} style={{ color: el.color }}>
+                <div className={`story-text-box font-${el.font ?? 'gamer'}`} style={storyTextStyle(el.color)}>
                   {el.text}
                 </div>
               )}
@@ -335,8 +337,10 @@ export function StoryEditor({
           {pop === 'text' && (
             <div className="story-pop" onPointerDown={(e) => e.stopPropagation()}>
               <textarea
-                className={`story-field story-textarea font-${font}${light ? ' on-dark' : ''}`}
-                style={{ color: colour }}
+                /* on-dark only for the pale inks that would vanish on the white field; the
+                   two neutrals bring their own field with them */
+                className={`story-field story-textarea font-${font}${light && !isFieldColour(colour) ? ' on-dark' : ''}`}
+                style={storyTextStyle(colour)}
                 placeholder={t('text_placeholder', { max: MAX_TEXT })}
                 maxLength={MAX_TEXT}
                 value={text}

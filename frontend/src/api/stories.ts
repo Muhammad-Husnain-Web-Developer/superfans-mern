@@ -15,7 +15,7 @@ export interface StoryElement {
   url?: string;
   title?: string;
   text?: string;
-  font?: 'gamer' | 'spacial' | 'classic' | 'base';
+  font?: 'gamer' | 'anton' | 'classic' | 'base';
   color?: string;
 }
 

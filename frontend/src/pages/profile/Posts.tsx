@@ -14,6 +14,8 @@ import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { Bio, EarnSection, PostItem, ProfilePageFooter } from './Profile';
+import { AddPostHost } from './AddPostHost';
+import { ControlPanelHost } from './ControlPanelHost';
 import '../../styles/profile-page.css';
 import '../../styles/posts-page.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
@@ -74,6 +76,8 @@ export function Posts() {
   const [posts, setPosts] = useState<ProfilePost[]>([]);
   const [ads, setAds] = useState<FeedAd[]>([]);
   const [state, setState] = useState<'loading' | 'ok' | 'notfound'>('loading');
+  const [addPostOpen, setAddPostOpen] = useState(false);
+  const [controlPanelOpen, setControlPanelOpen] = useState(false);
   /* come back from the viewer beside the post that was opened, not at the top */
   useScrollMemory(state === 'ok' && posts.length > 0);
 
@@ -136,7 +140,15 @@ export function Posts() {
       {/* header sits at page level, exactly like the blade's @include before @yield */}
       <GuestHeader usernameUrl={profile.usernameUrl} />
 
-      <ProfileSidebar profile={profile} />
+      {/* the sidebar's own menu items — without these two the Add Post and Control Panel
+          entries called nothing at all on this page */}
+      <ProfileSidebar
+        profile={profile}
+        onAddPost={() => setAddPostOpen(true)}
+        onControlPanel={() => setControlPanelOpen(true)}
+      />
+      <AddPostHost open={addPostOpen} onClose={() => setAddPostOpen(false)} />
+      <ControlPanelHost open={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
 
       <div id="fh5co-main">
         <div className="fh5co-narrow-content" style={{ paddingTop: 40 }}>
