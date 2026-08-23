@@ -217,7 +217,7 @@ export function StoryEditor({
                       setSelected(null);
                     }}
                   >
-                    🗑️
+                    <i class="fa fa-trash"></i>
                   </button>
                 </div>
               )}

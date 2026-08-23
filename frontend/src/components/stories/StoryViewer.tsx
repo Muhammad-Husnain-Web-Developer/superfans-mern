@@ -337,6 +337,13 @@ export function StoryViewer({
         {stories !== null && stories.length === 0 && (
           <div className="story-viewer-empty">{t('empty')}</div>
         )}
+        {/* The author composed on a 254:460 canvas with the media letterboxed inside it, and
+            every element's x/y is a fraction of THAT box. The stage is the whole screen, so
+            laying the elements straight onto it put them wherever the screen happened to be
+            wide — a chip dropped at a quarter of the canvas landed at the very edge of a
+            desktop picture, or past it. The frame below restores the canvas the fractions
+            were measured against. */}
+        <div className="story-viewer-frame">
         {current && current.mediaType === 'video' ? (
           <video
             key={current.id}
@@ -391,6 +398,7 @@ export function StoryViewer({
             )}
           </div>
         ))}
+        </div>
 
         {current && (
           <>

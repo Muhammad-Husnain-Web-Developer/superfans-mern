@@ -163,6 +163,17 @@
   color: #000;
   box-sizing: border-box;
 }
+
+.story-field:focus {
+  display: block;
+  width: 100%;
+  background: #fff;
+  border: 2px solid #ff0000;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #000;
+  box-sizing: border-box;
+}
 .story-field + .story-field {
   border-top: 0;
 }
