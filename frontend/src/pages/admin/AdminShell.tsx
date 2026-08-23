@@ -53,8 +53,8 @@ export function AdminShell({ title, children }: { title: string; children: React
 /** Simple modal used by the admin add/edit forms. */
 export function AdminModal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 100000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 24, overflowY: 'auto' }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 8, width: '100%', maxWidth: 560, padding: 24, marginTop: 40 }}>
+    <div className="sf-modal-scrim" onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 100000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: 24, overflowY: 'auto' }}>
+      <div className="sf-modal-pop" onClick={(e) => e.stopPropagation()} style={{ background: '#fff', borderRadius: 8, width: '100%', maxWidth: 560, padding: 24, marginTop: 40 }}>
         <div className="d-flex justify-content-between align-items-center mb-3">
           <h4 style={{ margin: 0 }}>{title}</h4>
           <button onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>

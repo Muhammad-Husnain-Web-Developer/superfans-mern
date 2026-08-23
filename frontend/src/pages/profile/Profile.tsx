@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, fetchProfilePosts, type ProfileData, type ProfilePost } from '../../api/profiles';
-import { assetImage, formatNumber, formatNumberRounded, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage, formatNumber, formatNumberRounded, isVideoFile, likePercent, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE, networkLogo } from '../../utils/networkLogo';
 import { observeNewVideos } from '../../utils/video';
 import { useAuth } from '../../context/AuthContext';
@@ -24,6 +24,8 @@ import { PostReportButton } from '../../components/PostReportButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PageLoader } from '../../components/PageLoader';
 import { PostHeading } from '../../components/PostHeading';
+import { RatingPill } from '../../components/RatingPill';
+import { useRatingFeedback } from '../../utils/useRatingFeedback';
 import { rememberScroll, useScrollMemory } from '../../utils/useScrollMemory';
 import { NotFoundPage } from '../errors/ErrorPage';
 import { NavToggle } from '../../components/NavToggle';
@@ -77,6 +79,7 @@ export function SwalResult({
 }) {
   return (
     <div
+      className="sf-modal-scrim"
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -89,6 +92,7 @@ export function SwalResult({
       }}
     >
       <div
+        className="sf-modal-pop"
         onClick={(e) => e.stopPropagation()}
         style={{
           /* Laravel's global .swal2-modal theme: purple background, white text, 1.2rem. */
@@ -170,6 +174,13 @@ export function PostItem({
     .filter(([name]) => name);
   const [heart, setHeart] = useState(false);
   const [likes, setLikes] = useState(post.noOfLikes);
+  /* the pill's own counts: real rows only, kept apart from the view figure above */
+  const [liked, setLiked] = useState(post.viewerLiked ?? false);
+  const [hated, setHated] = useState(post.viewerHated ?? false);
+  const [likeRows, setLikeRows] = useState(post.likesCount ?? 0);
+  const [hateRows, setHateRows] = useState(post.hatesCount ?? 0);
+  /* blade: the coin + heartbeat on a like, the woosh + poop bounce on a hate */
+  const feedback = useRatingFeedback();
   const frame: React.CSSProperties = {
     borderRadius: 26,
     border: '7px solid lightgray',
@@ -190,10 +201,7 @@ export function PostItem({
       clickTimer.current = null;
       setHeart(true);
       setTimeout(() => setHeart(false), 600);
-      api
-        .post<{ success: boolean; data: { likesTotal: number } }>(`/posts/${post.id}/like-toggle`)
-        .then((r) => setLikes(r.data.data.likesTotal))
-        .catch(() => undefined);
+      doLike();
     } else {
       /* noted in the click itself, not inside the timer: by the time the
          double-click window closes the page has been laid out for the viewer
@@ -204,6 +212,39 @@ export function PostItem({
         navigate(`/user/post_detail/${post.id}`);
       }, 350);
     }
+  }
+
+  function doLike() {
+    api
+      .post<{ success: boolean; data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+        `/posts/${post.id}/like-toggle`,
+      )
+      .then((r) => {
+        const nowLiked = r.data.data.status === 'post liked';
+        setLiked(nowLiked);
+        if (nowLiked) setHated(false);
+        setLikes(r.data.data.likesTotal);
+        setLikeRows(r.data.data.likesCount);
+        setHateRows(r.data.data.hatesCount);
+        feedback.onLiked();
+      })
+      .catch(() => undefined);
+  }
+
+  function doHate() {
+    api
+      .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+        `/me/hate/${post.id}`,
+      )
+      .then((r) => {
+        const nowHated = r.data.data.status === 'post hated';
+        setHated(nowHated);
+        if (nowHated) setLiked(false);
+        setLikeRows(r.data.data.likesCount);
+        setHateRows(r.data.data.hatesCount);
+        feedback.onHated();
+      })
+      .catch(() => undefined);
   }
 
   return (
@@ -236,16 +277,25 @@ export function PostItem({
       ) : (
         <img src={assetImage(media)} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
       )}
-      <center>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <b>
-          <a className="post_stats" style={{ fontSize: '0.69em' }}>
-            <span className="eye-icon">👁️</span>{' '}
-            <span className="number_of_post_likes">{formatNumberRounded(likes)}</span>
-          </a>
-          &nbsp;
-        </b>
-      </center>
+      {/* views on the left, the rating group on the right — the horizontal wall row
+          the client asked for, the same one the world feed carries */}
+      <div className="stats-wrapper has-actions" onClick={(e) => e.stopPropagation()}>
+        <div className="view-count">
+          <span className="eye-icon">👁️</span>
+          <span className="number_of_post_likes">{formatNumberRounded(likes)}</span>
+        </div>
+        {!locked && (
+          <RatingPill
+            pct={likePercent(likeRows, hateRows, post.likePercent)}
+            liked={liked}
+            hated={hated}
+            beat={feedback.beat}
+            bounce={feedback.bounce}
+            onLike={doLike}
+            onHate={doHate}
+          />
+        )}
+      </div>
       {showReport && !locked && media && <PostReportButton postId={post.id} />}
     </div>
   );
@@ -470,10 +520,12 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
       {/* Boost Your Post modal — port of #boostlatest-postModal (user/index.blade.php). */}
       {boostOpen && posts[0] && createPortal(
         <div
+          className="sf-modal-scrim"
           onClick={closeBoost}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 123112311231, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
         >
           <div
+            className="sf-modal-pop"
             onClick={(e) => e.stopPropagation()}
             style={{
               background: 'linear-gradient(135deg, #8a2be2, #7326b5)',
@@ -537,10 +589,12 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
       {/* Invite-a-friend modal — port of #referralModal (purple, shown once after login). */}
       {referralOpen && createPortal(
         <div
+          className="sf-modal-scrim"
           onClick={() => setReferralOpen(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 123112311231, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
         >
           <div
+            className="sf-modal-pop"
             onClick={(e) => e.stopPropagation()}
             style={{ background: '#8a2be2', color: '#fff', textAlign: 'center', borderRadius: 7, border: 'none', boxShadow: 'none', width: 600, maxWidth: 'calc(100% - 20px)', padding: 15 }}
           >

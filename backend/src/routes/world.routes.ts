@@ -71,6 +71,7 @@ worldRouter.get(
       imageVideo?: string;
       thumbnail?: string;
       noOfLikes: number;
+      likePercent?: number | null;
       tags: string[];
       taggedProfilePictures: string[];
       createdAt: Date;
@@ -137,24 +138,27 @@ worldRouter.get(
     const likesMap = new Map(likeCounts.map((l) => [String(l._id), l.cnt]));
 
     let likedSet = new Set<string>();
+    let hatedSet = new Set<string>();
     let followingSet = new Set<string>();
     if (req.auth) {
-      const [liked, following] = await Promise.all([
+      const [liked, hated, following] = await Promise.all([
         Like.find({ user: req.auth.userId, post: { $in: postIds } }, { post: 1 }).lean(),
+        Hate.find({ user: req.auth.userId, post: { $in: postIds } }, { post: 1 }).lean(),
         Followership.find(
           { followerUser: req.auth.userId, followedUser: { $in: influencerIds } },
           { followedUser: 1 },
         ).lean(),
       ]);
       likedSet = new Set(liked.map((l) => String(l.post)));
+      hatedSet = new Set(hated.map((h) => String(h.post)));
       followingSet = new Set(following.map((f) => String(f.followedUser)));
     }
 
     // === ads: 3 random active, injected after every 6th post ===
-    const ads = await Ad.aggregate<{ _id: Types.ObjectId; media: string; link?: string }>([
+    const ads = await Ad.aggregate<{ _id: Types.ObjectId; media: string; link?: string; adType?: string }>([
       { $match: { status: true } },
       { $sample: { size: 3 } },
-      { $project: { media: 1, link: 1 } },
+      { $project: { media: 1, link: 1, adType: 1 } },
     ]);
 
     const taggedAvatars = await resolveTaggedAvatars(pagePosts);
@@ -169,10 +173,15 @@ worldRouter.get(
         thumbnail: post.thumbnail ?? null,
         noOfLikes: post.noOfLikes,
         likesTotal: post.noOfLikes + (likesMap.get(String(post._id)) ?? 0),
+        /* the pill needs the real rows on their own; likesTotal carries the view
+           figure, which is a different number since the client split the two */
+        likesCount: likesMap.get(String(post._id)) ?? 0,
         hatesCount: hatesMap.get(String(post._id)) ?? 0,
+        likePercent: post.likePercent ?? null,
         tags: post.tags,
         taggedProfilePictures: taggedAvatars[index],
         viewerLiked: likedSet.has(String(post._id)),
+        viewerHated: hatedSet.has(String(post._id)),
         influencer: owner
           ? {
               id: String(owner._id),
@@ -191,6 +200,11 @@ worldRouter.get(
             id: `ad_${String(ads[adIndex]._id)}`,
             media: ads[adIndex].media,
             link: ads[adIndex].link ?? '#',
+            /* the blade branches on the ad's own type here: a clients-form ad draws its
+               lead form in the tile rather than a link, so the feed has to say which is
+               which and give the plain id the formulary is looked up by */
+            adId: String(ads[adIndex]._id),
+            adType: ads[adIndex].adType ?? null,
           });
         }
       }

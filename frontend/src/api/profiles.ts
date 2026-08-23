@@ -52,6 +52,12 @@ export interface ProfilePost {
   imageVideo: string | null;
   thumbnail: string | null;
   noOfLikes: number;
+  /** real ❤️/💩 rows plus the admin-typed seed — the wall pill runs on these */
+  likesCount?: number;
+  hatesCount?: number;
+  likePercent?: number | null;
+  viewerLiked?: boolean;
+  viewerHated?: boolean;
   visible: boolean;
   tags: string[];
   taggedProfilePictures: string[];
@@ -79,6 +85,12 @@ export interface FeedPost {
   tags: string[];
   taggedProfilePictures: string[];
   viewsTotal: number;
+  /** the rating pill's inputs, same shape the wall and the world feed carry */
+  likesCount?: number;
+  hatesCount?: number;
+  likePercent?: number | null;
+  viewerLiked?: boolean;
+  viewerHated?: boolean;
   author: {
     id: string;
     usernameUrl: string | null;

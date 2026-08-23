@@ -531,14 +531,19 @@ adsRouter.put(
   }),
 );
 
-/** Stop/Play an Ad from the all-ads table (ads.update). Activating requires approval. */
+/**
+ * Stop/Play an Ad (ads.update). The blade puts this button on My Ads as well as on the
+ * all-ads table, and AdCenterController@update lets the ad's owner press it; the ads admin
+ * keeps the same power so the moderation table still works. Activating requires approval.
+ */
 adsRouter.put(
   '/:id/toggle-status',
   requireAuth,
   asyncHandler(async (req, res) => {
-    if (!(await isAdsAdmin(req.auth!.userId))) throw ApiError.forbidden();
     const ad = await Ad.findById(req.params.id);
     if (!ad) throw ApiError.notFound();
+    const mine = String(ad.user) === req.auth!.userId;
+    if (!mine && !(await isAdsAdmin(req.auth!.userId))) throw ApiError.forbidden();
     if (!ad.status && !ad.approved) {
       throw ApiError.badRequest('This ad is not approved yet. You cannot activate it.');
     }
@@ -735,6 +740,12 @@ async function buildAd(
   if (typeof body.media === 'string' && body.media.startsWith('data:')) {
     mediaName = await saveBase64Image(body.media);
   }
+
+  /* The Ads Center's type page sends the advertiser's own title and destination, the way
+     AdCenterController@store takes them; the payment path sends neither and keeps the
+     derived defaults set above. */
+  if (str(body.title)) title = str(body.title);
+  if (str(body.link)) link = str(body.link);
 
   const campaign = await AdCampaign.create({
     title,

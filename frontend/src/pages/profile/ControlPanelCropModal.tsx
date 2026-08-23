@@ -101,7 +101,7 @@ export function ControlPanelCropModal({
       style={{ zIndex: 9999999, display: 'block', position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.5)' }}
       onClick={onCancel}
     >
-      <div className="modal-dialog modal-lg" role="document" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-dialog modal-lg sf-modal-pop" role="document" onClick={(e) => e.stopPropagation()}>
         <div className="modal-content">
           <div className="modal-header">
             <button

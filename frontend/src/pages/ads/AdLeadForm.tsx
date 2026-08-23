@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 
 interface FormConfig {
   adId: string;
@@ -17,9 +18,19 @@ interface FormConfig {
  * rendered in the World feed (submitLead()). Loads the form config for `adId`, walks the
  * viewer through contact fields then questions, and POSTs to /ads/formulary/:adId/lead.
  */
-export function AdLeadForm({ adId, onClose }: { adId: string; onClose?: () => void }) {
+export function AdLeadForm({
+  adId,
+  media,
+  onClose,
+}: {
+  adId: string;
+  /** the ad's creative — shown on the opening step, the way the blade's step-0 does */
+  media?: string;
+  onClose?: () => void;
+}) {
   const [cfg, setCfg] = useState<FormConfig | null>(null);
-  const [step, setStep] = useState(0);
+  /* -1 is the blade's step-0: the creative with the advertiser's button under it */
+  const [step, setStep] = useState(media ? -1 : 0);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -77,6 +88,32 @@ export function AdLeadForm({ adId, onClose }: { adId: string; onClose?: () => vo
     );
   }
 
+  if (step === -1) {
+    return (
+      <div className="ad-form-card">
+        {isVideoFile(media ?? '') ? (
+          <video className="autoplay-video" style={{ maxWidth: '100%' }} controls loop muted playsInline>
+            <source src={assetImage(media!)} type={videoMime(media!)} />
+          </video>
+        ) : (
+          <img
+            src={assetImage(media!)}
+            alt="Advertisement"
+            className="img-responsive posttt-img"
+            style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
+          />
+        )}
+        <button
+          className="continue-btn"
+          style={{ marginTop: 10 }}
+          onClick={() => setStep(0)}
+        >
+          {cfg.buttonAction || 'More details'} ➜
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div style={box}>
       {cfg.title && <h4 className="mb-3">{cfg.title}</h4>}
@@ -110,6 +147,8 @@ export function AdLeadForm({ adId, onClose }: { adId: string; onClose?: () => vo
       <div className="d-flex justify-content-between mt-3" style={{ gap: 10 }}>
         {step > 0 ? (
           <button className="btn btn-light" onClick={() => setStep((s) => s - 1)}>← Back</button>
+        ) : media ? (
+          <button className="btn btn-light" onClick={() => setStep(-1)}>← Back</button>
         ) : onClose ? (
           <button className="btn btn-light" onClick={onClose}>Cancel</button>
         ) : <span />}

@@ -40,8 +40,21 @@ export function MyAds() {
     if (data.url) window.location.href = data.url;
   }
 
+  /* the blade's Play/Stop, which only the ad's owner may press and only once approved */
+  async function toggleStatus(ad: MyAd) {
+    try {
+      await api.put(`/ads/${ad.id}/toggle-status`);
+      await load();
+    } catch (e) {
+      window.alert(
+        (e as { response?: { data?: { message?: string } } }).response?.data?.message ??
+          'Could not update status.',
+      );
+    }
+  }
+
   async function remove(ad: MyAd) {
-    if (!window.confirm('Cancel this ad?')) return;
+    if (!window.confirm('Delete this ad?')) return;
     const { data } = await api.delete<{ message: string }>(`/ads/${ad.id}`);
     window.alert(data.message);
     await load();
@@ -95,13 +108,21 @@ export function MyAds() {
                       {ad.paid ? (
                         <span className="badge badge-success">Paid</span>
                       ) : (
-                        <button className="btn btn-sm btn-success" onClick={() => pay(ad)}>Pay €{ad.amount}</button>
+                        <button className="btn btn-sm btn-success" onClick={() => pay(ad)}>Pay ${ad.amount}</button>
                       )}
                     </td>
                     <td><span className={`badge badge-${ad.approved ? 'success' : 'secondary'}`}>{ad.approved ? 'Approved' : 'Pending Review'}</span></td>
-                    <td>€{ad.amount}</td>
+                    <td>${ad.amount}</td>
                     <td>{new Date(ad.createdAt).toLocaleDateString()}</td>
-                    <td><button className="btn btn-sm btn-outline-danger" onClick={() => remove(ad)}>Cancel</button></td>
+                    <td>
+                      <button
+                        className={`btn btn-sm btn-${ad.status ? 'warning' : 'primary'} mr-1`}
+                        onClick={() => void toggleStatus(ad)}
+                      >
+                        {ad.status ? 'Stop' : 'Play'}
+                      </button>
+                      <button className="btn btn-sm btn-danger" onClick={() => void remove(ad)}>Delete</button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

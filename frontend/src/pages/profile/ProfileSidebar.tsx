@@ -81,10 +81,10 @@ export function InfluencerSearch({ placeholder }: { placeholder: string }) {
               <a
                 className="dropdown-item"
                 href={`/${hit.name}`}
-                /* display comes from layout-direct-user.css: the row is a flex
-                   line so a long name can ellipsis without pushing the
-                   verified badge out of view */
-                style={{ padding: '3px 20px', color: '#333', textDecoration: 'none' }}
+                /* padding, colour and the flex line all live in
+                   layout-direct-user.css — the row has to be able to turn white
+                   on the #6622e5 hover, which an inline colour would outrank */
+                style={{ textDecoration: 'none' }}
                 onClick={(e) => {
                   e.preventDefault();
                   setOpen(false);
@@ -315,7 +315,9 @@ export function LoggedInNav({
       <li className={`${active === 'world' ? 'fh5co-active ' : ''}world_after`}>
         <a href={`${base}/world`}>{t('world', { defaultValue: 'World' })}</a>
       </li>
-      <li className={active === 'feed' ? 'fh5co-active' : undefined}>
+      {/* feed_after / wall_after carry this item's own hover rule, the way world_after
+          already colours WORLD — the client picked a colour per destination */}
+      <li className={`${active === 'feed' ? 'fh5co-active ' : ''}feed_after`}>
         <a href={`${base}/feed`}>{t('feed', { defaultValue: 'Feed' })}</a>
       </li>
       <li style={{ marginBottom: 5, marginTop: -5 }}>
@@ -323,7 +325,7 @@ export function LoggedInNav({
           {t('my', { defaultValue: 'My' })}
         </span>
       </li>
-      <li className={active === 'wall' ? 'fh5co-active' : undefined}>
+      <li className={`${active === 'wall' ? 'fh5co-active ' : ''}wall_after`}>
         <a href={base}>{t('wall', { defaultValue: 'Wall' })}</a>
       </li>
       <li className={active === 'posts' ? 'fh5co-active' : undefined}>
@@ -708,10 +710,12 @@ export function ProfileSidebar({
           stacking context and sits above the profile header. POST /create-room → /start-stream/:room. */}
       {goLiveOpen && createPortal(
         <div
+          className="sf-modal-scrim"
           onClick={() => setGoLiveOpen(false)}
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 123112311231, overflowY: 'auto' }}
         >
           <div
+            className="sf-modal-pop"
             onClick={(e) => e.stopPropagation()}
             style={{ width: 600, maxWidth: 'calc(100% - 20px)', margin: '30px auto', position: 'relative' }}
           >

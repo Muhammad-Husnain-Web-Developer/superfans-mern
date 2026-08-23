@@ -1,0 +1,275 @@
+/* The wall's rating row: 👁️ views on the left, ❤️ · %Liked/Hated · 💩 on the right.
+ *
+ * Values come from the world blade's own style block (world.blade.php:96-140 /
+ * user/world.blade.php:255-310), where the group sits commented out. Everything is scoped
+ * under `.stats-wrapper.has-actions` for two reasons: it beats the bare `.rating-pill` /
+ * `.actions-group` rules already extracted into world-page.css on specificity, whatever
+ * order the bundler emits them in, and it carries the whole group to pages like the profile
+ * wall that never loaded world-page.css.  */
+
+/* The world card wraps its media in an inline-block, and the stray baseline space under it
+   was the only reason that page had air between the media and this row — the wall, the feed
+   and the posts grid render the media as a block and the row sat flush against it. Bottom
+   alignment takes that accident out, and the margin below is then the one spacing rule every
+   page follows. */
+.work-item > .image-hover-wrapper {
+    vertical-align: bottom;
+}
+
+/* Same accident one level down: a <video> is inline-block on its baseline, so it left 9px
+   under itself inside the media wrapper while an <img class="img-responsive"> is block and
+   left none — video cards carried a bigger gap than image cards on every wall. */
+.work-item video {
+    vertical-align: bottom;
+}
+
+.stats-wrapper.has-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    padding: 0 5px;
+    position: relative;
+    min-height: 40px;
+}
+
+/* the count was centred absolutely while it had the row to itself; with the group back it
+   returns to the left edge */
+.stats-wrapper.has-actions .view-count {
+    position: static;
+    left: auto;
+    transform: none;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    color: #e32626ff;
+    font-size: 14px;
+    font-weight: 800;
+    margin-top: -10px;
+    white-space: nowrap;
+}
+
+.stats-wrapper.has-actions .eye-icon {
+    font-size: 18px;
+    transition: opacity 0.5s ease;
+}
+
+.stats-wrapper.has-actions .actions-group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: -7px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* the two buttons ride at the eye's size (18px) so the row reads as one line of icons
+   rather than a big heart and poop around a small pill */
+.stats-wrapper.has-actions .heart {
+    color: #e32626;
+    margin-right: 1px;
+    font-size: 20px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* not a button: the pill reports the ❤️/💩 split, the two icons beside it act. No pointer
+   cursor and no hover lift, so nothing invites a click that does nothing. */
+.stats-wrapper.has-actions .rating-pill {
+    display: flex;
+    height: 34px;
+    border: 2px solid #000;
+    border-radius: 20px;
+    overflow: hidden;
+    background-color: #000;
+    user-select: none;
+    /* the card around it is clickable and passes its pointer down by inheritance; the pill
+       is not, so it says so */
+    cursor: default;
+}
+
+/* Red half, cut on the diagonal. Its width is fixed rather than sized by the text: the
+   label runs from "Liked" to "100% Liked" depending on what a post has, and a pill that
+   changed width with it made every card in a grid a different size. */
+.stats-wrapper.has-actions .liked-segment {
+    flex: 0 0 auto;
+    width: 104px;
+    justify-content: center;
+    background-color: #8c001b;
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 0 15px 0 12px;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
+    margin-right: -15px;
+    z-index: 2;
+}
+
+.stats-wrapper.has-actions .hated-segment {
+    flex: 0 0 auto;
+    background-color: #555758;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px 0 20px;
+    font-size: 11px;
+    font-weight: bold;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+/* the black half stacks 👎🏻 over its label, so both lines are held to their own height —
+   the pill shrinks on narrow cards and default leading pushes the word out of it */
+.stats-wrapper.has-actions .thumb-up,
+.stats-wrapper.has-actions .thumb-down {
+    font-size: 13px;
+    line-height: 1;
+}
+
+.stats-wrapper.has-actions .thumb-down {
+    margin-bottom: 1px;
+}
+
+.stats-wrapper.has-actions .liked-text,
+.stats-wrapper.has-actions .hated-text {
+    font-size: 11px;
+    text-transform: capitalize;
+    line-height: 1;
+}
+
+/* blade: dimmed until the viewer has hated the post */
+.stats-wrapper.has-actions .poop {
+    opacity: 0.5;
+    transition: opacity 0.3s ease;
+    font-size: 18px !important;
+    line-height: 1;
+    /* margin-left: 1px; */
+    display: inline-flex;
+    align-items: center;
+}
+
+.stats-wrapper.has-actions .poop.enable {
+    opacity: 1;
+}
+
+/* Narrow cards: the group stays on the row beside the count instead of pushing past the
+   card edge, so the pill and both icons step down with the card. */
+@media screen and (max-width: 768px) {
+    .stats-wrapper.has-actions .rating-pill {
+        height: 30px;
+    }
+
+    .stats-wrapper.has-actions .liked-segment {
+        width: 96px;
+        padding: 0 12px 0 8px;
+        gap: 5px;
+        font-size: 10px;
+    }
+
+    .stats-wrapper.has-actions .hated-segment {
+        padding: 0 8px 0 16px;
+        font-size: 10px;
+    }
+
+    .stats-wrapper.has-actions .thumb-up,
+    .stats-wrapper.has-actions .thumb-down {
+        font-size: 12px;
+    }
+
+    .stats-wrapper.has-actions .liked-text,
+    .stats-wrapper.has-actions .hated-text {
+        font-size: 10px;
+    }
+
+    .stats-wrapper.has-actions .heart {
+        font-size: 18px;
+    }
+
+    .stats-wrapper.has-actions .poop {
+        font-size: 16px !important;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    .stats-wrapper.has-actions {
+        gap: 3px;
+        padding: 0 3px;
+        min-height: 35px;
+    }
+
+    .stats-wrapper.has-actions .view-count {
+        font-size: 12px;
+        margin-top: -5px;
+    }
+
+    .stats-wrapper.has-actions .eye-icon {
+        font-size: 14px;
+    }
+
+    .stats-wrapper.has-actions .rating-pill {
+        height: 28px;
+    }
+
+    .stats-wrapper.has-actions .liked-segment {
+        width: 86px;
+    }
+
+    .stats-wrapper.has-actions .liked-segment,
+    .stats-wrapper.has-actions .hated-segment {
+        font-size: 9px;
+    }
+
+    .stats-wrapper.has-actions .thumb-up,
+    .stats-wrapper.has-actions .thumb-down {
+        font-size: 11px;
+    }
+
+    .stats-wrapper.has-actions .liked-text,
+    .stats-wrapper.has-actions .hated-text {
+        font-size: 9px;
+    }
+
+    .stats-wrapper.has-actions .heart {
+        font-size: 17px;
+    }
+
+    .stats-wrapper.has-actions .poop {
+        font-size: 15px !important;
+    }
+}
+
+/* Click feedback, verbatim from user/world.blade.php:320-378: the heart beats on a like,
+   the poop bounces on a hate, both for 0.6s while their sound plays. */
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    14% { transform: scale(1.3); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.3); }
+    70% { transform: scale(1); }
+}
+
+.heart-animate {
+    animation: heartBeat 0.6s ease-in-out;
+    display: inline-block;
+}
+
+@keyframes poopBounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px) rotate(-10deg); }
+    60% { transform: translateY(-5px) rotate(10deg); }
+}
+
+.poop-animate {
+    animation: poopBounce 0.6s ease-in-out;
+    display: inline-block;
+}

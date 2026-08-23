@@ -45,6 +45,22 @@ export function AllAds() {
     await load();
   }
 
+  /* ads.destroy — the blade shows this on every row, and the controller lets only the ad's
+     own owner through, so someone else's ad answers with a refusal rather than vanishing */
+  async function remove(ad: AdminAd) {
+    if (!window.confirm('Delete this ad?')) return;
+    try {
+      const { data } = await api.delete<{ message?: string }>(`/ads/${ad.id}`);
+      if (data.message) window.alert(data.message);
+      await load();
+    } catch (e) {
+      window.alert(
+        (e as { response?: { data?: { message?: string } } }).response?.data?.message ??
+          'Only the advertiser who created this ad can delete it.',
+      );
+    }
+  }
+
   async function toggleStatus(ad: AdminAd) {
     try {
       await api.put(`/ads/${ad.id}/toggle-status`);
@@ -90,15 +106,18 @@ export function AllAds() {
                       <td><span className={`badge badge-${ad.status ? 'success' : 'secondary'}`}>{ad.status ? 'Running' : 'Stopped'}</span></td>
                       <td>{new Date(ad.createdAt).toLocaleDateString()}</td>
                       <td><span className={`badge badge-${ad.approved ? 'success' : 'warning'}`}>{ad.approved ? 'Approved' : 'Pending'}</span></td>
-                      <td>€{ad.amount}</td>
+                      <td>${ad.amount}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         {ad.approved ? (
                           <button className="btn btn-sm btn-secondary mr-1" onClick={() => decide(ad, 'reject')}>Reject</button>
                         ) : (
                           <button className="btn btn-sm btn-success mr-1" onClick={() => decide(ad, 'approve')}>Approve</button>
                         )}
-                        <button className={`btn btn-sm btn-${ad.status ? 'warning' : 'primary'}`} onClick={() => toggleStatus(ad)}>
+                        <button className={`btn btn-sm btn-${ad.status ? 'warning' : 'primary'} mr-1`} onClick={() => toggleStatus(ad)}>
                           {ad.status ? 'Stop' : 'Play'}
+                        </button>
+                        <button className="btn btn-sm btn-danger" onClick={() => void remove(ad)}>
+                          Delete
                         </button>
                       </td>
                     </tr>

@@ -69,7 +69,17 @@ export function PotentialClients() {
                       <td>{l.email || '—'}</td>
                       <td>{l.phone || '—'}</td>
                       <td>{l.company || '—'}</td>
-                      <td>{l.answers.length ? <ul style={{ margin: 0, paddingLeft: 16 }}>{l.answers.map((a, i) => <li key={i}>{a}</li>)}</ul> : '—'}</td>
+                      {/* the blade prints each answer on its own line behind a bold Q1..Q4 */}
+                      <td style={{ textAlign: 'left' }}>
+                        {l.answers.length
+                          ? l.answers.map((a, i) => (
+                              <span key={i}>
+                                <b>Q{i + 1}:</b> {a}
+                                <br />
+                              </span>
+                            ))
+                          : '—'}
+                      </td>
                       <td>{new Date(l.createdAt).toLocaleDateString()}</td>
                     </tr>
                   ))}

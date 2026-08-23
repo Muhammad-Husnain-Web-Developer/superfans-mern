@@ -44,11 +44,13 @@ export function StreamModal({ open, onClose }: { open: boolean; onClose: () => v
 
   return (
     <div
+      className="sf-modal-scrim"
       onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)', zIndex: 123112311231, overflowY: 'auto' }}
     >
       {/* modal-dialog: 600px, margin 30px auto (top-aligned, horizontally centered) */}
       <div
+        className="sf-modal-pop"
         onClick={(e) => e.stopPropagation()}
         style={{ width: 600, maxWidth: 'calc(100% - 20px)', margin: '30px auto', position: 'relative' }}
       >

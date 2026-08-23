@@ -4,14 +4,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useScrollMemory, rememberScroll } from '../../utils/useScrollMemory';
 import { markFeedReturn, recallFeed, rememberFeed } from '../../utils/feedMemory';
 import { useTranslation } from 'react-i18next';
+import { AdLeadForm } from '../ads/AdLeadForm';
 import { api } from '../../api/client';
-import { assetImage, formatNumberRounded, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage, formatNumberRounded, isVideoFile, likePercent, videoMime } from '../../utils/format';
 import { observeNewVideos } from '../../utils/video';
 import { useAuth } from '../../context/AuthContext';
 import { FooterLanguageSelector, GuestHeader, InfluencerSearch, LoggedInNav } from '../profile/ProfileSidebar';
 import { VolumeButton } from '../../components/VolumeButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PostHeading } from '../../components/PostHeading';
+import { RatingPill } from '../../components/RatingPill';
+import { useRatingFeedback } from '../../utils/useRatingFeedback';
 import { NetworkSlider } from '../../components/NetworkSlider';
 import { networkLogo } from '../../utils/networkLogo';
 import { PageLoader } from '../../components/PageLoader';
@@ -280,12 +283,18 @@ interface WorldItem {
   thumbnail?: string | null;
   noOfLikes?: number;
   likesTotal?: number;
+  likesCount?: number;
   hatesCount?: number;
+  likePercent?: number | null;
   viewerLiked?: boolean;
+  viewerHated?: boolean;
   tags?: string[];
   taggedProfilePictures?: string[];
   media?: string;
   link?: string;
+  /** an ad's own id and type — a clients-form ad draws its lead form instead of a link */
+  adId?: string;
+  adType?: string | null;
   influencer?: {
     id?: string;
     usernameUrl: string | null;
@@ -323,8 +332,14 @@ function WorldPostCard({
   const navigate = useNavigate();
   const [reportOpen, setReportOpen] = useState(false);
   const [liked, setLiked] = useState(item.viewerLiked ?? false);
+  const [hated, setHated] = useState(item.viewerHated ?? false);
   const [likesTotal, setLikesTotal] = useState(item.likesTotal ?? item.noOfLikes ?? 0);
+  /* the pill runs on the real rows only — likesTotal above is the view figure */
+  const [likes, setLikes] = useState(item.likesCount ?? 0);
+  const [hates, setHates] = useState(item.hatesCount ?? 0);
   const [heartShow, setHeartShow] = useState(false);
+  /* blade: the coin + heartbeat on a like, the woosh + poop bounce on a hate */
+  const feedback = useRatingFeedback();
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const username = item.influencer?.usernameUrl ?? 'unknown';
   const profilePicture = item.influencer?.profilePicture || 'output-onlinepngtools (2).png';
@@ -338,13 +353,44 @@ function WorldPostCard({
   /** blade like_dislike_post: toggles the like and updates the count optimistically. */
   function toggleLike() {
     api
-      .post<{ data: { status: string; likesTotal: number } }>(`/posts/${item.id}/like-toggle`)
+      .post<{ data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+        `/posts/${item.id}/like-toggle`,
+      )
       .then((r) => {
-        setLiked(r.data.data.status === 'post liked');
+        const nowLiked = r.data.data.status === 'post liked';
+        setLiked(nowLiked);
+        if (nowLiked) setHated(false);
         setLikesTotal(r.data.data.likesTotal);
+        setLikes(r.data.data.likesCount);
+        setHates(r.data.data.hatesCount);
+        feedback.onLiked();
       })
       .catch(() => {});
   }
+
+  /** the pill's 💩 half — /me/hate, the same endpoint the full-screen viewer uses. */
+  function toggleHate() {
+    api
+      .post<{ data: { status: string; likesCount: number; hatesCount: number } }>(`/me/hate/${item.id}`)
+      .then((r) => {
+        const nowHated = r.data.data.status === 'post hated';
+        setHated(nowHated);
+        if (nowHated) setLiked(false);
+        setLikes(r.data.data.likesCount);
+        setHates(r.data.data.hatesCount);
+        feedback.onHated();
+      })
+      .catch(() => {});
+  }
+
+  /* guests get the register modal here exactly as they do on the media */
+  const guardGuest = (run: () => void) => () => {
+    if (!authUser) {
+      registerModal.open();
+      return;
+    }
+    run();
+  };
 
   function fireHeart() {
     toggleLike();
@@ -504,13 +550,22 @@ function WorldPostCard({
         )}
       </div>
 
-      <div className="stats-wrapper">
+      <div className="stats-wrapper has-actions">
         <div className="view-count" onClick={onMediaClick}>
           <span className="eye-icon">👁️</span>
           <span className="number_of_post_likes" style={liked ? { color: '#da1212' } : undefined}>
             {formatNumberRounded(likesTotal)}
           </span>
         </div>
+        <RatingPill
+          pct={likePercent(likes, hates, item.likePercent)}
+          liked={liked}
+          hated={hated}
+          beat={feedback.beat}
+          bounce={feedback.bounce}
+          onLike={guardGuest(fireHeart)}
+          onHate={guardGuest(toggleHate)}
+        />
       </div>
     </div>
   );
@@ -518,6 +573,21 @@ function WorldPostCard({
 
 function WorldAdCard({ item }: { item: WorldItem }) {
   const media = item.media ?? '';
+
+  /* The blade gives a clients-form ad its own tile: the creative with the advertiser's
+     button under it, which walks the viewer through the formulary in place. Every other
+     type stays a picture that links out. */
+  if (item.adType === 'clients-form' && item.adId) {
+    return (
+      <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
+        <p className="feed_posts_heading_p" style={{ position: 'relative', fontSize: 14 }}>
+          <span>Super Ads</span>
+        </p>
+        <AdLeadForm adId={item.adId} media={media} />
+      </div>
+    );
+  }
+
   return (
     <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
       <a href={item.link ?? '#'} target="_blank" rel="noreferrer">

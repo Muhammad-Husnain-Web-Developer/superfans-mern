@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { fetchFeed, type FeedPost } from '../../api/profiles';
-import { assetImage, isVideoFile, formatNumber, videoMime } from '../../utils/format';
+import { assetImage, isVideoFile, formatNumber, likePercent, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { rememberScroll, useScrollMemory } from '../../utils/useScrollMemory';
 import { api } from '../../api/client';
 import { PageLoader } from '../../components/PageLoader';
+import { RatingPill } from '../../components/RatingPill';
+import { useRatingFeedback } from '../../utils/useRatingFeedback';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { StoriesStrip } from '../../components/stories/StoriesStrip';
@@ -121,12 +123,18 @@ export function UserFeed() {
   );
 }
 
-/** One feed tile: author heading, media, report, 👁️ views. Click → full-screen viewer. */
+/** One feed tile: author heading, media, report, and the same 👁️ views + rating row the
+ *  world feed and the walls carry. Click → full-screen viewer. */
 function FeedCard({ post }: { post: FeedPost }) {
   const navigate = useNavigate();
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [heart, setHeart] = useState(false);
   const [views, setViews] = useState(post.viewsTotal);
+  const [liked, setLiked] = useState(post.viewerLiked ?? false);
+  const [hated, setHated] = useState(post.viewerHated ?? false);
+  const [likeRows, setLikeRows] = useState(post.likesCount ?? 0);
+  const [hateRows, setHateRows] = useState(post.hatesCount ?? 0);
+  const feedback = useRatingFeedback();
   const media = post.imageVideo;
   const author = post.author;
 
@@ -137,10 +145,7 @@ function FeedCard({ post }: { post: FeedPost }) {
       clickTimer.current = null;
       setHeart(true);
       setTimeout(() => setHeart(false), 600);
-      api
-        .post<{ success: boolean; data: { likesTotal: number } }>(`/posts/${post.id}/like-toggle`)
-        .then((r) => setViews(r.data.data.likesTotal))
-        .catch(() => undefined);
+      doLike();
     } else {
       /* noted in the click itself: once the double-click window has closed the
          page is laid out for the viewer and the position reads 0 */
@@ -150,6 +155,39 @@ function FeedCard({ post }: { post: FeedPost }) {
         navigate(`/user/post_detail/${post.id}`);
       }, 350);
     }
+  }
+
+  function doLike() {
+    api
+      .post<{ success: boolean; data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+        `/posts/${post.id}/like-toggle`,
+      )
+      .then((r) => {
+        const nowLiked = r.data.data.status === 'post liked';
+        setLiked(nowLiked);
+        if (nowLiked) setHated(false);
+        setViews(r.data.data.likesTotal);
+        setLikeRows(r.data.data.likesCount);
+        setHateRows(r.data.data.hatesCount);
+        feedback.onLiked();
+      })
+      .catch(() => undefined);
+  }
+
+  function doHate() {
+    api
+      .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+        `/me/hate/${post.id}`,
+      )
+      .then((r) => {
+        const nowHated = r.data.data.status === 'post hated';
+        setHated(nowHated);
+        if (nowHated) setLiked(false);
+        setLikeRows(r.data.data.likesCount);
+        setHateRows(r.data.data.hatesCount);
+        feedback.onHated();
+      })
+      .catch(() => undefined);
   }
 
   // Author heading + any tagged users, scrolling if tagged (marquee) like the blade.
@@ -219,13 +257,21 @@ function FeedCard({ post }: { post: FeedPost }) {
           />
         )}
       </div>
-      <center style={{ display: 'block', marginTop: 4 }}>
-        <b>
-          <a className="post_stats" style={{ fontSize: '0.69em' }}>
-            <span className="eye-icon">👁️</span> <span className="number_of_post_likes">{formatNumber(views)}</span>
-          </a>
-        </b>
-      </center>
+      <div className="stats-wrapper has-actions" onClick={(e) => e.stopPropagation()}>
+        <div className="view-count">
+          <span className="eye-icon">👁️</span>
+          <span className="number_of_post_likes">{formatNumber(views)}</span>
+        </div>
+        <RatingPill
+          pct={likePercent(likeRows, hateRows, post.likePercent)}
+          liked={liked}
+          hated={hated}
+          beat={feedback.beat}
+          bounce={feedback.bounce}
+          onLike={doLike}
+          onHate={doHate}
+        />
+      </div>
     </div>
   );
 }

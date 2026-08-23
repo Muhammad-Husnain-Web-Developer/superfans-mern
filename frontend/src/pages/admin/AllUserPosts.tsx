@@ -11,6 +11,8 @@ interface PanelPost {
   postId: number | null;
   imageVideo: string | null;
   noOfLikes: number;
+  /** the typed ❤️/💩 figure; null means the pill runs on the real votes alone */
+  likePercent: number | null;
 }
 
 type Flash = { kind: 'success' | 'danger'; text: string } | null;
@@ -24,9 +26,10 @@ function PostRow({
   post: PanelPost;
   influencerId: number | null;
   onFlash: (f: Flash) => void;
-  onChanged: (p: { id: string; noOfLikes: number }) => void;
+  onChanged: (p: { id: string; noOfLikes?: number; likePercent?: number | null }) => void;
 }) {
   const [amount, setAmount] = useState('');
+  const [pct, setPct] = useState(post.likePercent == null ? '' : String(post.likePercent));
   const [busy, setBusy] = useState(false);
 
   const send = useCallback(
@@ -51,6 +54,27 @@ function PostRow({
     },
     [amount, post.id, onFlash, onChanged],
   );
+
+  /* the pill's figure: an empty box clears it and hands the post back to its real votes */
+  const savePercent = useCallback(async () => {
+    setBusy(true);
+    try {
+      const percent = pct.trim() === '' ? null : Number(pct);
+      const { data } = await api.post<{ message: string; likePercent: number | null }>(
+        `/admin/posts/${post.id}/like-percent`,
+        { percent },
+      );
+      onFlash({ kind: 'success', text: data.message });
+      onChanged({ id: post.id, likePercent: data.likePercent });
+    } catch (err) {
+      const text = isAxiosError(err)
+        ? ((err.response?.data as { message?: string } | undefined)?.message ?? 'Something went wrong')
+        : 'Something went wrong';
+      onFlash({ kind: 'danger', text });
+    } finally {
+      setBusy(false);
+    }
+  }, [pct, post.id, onFlash, onChanged]);
 
   const media = post.imageVideo;
 
@@ -96,6 +120,27 @@ function PostRow({
           onClick={() => void send('remove')}
         />
       </td>
+      <td>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            placeholder="auto"
+            value={pct}
+            style={{ width: 70 }}
+            onChange={(e) => setPct(e.target.value)}
+          />
+          <span>%</span>
+          <input
+            type="submit"
+            className="btn my-1 btn-primary"
+            value="Save"
+            disabled={busy}
+            onClick={() => void savePercent()}
+          />
+        </div>
+      </td>
     </tr>
   );
 }
@@ -130,9 +175,42 @@ export function AllUserPosts() {
       .catch(() => setState('denied'));
   }, [id]);
 
-  const patch = useCallback((p: { id: string; noOfLikes: number }) => {
-    setPosts((prev) => prev.map((x) => (x.id === p.id ? { ...x, noOfLikes: p.noOfLikes } : x)));
+  const patch = useCallback((p: { id: string; noOfLikes?: number; likePercent?: number | null }) => {
+    setPosts((prev) =>
+      prev.map((x) =>
+        x.id === p.id
+          ? {
+              ...x,
+              noOfLikes: p.noOfLikes ?? x.noOfLikes,
+              likePercent: p.likePercent !== undefined ? p.likePercent : x.likePercent,
+            }
+          : x,
+      ),
+    );
   }, []);
+
+  const [bulkPct, setBulkPct] = useState('');
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  async function applyBulk() {
+    setBulkBusy(true);
+    try {
+      const percent = bulkPct.trim() === '' ? null : Number(bulkPct);
+      const { data } = await api.post<{ message: string; likePercent: number | null }>(
+        `/admin/users/${id}/like-percent`,
+        { percent },
+      );
+      setFlash({ kind: 'success', text: data.message });
+      setPosts((prev) => prev.map((x) => ({ ...x, likePercent: data.likePercent })));
+    } catch (err) {
+      const text = isAxiosError(err)
+        ? ((err.response?.data as { message?: string } | undefined)?.message ?? 'Something went wrong')
+        : 'Something went wrong';
+      setFlash({ kind: 'danger', text });
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   if (state === 'loading') return null;
   if (state === 'denied') {
@@ -160,6 +238,28 @@ export function AllUserPosts() {
         </div>
       )}
 
+      {/* One figure across every post of this creator — the boost the client asked for,
+          alongside the per-post box in the table. Empty clears them all. */}
+      <div className="card mb-3">
+        <div className="card-body d-flex align-items-center" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <b>Help this influencer:</b>
+          <span>set ❤️ % 💩 on all {posts.length} post(s)</span>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            placeholder="auto"
+            value={bulkPct}
+            style={{ width: 80 }}
+            onChange={(e) => setBulkPct(e.target.value)}
+          />
+          <span>%</span>
+          <button className="btn btn-primary" disabled={bulkBusy} onClick={() => void applyBulk()}>
+            Apply to all
+          </button>
+        </div>
+      </div>
+
       <DataTableShell rows={posts} searchText={(p) => `${p.postId ?? ''} ${p.imageVideo ?? ''}`}>
         {(pageRows) => (
           <table className="table table-striped table-bordered dt-responsive nowrap">
@@ -174,6 +274,9 @@ export function AllUserPosts() {
                 <th>👁️ Views</th>
                 <th>Add Views</th>
                 <th>Views Action</th>
+                {/* the client's second figure: typed by hand, blank means it is
+                    left to the real ❤️/💩 votes */}
+                <th>❤️ % 💩</th>
               </tr>
             </thead>
             <tbody>

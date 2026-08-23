@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { api } from '../../api/client';
+import { DataTableShell } from './DataTableShell';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
@@ -20,20 +21,59 @@ interface Campaign {
 
 const ucfirst = (t: string) => t.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
-/** Per-type input(s) the backend buildAd() expects, beyond the common ad_name + amount. */
-const TYPE_FIELDS: Record<string, { key: string; label: string; placeholder: string; type?: string }[]> = {
-  instagram: [{ key: 'instagram_url', label: 'Instagram username', placeholder: 'username' }],
+interface TypeField {
+  key: string;
+  label: string;
+  placeholder: string;
+  type?: string;
+  area?: boolean;
+}
+
+/**
+ * The fields each type asks for, taken from the blade's own branches
+ * (resources/views/ads/type.blade.php): clients-form title + budget, messages title + link,
+ * instagram link, calls phone, whatsapp phone + message, website-visits link — every one of
+ * them but instagram also uploading a creative.
+ *
+ * The social types below (tiktok, twitch, amazon, spotify, youtube) have no branch in the
+ * blade at all, so its form offers them nothing and the ad cannot be built. Their fields are
+ * kept because the link has to come from somewhere; removing them would leave those five
+ * cards leading to a form that cannot produce an ad.
+ */
+const TYPE_FIELDS: Record<string, TypeField[]> = {
+  'clients-form': [{ key: 'title', label: 'Ad Title', placeholder: 'Get More Clients' }],
+  messages: [
+    { key: 'title', label: 'Ad Title', placeholder: 'Chat with us!' },
+    { key: 'link', label: 'Message Link (Messenger / Inbox)', placeholder: 'https://...', type: 'url' },
+  ],
+  instagram: [
+    { key: 'link', label: 'Instagram Post Link', placeholder: 'https://instagram.com/p/...', type: 'url' },
+  ],
+  calls: [{ key: 'phone', label: 'Phone Number', placeholder: '+1234567890', type: 'tel' }],
+  whatsapp: [
+    { key: 'phone', label: 'WhatsApp Number', placeholder: '+1234567890', type: 'tel' },
+    {
+      key: 'whatsapp_message',
+      label: 'Message',
+      placeholder: 'Type the message people will see when they click the ad',
+      area: true,
+    },
+  ],
+  'website-visits': [{ key: 'link', label: 'Website URL', placeholder: 'https://example.com', type: 'url' }],
   tiktok: [{ key: 'tiktok_username', label: 'TikTok username', placeholder: '@username' }],
   twitch: [{ key: 'twitch_username', label: 'Twitch username', placeholder: 'username' }],
   amazon: [{ key: 'amazon_url', label: 'Amazon URL', placeholder: 'https://amazon…', type: 'url' }],
   spotify: [{ key: 'spotify_url', label: 'Spotify URL', placeholder: 'https://spotify…', type: 'url' }],
-  'website-visits': [{ key: 'website_url', label: 'Website URL', placeholder: 'https://…', type: 'url' }],
   youtube: [{ key: 'youtube_url', label: 'YouTube URL', placeholder: 'https://youtube…', type: 'url' }],
-  whatsapp: [{ key: 'whatsapp_number', label: 'WhatsApp number', placeholder: '+34…' }],
-  calls: [{ key: 'phone', label: 'Phone number', placeholder: '+34…' }],
 };
-/** Types that pick one of your Superfans posts (post_id) instead of a URL. */
-const POST_TYPES = new Set(['promote-post', 'messages', 'profile-followers']);
+
+/** Only promote-post picks one of your own posts; the blade has no picker for anything else. */
+const POST_TYPES = new Set(['promote-post']);
+
+/** The types whose blade branch uploads a creative. instagram deliberately stores only a link. */
+const MEDIA_TYPES = new Set(['clients-form', 'messages', 'calls', 'whatsapp', 'website-visits']);
+/** Of those, the ones whose file input the blade marks required. */
+const MEDIA_REQUIRED = new Set(['clients-form', 'messages', 'whatsapp']);
 
 interface PostThumb { id: string; imageVideo: string | null }
 
@@ -55,7 +95,10 @@ export function AdsType() {
   const [posts, setPosts] = useState<PostThumb[]>([]);
   const [busy, setBusy] = useState(false);
 
+  const [media, setMedia] = useState<{ name: string; dataUrl: string } | null>(null);
+
   const isPostType = POST_TYPES.has(type);
+  const wantsMedia = MEDIA_TYPES.has(type);
   const typeFields = TYPE_FIELDS[type] ?? [];
 
   const load = useCallback(() => {
@@ -98,10 +141,12 @@ export function AdsType() {
         amount: amount ? Number(amount) : undefined,
         ...(isPostType ? { post_id: postId } : {}),
         ...fields,
+        /* the creative travels as a data URL, which is what the ad builder reads */
+        ...(media ? { media: media.dataUrl } : {}),
       })
       .then(({ data }) => {
         setFlash(data.message ?? 'Ad added successfully');
-        setAdName(''); setAmount(''); setFields({}); setPostId('');
+        setAdName(''); setAmount(''); setFields({}); setPostId(''); setMedia(null);
         setAddOpen(false);
         load();
       })
@@ -171,42 +216,93 @@ export function AdsType() {
                 typeFields.map((f) => (
                   <div className="form-group" key={f.key}>
                     <label>{f.label}</label>
-                    <input
-                      className="form-control"
-                      type={f.type ?? 'text'}
-                      placeholder={f.placeholder}
-                      value={fields[f.key] ?? ''}
-                      onChange={(e) => setFields({ ...fields, [f.key]: e.target.value })}
-                    />
+                    {f.area ? (
+                      <textarea
+                        className="form-control"
+                        placeholder={f.placeholder}
+                        value={fields[f.key] ?? ''}
+                        onChange={(e) => setFields({ ...fields, [f.key]: e.target.value })}
+                      />
+                    ) : (
+                      <input
+                        className="form-control"
+                        type={f.type ?? 'text'}
+                        placeholder={f.placeholder}
+                        value={fields[f.key] ?? ''}
+                        onChange={(e) => setFields({ ...fields, [f.key]: e.target.value })}
+                      />
+                    )}
                   </div>
                 ))
               )}
 
+              {/* The creative itself. The blade takes it as a file; it travels here as a
+                  data URL, which is the shape the ad builder already accepts. */}
+              {wantsMedia && (
+                <div className="form-group">
+                  <label>Media</label>
+                  <input
+                    className="form-control"
+                    type="file"
+                    accept="image/jpeg,image/png,image/jpg,video/mp4,video/webm"
+                    required={MEDIA_REQUIRED.has(type)}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) {
+                        setMedia(null);
+                        return;
+                      }
+                      /* the blade caps this at 10 MB */
+                      if (file.size > 10 * 1024 * 1024) {
+                        setFlash('That file is over 10 MB.');
+                        e.target.value = '';
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = () => setMedia({ name: file.name, dataUrl: String(reader.result) });
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  {media && <small className="text-muted">{media.name}</small>}
+                </div>
+              )}
+
+              {/* clients-form and messages carry their own Ad Title in the branch above, the
+                  way the blade writes them; the rest get this one so the ad has a name */}
+              {!typeFields.some((f) => f.key === 'title') && (
+                <div className="form-group">
+                  <label>Ad Title</label>
+                  <input className="form-control" value={adName} onChange={(e) => setAdName(e.target.value)} placeholder="Untitled Ad" />
+                </div>
+              )}
               <div className="form-group">
-                <label>Ad Title</label>
-                <input className="form-control" value={adName} onChange={(e) => setAdName(e.target.value)} placeholder="Untitled Ad" />
-              </div>
-              <div className="form-group">
-                <label>Budget (€)</label>
+                <label>Budget</label>
                 <input className="form-control" type="number" min={1} value={amount} onChange={(e) => setAmount(e.target.value)} />
               </div>
-              <button type="submit" className="btn btn-success" disabled={busy || (isPostType && !postId)}>Submit</button>
+              <button type="submit" className="btn btn-success" disabled={busy || (isPostType && !postId)}>Upload</button>
             </form>
           </div>
         )}
 
-        <div style={{ overflowX: 'auto' }}>
-          <table className="table table-bordered table-striped">
+        {/* the blade wraps this table in DataTables: Show N entries, Search, and the
+            "Showing 1 to N of N entries" pager */}
+        <DataTableShell
+          rows={ads}
+          searchText={(ad) => `${ad.id} ${ad.type} ${ad.status === 'active' ? 'running' : 'stopped'}`}
+        >
+          {(pageRows) => (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="table table-bordered table-striped">
             <thead className="thead-dark">
               <tr><th>ID</th><th>Preview</th><th>Type</th><th>Status</th><th>Created</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr><td colSpan={6} className="text-center">Loading…</td></tr>
-              ) : ads.length === 0 ? (
+              ) : pageRows.length === 0 ? (
                 <tr><td colSpan={6} className="text-center">No ads found.</td></tr>
               ) : (
-                ads.map((ad) => (
+                pageRows.map((ad) => (
                   <tr key={ad.id}>
                     <td>{ad.id.slice(-6)}</td>
                     <td>
@@ -235,8 +331,10 @@ export function AdsType() {
                 ))
               )}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+          )}
+        </DataTableShell>
         </>
         )}
       </div>

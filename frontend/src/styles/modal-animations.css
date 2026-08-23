@@ -1,0 +1,78 @@
+/* One entrance for every dialog in the app.
+ *
+ * Modals here are built five different ways — Bootstrap's .modal/.modal-dialog, the Ads
+ * Center's own overlay, .swal-modal, .networkmodal, and a handful of hand-rolled fixed
+ * overlays. Rather than teach each one its own transition, the panel of every family gets
+ * the same keyframes: it drops in from above while the ground behind it fades up.
+ *
+ * These are animations, not transitions, so they play the moment the element is mounted —
+ * no open/closed class has to be toggled, which is what the hand-rolled modals never did.
+ */
+
+@keyframes sfModalDrop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -72px, 0) scale(0.94);
+  }
+  55% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes sfBackdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* the ground behind the dialog */
+.modal.in,
+.modal.show,
+.ads-modal-overlay,
+.modal-backdrop.show,
+.modal-backdrop.in,
+.sf-modal-scrim {
+  animation: sfBackdropFade 0.22s ease-out both;
+}
+
+/* the dialog itself — a little slower than the ground, so it reads as arriving */
+.modal.in > .modal-dialog,
+.modal.show > .modal-dialog,
+.ads-modal-overlay > .ads-modal-box,
+.swal-modal,
+.networkmodal,
+.sf-modal-pop {
+  animation: sfModalDrop 0.38s cubic-bezier(0.21, 1.02, 0.32, 1) both;
+}
+
+/* Bootstrap ships its own -25% offset for .modal.fade .modal-dialog and undoes it on
+   .show. Both classes are present at once here, so that transform would fight the
+   keyframes for the same property. */
+.modal.fade.in > .modal-dialog,
+.modal.fade.show > .modal-dialog {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal.in,
+  .modal.show,
+  .ads-modal-overlay,
+  .modal-backdrop.show,
+  .modal-backdrop.in,
+  .sf-modal-scrim,
+  .modal.in > .modal-dialog,
+  .modal.show > .modal-dialog,
+  .ads-modal-overlay > .ads-modal-box,
+  .swal-modal,
+  .networkmodal,
+  .sf-modal-pop {
+    animation: none;
+  }
+}

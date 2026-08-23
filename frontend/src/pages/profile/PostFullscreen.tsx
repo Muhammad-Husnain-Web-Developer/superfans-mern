@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
-import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage, isVideoFile, likePercent, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from './Profile';
@@ -13,6 +13,7 @@ interface FsPost {
   imageVideo: string | null;
   thumbnail: string | null;
   likesTotal: number;
+  likePercent?: number | null;
   likesCount: number;
   hatesCount: number;
   viewerLiked: boolean;
@@ -49,11 +50,6 @@ const HeartIcon = ({ size = 32 }: { size?: number }) => (
     <path d="M462.3 62.6C407.5 15.9 326 24.3 275.7 76.2L256 96.5l-19.7-20.3C186.1 24.3 104.5 15.9 49.7 62.6c-62.8 53.6-66.1 149.8-9.9 207.9l193.5 199.8c12.5 12.9 32.8 12.9 45.3 0l193.5-199.8c56.3-58.1 53-154.3-9.8-207.9z" />
   </svg>
 );
-
-function likePct(likes: number, hates: number): number {
-  const total = likes + hates;
-  return total > 0 ? Math.round((likes / total) * 100) : 0;
-}
 
 /**
  * Full-screen "reels" post viewer — port of user/post_detail.blade.php
@@ -394,7 +390,7 @@ export function PostFullscreen() {
   const author = post.influencer;
   const isOwner = !!authUser && author?.id === authUser.id;
   const worldBack = authUser?.role === 'influencer' ? '/influencer/world' : '/user/world';
-  const pct = likePct(likes, hates);
+  const pct = likePercent(likes, hates, post?.likePercent);
   // Locked: reached (via swipe) a post the viewer can't see — show the subscribe/follow tile
   // instead of the media (David's "blocked post" full-screen state).
   const locked = !post.canView;
@@ -455,7 +451,7 @@ export function PostFullscreen() {
         .post-fs-heart.empty{color:#fff}
         .post-fs-heart:not(.empty){color:#e32626}
         .post-fs-pill{display:flex;flex-direction:column;width:40px;height:110px;border-radius:28px;overflow:hidden;background:#333}
-        .post-fs-pill-liked{background:#8B1A1A;color:#fff;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
+        .post-fs-pill-liked{background:#8c001b;color:#fff;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
         .post-fs-pill-liked .pct{font-size:14px}
         .post-fs-pill-hated{background:#333;color:#fff;min-height:35px;font-size:12px;display:flex;align-items:center;justify-content:center}
         .post-fs-poop{font-size:28px;cursor:pointer;opacity:.55;filter:brightness(1.25);transition:opacity .2s,filter .2s}
@@ -659,7 +655,7 @@ export function PostFullscreen() {
           </span>
           <div className="post-fs-pill">
             <div className="post-fs-pill-liked">
-              <span className="pct">{pct}%</span>
+              {pct !== null && <span className="pct">{pct}%</span>}
               <span>Liked</span>
             </div>
             <div className="post-fs-pill-hated">{hated ? 'Hated' : 'Hate'}</div>

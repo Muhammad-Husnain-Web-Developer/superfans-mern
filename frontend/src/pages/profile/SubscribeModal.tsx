@@ -24,6 +24,8 @@ export function SubscribeModal({
 }) {
   const { t } = useTranslation('content');
   const [agreed, setAgreed] = useState(false);
+  /* shown when the button is pressed before the terms are accepted */
+  const [needsTerms, setNeedsTerms] = useState(false);
 
   if (!open) return null;
 
@@ -36,6 +38,7 @@ export function SubscribeModal({
 
   return createPortal(
     <div
+      className="sf-modal-scrim"
       onClick={onClose}
       style={{
         position: 'fixed',
@@ -43,17 +46,21 @@ export function SubscribeModal({
         background: 'rgba(0,0,0,.5)',
         zIndex: 123122,
         display: 'flex',
-        alignItems: 'center',
+        /* auto margins on the panel do the centring; align-items:center would pin the
+           panel's middle and put its top out of reach once it is taller than the screen */
+        alignItems: 'flex-start',
         justifyContent: 'center',
         padding: 16,
         overflowY: 'auto',
       }}
     >
       <div
+        className="sf-modal-pop"
         onClick={(e) => e.stopPropagation()}
         style={{
           /* Bootstrap modal-dialog-centered: 600px wide, content sizes naturally
              (overflow visible — no inner scrollbar). */
+          margin: 'auto 0',
           borderRadius: 20,
           background: '#8a2be2',
           color: '#fff',
@@ -97,22 +104,44 @@ export function SubscribeModal({
               <input
                 type="checkbox"
                 checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
+                onChange={(e) => {
+                  setAgreed(e.target.checked);
+                  if (e.target.checked) setNeedsTerms(false);
+                }}
                 style={{ marginRight: 6, verticalAlign: 'middle' }}
               />
               <span dangerouslySetInnerHTML={{ __html: termsLabel }} />
             </label>
           </div>
           <center>
+            {/* Not the disabled attribute: a disabled button swallows the tap, and on a
+                phone there is no cursor to explain why nothing happened. It stays pressable
+                and answers with the reason instead. */}
             <button
               type="button"
               className="btn btn-success"
-              disabled={!agreed || busy}
-              onClick={() => agreed && !busy && onConfirm()}
-              style={{ border: '2px solid #409c40', display: 'inline-block', marginLeft: 10, opacity: agreed && !busy ? 1 : 0.6, cursor: agreed && !busy ? 'pointer' : 'not-allowed' }}
+              aria-disabled={!agreed || busy}
+              onClick={() => {
+                if (busy) return;
+                if (!agreed) {
+                  setNeedsTerms(true);
+                  return;
+                }
+                onConfirm();
+              }}
+              /* full colour whether or not the terms are ticked — only the action waits */
+              style={{ border: '2px solid #409c40', display: 'inline-block', marginLeft: 10, opacity: 1, cursor: agreed && !busy ? 'pointer' : 'not-allowed' }}
             >
               ✨{t('subscribe', { defaultValue: 'Subscribe' })}
             </button>
+            {needsTerms && !agreed && (
+              <p
+                role="alert"
+                style={{ margin: '10px 0 0', fontSize: '0.9em', fontWeight: 700, color: '#ffe08a' }}
+              >
+                ☝ {t('accept_terms_first', { defaultValue: 'Please accept the Terms and Conditions first.' })}
+              </p>
+            )}
           </center>
           <br />
           <p style={{ fontSize: '0.74em' }}>{t('welcome_notice')}</p>

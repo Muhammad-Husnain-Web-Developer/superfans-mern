@@ -221,7 +221,7 @@ adminRouter.get(
     /* the panel is the one place that should see everything, including the
        posts whose media went missing in the migration */
     const posts = await Post.find({ influencer: req.params.id })
-      .select('mysqlId imageVideo noOfLikes createdAt')
+      .select('mysqlId imageVideo noOfLikes likePercent createdAt')
       .sort({ mysqlId: -1, createdAt: -1 })
       .setOptions({ withMissing: true })
       .lean();
@@ -234,6 +234,7 @@ adminRouter.get(
         postId: p.mysqlId ?? null,
         imageVideo: p.imageVideo ?? null,
         noOfLikes: p.noOfLikes ?? 0,
+        likePercent: p.likePercent ?? null,
       })),
     });
   }),
@@ -265,6 +266,57 @@ adminRouter.post(
     p.noOfLikes = current - amount;
     await p.save();
     res.json({ success: true, noOfLikes: p.noOfLikes, message: 'Likes Removed Successfully' });
+  }),
+);
+
+/** update the admin-typed like percentage on one post. `percent: null` clears it, so the
+    pill falls back to the real like/hate rows. */
+adminRouter.post(
+  '/posts/:id/like-percent',
+  requireAuth,
+  admin(async (req, res) => {
+    const { percent } = z
+      .object({ percent: z.coerce.number().min(0).max(100).nullable() })
+      .parse(req.body);
+
+    const p = await Post.findById(req.params.id).setOptions({ withMissing: true });
+    if (!p) throw ApiError.notFound('Post not found');
+    p.likePercent = percent === null ? null : Math.round(percent);
+    await p.save();
+    res.json({
+      success: true,
+      likePercent: p.likePercent,
+      message: percent === null ? 'Percentage cleared' : 'Percentage saved',
+    });
+  }),
+);
+
+/** Same value across every post of one influencer — the "help an influencer" bulk apply,
+    the counterpart of starting the growth engine on a user. */
+adminRouter.post(
+  '/users/:id/like-percent',
+  requireAuth,
+  admin(async (req, res) => {
+    const { percent } = z
+      .object({ percent: z.coerce.number().min(0).max(100).nullable() })
+      .parse(req.body);
+
+    const u = await User.findById(req.params.id, { _id: 1 }).lean();
+    if (!u) throw ApiError.notFound('User not found');
+    const value = percent === null ? null : Math.round(percent);
+    const r = await Post.updateMany(
+      { influencer: req.params.id },
+      { $set: { likePercent: value } },
+    );
+    res.json({
+      success: true,
+      likePercent: value,
+      modified: r.modifiedCount,
+      message:
+        percent === null
+          ? `Percentage cleared on ${r.modifiedCount} post(s)`
+          : `${value}% applied to ${r.modifiedCount} post(s)`,
+    });
   }),
 );
 

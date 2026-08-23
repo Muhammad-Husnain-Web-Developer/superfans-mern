@@ -408,15 +408,26 @@ meRouter.get(
     const postIds = allPosts.map((p) => p._id);
     const creatorIds = [...new Set(groups.map((g) => g.creatorId))];
 
-    // Batch: like counts per post + author docs (avoids N queries).
-    const [likeAgg, authors] = await Promise.all([
+    /* Batch: like/hate counts per post, the viewer's own votes, and author docs (avoids N
+       queries). The rating pill on the feed cards runs on the same numbers the world feed
+       and the walls carry. */
+    const [likeAgg, hateAgg, myLikes, myHates, authors] = await Promise.all([
       Like.aggregate<{ _id: unknown; count: number }>([
         { $match: { post: { $in: postIds } } },
         { $group: { _id: '$post', count: { $sum: 1 } } },
       ]),
+      Hate.aggregate<{ _id: unknown; count: number }>([
+        { $match: { post: { $in: postIds } } },
+        { $group: { _id: '$post', count: { $sum: 1 } } },
+      ]),
+      Like.find({ user: req.auth!.userId, post: { $in: postIds } }, { post: 1 }).lean(),
+      Hate.find({ user: req.auth!.userId, post: { $in: postIds } }, { post: 1 }).lean(),
       User.find({ _id: { $in: creatorIds } }, { usernameUrl: 1, profilePicture: 1, verified: 1 }).lean(),
     ]);
     const likeByPost = new Map(likeAgg.map((l) => [String(l._id), l.count]));
+    const hateByPost = new Map(hateAgg.map((h) => [String(h._id), h.count]));
+    const likedSet = new Set(myLikes.map((l) => String(l.post)));
+    const hatedSet = new Set(myHates.map((h) => String(h.post)));
     const authorById = new Map(authors.map((a) => [String(a._id), a]));
 
     const data = groups.flatMap((g, i) => {
@@ -428,6 +439,11 @@ meRouter.get(
         tags: p.tags ?? [],
         taggedProfilePictures: p.taggedProfilePictures ?? [],
         viewsTotal: (likeByPost.get(String(p._id)) ?? 0) + p.noOfLikes,
+        likesCount: likeByPost.get(String(p._id)) ?? 0,
+        hatesCount: hateByPost.get(String(p._id)) ?? 0,
+        likePercent: p.likePercent ?? null,
+        viewerLiked: likedSet.has(String(p._id)),
+        viewerHated: hatedSet.has(String(p._id)),
         author: {
           id: g.creatorId,
           usernameUrl: author?.usernameUrl ?? null,

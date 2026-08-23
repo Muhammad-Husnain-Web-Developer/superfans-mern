@@ -251,6 +251,7 @@ postsRouter.get(
         likesTotal: likeRows + post.noOfLikes,
         likesCount: likeRows,
         hatesCount: hateRows,
+        likePercent: post.likePercent ?? null,
         viewerLiked,
         viewerHated,
         canView,

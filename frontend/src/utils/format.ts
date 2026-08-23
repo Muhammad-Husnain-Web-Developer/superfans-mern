@@ -14,7 +14,7 @@ export function formatNumber(num: number): string {
     const x = Math.round(num);
     const xNumberFormat = x.toLocaleString('en-US');
     const xArray = xNumberFormat.split(',');
-    const xParts = ['k', 'm', 'b', 't'];
+    const xParts = ['K', 'M', 'B', 'T'];
     const xCountParts = xArray.length - 1;
     const nextDigit = parseInt(xArray[1][0], 10);
     const xDisplay = xArray[0] + (nextDigit !== 0 ? `.${xArray[1][0]}` : '') + xParts[xCountParts - 1];
@@ -56,4 +56,24 @@ export function videoMime(filename: string): string {
 /** Media URL — same shape as Laravel's asset('assets/images/...') */
 export function assetImage(filename: string): string {
   return `/assets/images/${filename}`;
+}
+
+/**
+ * The rating pill's percentage. `seed` is the figure an admin typed on the post: it stands
+ * alone while nobody has voted, and keeps the weight of SEED_VOTES votes afterwards, so the
+ * first real clicks only nudge the number and a post that truly gets voted on drifts to its
+ * own ratio. Without a seed the pill is the plain like/hate split.
+ *
+ * null when there is nothing to state — no typed figure and not one vote either. The blade
+ * labels that state plain "Liked", and most migrated posts are in it, so a hard 0% would be
+ * on nearly every card.
+ */
+const SEED_VOTES = 100;
+export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
+  if (seed == null) {
+    const total = likes + hates;
+    return total > 0 ? Math.round((likes / total) * 100) : null;
+  }
+  const seedLikes = (seed / 100) * SEED_VOTES;
+  return Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
 }

@@ -5,6 +5,7 @@ import { User } from '../models/User.js';
 import { Post } from '../models/Post.js';
 import { resolveTaggedAvatars } from '../utils/tagged-avatars.js';
 import { Like } from '../models/Like.js';
+import { Hate } from '../models/Hate.js';
 import { Followership } from '../models/Followership.js';
 import { Subscription } from '../models/Subscription.js';
 import { SocialNetwork } from '../models/SocialNetwork.js';
@@ -185,12 +186,40 @@ profilesRouter.get(
 /** Profile posts (newest first) — mirrors direct_user_posts / influencer_posts. */
 profilesRouter.get(
   '/:usernameUrl/posts',
+  optionalAuth,
   asyncHandler(async (req, res) => {
     const user = await User.findOne({ usernameUrl: req.params.usernameUrl });
     if (!user) throw ApiError.notFound('Profile not found');
 
     const posts = await Post.find({ influencer: user._id }).sort({ mysqlId: -1, createdAt: -1 }).lean();
     const taggedAvatars = await resolveTaggedAvatars(posts);
+
+    /* the wall pill needs the real like/hate rows per post, and the viewer's own
+       vote, exactly like the world feed builds them */
+    const postIds = posts.map((p) => p._id);
+    const [likeCounts, hateCounts] = await Promise.all([
+      Like.aggregate<{ _id: unknown; cnt: number }>([
+        { $match: { post: { $in: postIds } } },
+        { $group: { _id: '$post', cnt: { $sum: 1 } } },
+      ]),
+      Hate.aggregate<{ _id: unknown; cnt: number }>([
+        { $match: { post: { $in: postIds } } },
+        { $group: { _id: '$post', cnt: { $sum: 1 } } },
+      ]),
+    ]);
+    const likesMap = new Map(likeCounts.map((l) => [String(l._id), l.cnt]));
+    const hatesMap = new Map(hateCounts.map((h) => [String(h._id), h.cnt]));
+
+    let likedSet = new Set<string>();
+    let hatedSet = new Set<string>();
+    if (req.auth) {
+      const [liked, hated] = await Promise.all([
+        Like.find({ user: req.auth.userId, post: { $in: postIds } }, { post: 1 }).lean(),
+        Hate.find({ user: req.auth.userId, post: { $in: postIds } }, { post: 1 }).lean(),
+      ]);
+      likedSet = new Set(liked.map((l) => String(l.post)));
+      hatedSet = new Set(hated.map((h) => String(h.post)));
+    }
 
     res.json({
       success: true,
@@ -199,6 +228,11 @@ profilesRouter.get(
         imageVideo: p.imageVideo ?? null,
         thumbnail: p.thumbnail ?? null,
         noOfLikes: p.noOfLikes,
+        likesCount: likesMap.get(String(p._id)) ?? 0,
+        hatesCount: hatesMap.get(String(p._id)) ?? 0,
+        likePercent: p.likePercent ?? null,
+        viewerLiked: likedSet.has(String(p._id)),
+        viewerHated: hatedSet.has(String(p._id)),
         visible: p.visible,
         tags: p.tags,
         /* the wall shows the tagged handles too (user/index.blade.php:1675),

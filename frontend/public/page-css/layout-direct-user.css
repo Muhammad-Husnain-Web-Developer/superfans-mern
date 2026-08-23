@@ -1505,11 +1505,14 @@ font-weight: 100 !important;
    Client change, not blade parity: the blade only sizes these rows
    (main.blade.php:1033) and let them inherit the sidebar's centre alignment.
 
-   The hover underline already exists — every sidebar link gets the theme's
-   animated 2px red rule from `#fh5co-aside #fh5co-main-menu ul li a:after`
-   (style.css:148), but it sits 7px up, under the text. Drop it to the bottom of
-   the row for these items only; that shared rule still governs WORLD, TIKTOK and
-   the rest of the menu. !important because the theme selector carries two ids.
+   These rows are links inside the sidebar menu, so the theme was drawing its
+   animated 2px red rule under each one on hover
+   (`#fh5co-aside #fh5co-main-menu ul li a:after`, style.css:148). The client
+   asked for the result list to highlight the way the live mobile search does
+   instead — the whole row in #6622e5 with white text
+   (layouts/footer.blade.php:385) — so the rule is switched off here only; it
+   still governs WORLD, TIKTOK and the rest of the menu. !important throughout
+   because the theme selector carries two ids.
 
    Long names used to run past the 180px list and get cut mid-letter, so they
    now truncate with an ellipsis. */
@@ -1518,6 +1521,8 @@ font-weight: 100 !important;
   align-items: center;
   text-align: left;
   overflow: hidden;
+  padding: 3px 20px !important;
+  color: #333 !important;
 }
 
 .typeahead .dropdown-item .dropdown-item-name {
@@ -1527,7 +1532,14 @@ font-weight: 100 !important;
 }
 
 .typeahead .dropdown-item::after {
-  bottom: 0 !important;
+  display: none !important;
+}
+
+.typeahead .dropdown-item:hover,
+.typeahead .dropdown-item:focus,
+.typeahead > li.active > .dropdown-item {
+  background: #6622e5 !important;
+  color: #fff !important;
 }
 
 /* ===== Post text banner is square =====
@@ -1589,4 +1601,18 @@ font-weight: 100 !important;
   #fh5co-aside {
     padding-bottom: 96px;
   }
+}
+
+/* ===== Sidebar menu rule colours =====
+   Client change, not blade parity: the theme draws one animated 2px rule under every
+   sidebar link (#da1212, style.css:148) and the page sheets already repaint WORLD's in
+   #ffc83d through .world_after. The client picked a colour per destination, so FEED and
+   WALL get their own here; POSTS keeps the theme's red. !important for the same reason
+   the yellow needs it — the theme selector carries two ids. */
+.feed_after a:after {
+  background-color: #3a96dd !important;
+}
+
+.wall_after a:after {
+  background-color: #5e3af1 !important;
 }

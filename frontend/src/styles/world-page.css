@@ -93,7 +93,7 @@
 
         /* Red Liked Part with Diagonal Cut */
         .liked-segment {
-            background-color: #8B1A1A;
+            background-color: #8c001b;
             /* Deep Red */
             color: white;
             display: flex;
@@ -111,7 +111,7 @@
 
         /* Black Hated Part */
         .hated-segment {
-            background-color: #333;
+            background-color: #555758;
             /* Dark Grey/Black */
             color: white;
             display: flex;
@@ -137,9 +137,9 @@
 
         .heart {
             color: #e32626;
-            margin-right: 2px;
+            /* margin-right: 2px; */
             font-size:25px;
-            margin-top: 3px;
+            /* margin-top: 3px; */
             
         }
     

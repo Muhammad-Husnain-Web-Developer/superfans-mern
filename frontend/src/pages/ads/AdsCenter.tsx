@@ -156,7 +156,6 @@ export function AdsCenter() {
               <p style={{ fontSize: 16 }} dangerouslySetInnerHTML={{ __html: restricted.message }} />
               <button
                 className="continue-btn"
-                style={{ width: 'auto' as unknown as number, background: '#fff', color: '#000', borderColor: '#fff' }}
                 onClick={() => {
                   const openProfile = restricted.profile;
                   setRestricted(null);
@@ -173,7 +172,7 @@ export function AdsCenter() {
       {superVideo && (
         <div className="ads-modal-overlay" onClick={() => setSuperVideo(false)}>
           <div className="ads-modal-box" style={{ maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ background: '#8a2be2', color: '#fff', borderRadius: 7, padding: '28px 24px', textAlign: 'center' }}>
+            <div style={{ background: '#8a2be2', color: '#fff', borderRadius: '0.3rem', boxShadow: 'none', padding: '28px 24px', textAlign: 'center' }}>
               <h3 style={{ fontWeight: 700, fontSize: 26 }}>⚠️ 🪄🎬 SUPER VIDEO ADS</h3>
               <p style={{ fontSize: 17 }}>
                 UPS! This tool is only available for <b>VIP Business Accounts</b>. Become a VIP to activate Super

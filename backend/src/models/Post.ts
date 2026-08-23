@@ -7,6 +7,8 @@ export interface IPost {
   thumbnail?: string;
   noOfLikes: number;
   noOfViews: number;
+  /** admin-typed ❤️/💩 percentage seed (0-100); null = derive from the real rows alone */
+  likePercent?: number | null;
   visible: boolean;
   tags: string[];
   taggedProfilePictures: string[];
@@ -26,6 +28,7 @@ const postSchema = new Schema<IPost>(
     thumbnail: String,
     noOfLikes: { type: Number, default: 0 },
     noOfViews: { type: Number, default: 0 },
+    likePercent: { type: Number, default: null },
     visible: { type: Boolean, default: false }, // Laravel default 0
     tags: { type: [String], default: [] },
     taggedProfilePictures: { type: [String], default: [] },

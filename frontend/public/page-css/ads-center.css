@@ -165,7 +165,77 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .ads-sidebar .footer-links { margin-top: 60px; font-size: 0.8em; padding: 0 20px; }
 .ads-sidebar .footer-links a { padding: 12px 5px; }
+/* Every ads blade repeats this override after the sidebar's own rule, and it is what the
+   footer links actually render at: 0.92rem on 9px/17px with no rule under them. Without it
+   the four bottom links stand 54px tall instead of 40, which lengthens the sidebar by 22px
+   and puts a scrollbar on it sooner than the original. */
+.ads-sidebar .footer-links a {
+  border-bottom: 0 !important;
+  padding: 9px 17px !important;
+  font-size: 0.92rem !important;
+}
 .ads-sidebar .upper-links a:first-child { border-top: 2px solid rgba(0,0,0,0.65); }
 .ads-sidebar .upper-links a:hover, .ads-sidebar .footer-links a:hover { background: #f0f2f5; }
 .ads-sidebar .upper-links a.active { background: #000; color: #fff; }
 @media (max-width: 900px) { .ads-sidebar { position: relative; width: 100%; } }
+
+/* On a phone the banner's row layout collapses: the button keeps its natural width and
+   the sentence is squeezed into whatever is left — measured at 123px wide and 432 tall on
+   a 390px screen. It stacks instead, which the blade never does because its Ads Center has
+   no mobile handling at all (fixed 256px sidebar, .main pushed 240px). Desktop is
+   untouched. */
+@media (max-width: 900px) {
+  .redlabel {
+    flex-direction: column;
+    width: 100%;
+    text-align: center;
+    padding: 14px 18px;
+    margin-bottom: 24px !important;
+  }
+  .redlabel p { width: 100%; margin-right: 0; }
+  .redlabel h2 { width: auto; left: 0; top: 0; margin: 0 0 6px; }
+  #redlabelButton { margin-top: 12px; }
+}
+
+
+/* ---------------------------------------------------------------- scrollbars ---
+   The Ads Center is a standalone page: it never loads layout-direct-user.css, so its
+   scrollbars came out as the browser's own grey while World, the profile and the rest of
+   the app wear the violet one. These are those same rules, value for value, so the two
+   halves of the site match.
+
+   Note this is deliberately NOT what the blade does — Laravel's Ads Center has no
+   scrollbar styling at all and shows the default bars. The client asked for the app's
+   own look here instead. */
+body::-webkit-scrollbar {
+  width: 11px;
+}
+body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+body::-webkit-scrollbar-thumb {
+  background-color: #777;
+  border-radius: 20px;
+  border-right: 4px solid blueviolet;
+  height: 11px !important;
+}
+
+.ads-sidebar::-webkit-scrollbar {
+  width: 11px;
+}
+.ads-sidebar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+.ads-sidebar::-webkit-scrollbar-thumb {
+  background-color: #777;
+  border-radius: 20px;
+  border-right: 4px solid blueviolet;
+  height: 11px !important;
+}
+
+/* The blade edges this column with 4px of near-black, which lands right beside the
+   scrollbar and reads as a second heavy line. The rest of the app separates its sidebar
+   with a single light hairline, and that is what goes here. */
+.ads-sidebar {
+  border-right: 1px solid #e6e6e6 !important;
+}

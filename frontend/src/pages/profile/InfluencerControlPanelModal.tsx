@@ -801,10 +801,11 @@ function WithdrawModal({
 
   return (
     <div
+      className="sf-modal-scrim"
       onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.55)', zIndex: 200000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
     >
-      <div onClick={(e) => e.stopPropagation()} style={{ background: 'red', borderRadius: 20, color: '#fff', width: '100%', maxWidth: 480, padding: 28, position: 'relative' }}>
+      <div className="sf-modal-pop" onClick={(e) => e.stopPropagation()} style={{ background: 'red', borderRadius: 20, color: '#fff', width: '100%', maxWidth: 480, padding: 28, position: 'relative' }}>
         <button onClick={onClose} style={{ position: 'absolute', right: 18, top: 10, fontSize: 40, color: '#fff', background: 'none', border: 'none', cursor: 'pointer' }}>×</button>
         <div style={{ textAlign: 'center', marginBottom: 12 }}>
           <img src="/assets/images/superman2.png" alt="" style={{ height: 51 }} />
