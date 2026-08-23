@@ -76,36 +76,41 @@ export function UserFeed() {
 
       <div id="fh5co-main">
         <div className="fh5co-narrow-content">
-          {/* Header: avatar · name · @username · Subscribe · title */}
+          {/* The client asked for this header — avatar, name, handle, Subscribe and the
+              "My Feed Superfans World" title — to come off the feed, so the page opens on
+              the stories row. Kept here rather than deleted in case it is wanted back.
+
+          [ Header: avatar · name · @username · Subscribe · title ]
           <center>
-            <img
-              src={authUser?.profilePicture ? assetImage(authUser.profilePicture) : assetImage('output-onlinepngtools (2).png')}
-              style={{ width: 92, height: 92, borderRadius: 74 }}
-              alt=""
-            />
-            <br />
-            <br />
-            <b>{authUser?.name}</b>
-            <br />@{authUser?.usernameUrl}
-            <br />
-            <br />
-            <span
-              className="btn btn-primary btn-outline"
-              style={{ width: 226, cursor: 'pointer' }}
-              onClick={() => setControlPanelOpen(true)}
-            >
-              <img
-                src="/assets/images/SUPERHEROINA.svg"
-                style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
-                alt=""
-              />
-              {t('subscribe', { defaultValue: 'Subscribe' })} <b>+</b>
-            </span>
-            <h2 className="fh5co-heading animate-box feed-head-title">
-              <br />
-              <span>"{t('feed_of_me', { defaultValue: 'My Feed' })} <br /> Superfans World"</span>
-            </h2>
+          <img
+          src={authUser?.profilePicture ? assetImage(authUser.profilePicture) : assetImage('output-onlinepngtools (2).png')}
+          style={{ width: 92, height: 92, borderRadius: 74 }}
+          alt=""
+          />
+          <br />
+          <br />
+          <b>{authUser?.name}</b>
+          <br />@{authUser?.usernameUrl}
+          <br />
+          <br />
+          <span
+          className="btn btn-primary btn-outline"
+          style={{ width: 226, cursor: 'pointer' }}
+          onClick={() => setControlPanelOpen(true)}
+          >
+          <img
+          src="/assets/images/SUPERHEROINA.svg"
+          style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
+          alt=""
+          />
+          {t('subscribe', { defaultValue: 'Subscribe' })} <b>+</b>
+          </span>
+          <h2 className="fh5co-heading animate-box feed-head-title">
+          <br />
+          <span>"{t('feed_of_me', { defaultValue: 'My Feed' })} <br /> Superfans World"</span>
+          </h2>
           </center>
+          ]
 
           {/* Stories, Pas 7: the ringed avatars sit between the heading and the posts */}
           <StoriesStrip />

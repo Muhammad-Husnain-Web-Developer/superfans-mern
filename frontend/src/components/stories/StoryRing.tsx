@@ -24,10 +24,15 @@ export function StoryRing({
   onClick?: () => void;
   title?: string;
 }) {
+  /* the photo is round whether or not a ring is drawn around it — without this an
+     un-ringed avatar (nothing posted yet) came out square */
   const img = picture ? (
-    <img src={assetImage(picture)} alt={alt} width={size} height={size} />
+    <img className="story-ring-photo" src={assetImage(picture)} alt={alt} width={size} height={size} />
   ) : (
-    <span className="story-ring-inner" style={{ width: size, height: size, display: 'block' }} />
+    <span
+      className="story-ring-inner story-ring-photo"
+      style={{ width: size, height: size, display: 'block' }}
+    />
   );
 
   if (!ring) {
