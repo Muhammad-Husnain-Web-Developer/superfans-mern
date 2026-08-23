@@ -188,6 +188,18 @@ export function StoryEditor({
                   >
                     🔄
                   </button>
+                   <button
+                    type="button"
+                    className="story-handle"
+                    title={t('remove')}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onChange(elements.filter((_, j) => j !== i));
+                      setSelected(null);
+                    }}
+                  >
+                    <i class="fa fa-trash"></i>
+                  </button>
                   {el.kind === 'text' && (
                     <button
                       type="button"
@@ -207,18 +219,7 @@ export function StoryEditor({
                   )}
                   {/* the bin belongs to every element, not only the text one — a tagged
                       handle and a link chip have to come off the canvas too */}
-                  <button
-                    type="button"
-                    className="story-handle"
-                    title={t('remove')}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onChange(elements.filter((_, j) => j !== i));
-                      setSelected(null);
-                    }}
-                  >
-                    <i class="fa fa-trash"></i>
-                  </button>
+                 
                 </div>
               )}
 
