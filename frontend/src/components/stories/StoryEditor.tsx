@@ -198,7 +198,7 @@ export function StoryEditor({
                       setSelected(null);
                     }}
                   >
-                    <i class="fa fa-trash"></i>
+                    <i className="fa fa-trash"></i>
                   </button>
                   {el.kind === 'text' && (
                     <button
