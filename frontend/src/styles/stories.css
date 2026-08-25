@@ -42,26 +42,32 @@
 }
 
 /* --------------------------------------------------------------- the strip --- */
-/* The client's own brief for this row: a dark #555758 bar edged in black with no rounding
-   at all, black arrows, and the circles running from the left — the first of them your own,
-   carrying the + that starts a new story, the way Instagram does it.
-   Sizes stay as measured from Pas 7: 74px circles, 8px apart, 76/88 tall. */
+/* The client's brief for this row: a dark #555758 bar edged in black with no rounding at
+   all, the circles running from the left, and each one captioned with its owner's name.
+   Your own circle is pinned outside the rail — the row scrolls past it and it never leaves
+   — and carries the + that starts a new story.
+   The bar was cut down at the client's request: the circle is 44px inside its 3px ring and
+   the paddings came in with it, so the row ends up shorter than before even though it now
+   carries a line of type it did not have. The circle's size also lives in StoriesStrip.tsx
+   (StoryRing sizes the picture through attributes, which a CSS variable cannot reach), so
+   the two move together. */
 .stories-strip-wrap {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
+  /* gap: 6px; */
   margin: 0 auto 24px;
   max-width: 1290px;
-  /* the same 7px top and bottom the phone row uses, so both read alike */
-  padding: 7px 8px;
+  padding: 4px 8px;
   background: #555758;
-  border: 6px solid #000;
+  border: 4px solid #000;
   border-radius: 0;
 }
+/* the rail: everyone else, scrolling left to right behind the pinned circle */
 .stories-strip {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   overflow-x: auto;
   scroll-behavior: smooth;
@@ -72,10 +78,7 @@
 .stories-strip::-webkit-scrollbar {
   display: none;
 }
-/* the row starts at the left and grows to the right, however few circles there are */
-.stories-strip {
-  justify-content: flex-start;
-}
+
 .stories-strip-item {
   background: none;
   border: none;
@@ -84,39 +87,78 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   flex-shrink: 0;
+  /* wider than the 50px circle so a name has somewhere to go, narrow enough that a long
+     one is clipped instead of spreading the row out */
+  width: 62px;
 }
+.stories-strip-name {
+  max-width: 100%;
+  font-size: 11px;
+  line-height: 13px;
+  color: #fff;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ◀ ▶ — the shape is unchanged; what is new is the blue centre, drawn as a triangle
+   filled with the app's own #8a2be2 and edged in the bar's black. */
 .stories-strip-arrow {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 20px;
-  line-height: 1;
-  color: #000;
-  padding: 4px 2px;
+  line-height: 0;
+  padding: 2px;
   flex-shrink: 0;
+}
+.stories-strip-arrow svg {
+  display: block;
+  width: 20px;
+  height: 24px;
+  fill: #8a2be2;
+  stroke: #000;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
 }
 .stories-strip-arrow[disabled] {
   opacity: 0.45;
   cursor: default;
 }
 
-/* your own circle leads the row and carries the + that opens Add Storie */
-.stories-strip-item.self {
+/* the separator between your own circle and the scrolling row, in the bar's own black */
+.stories-strip-sep {
+  flex-shrink: 0;
+  align-self: stretch;
+  width: 2px;
+  background: #adaaaa;
+  margin: 0 4px;
+}
+
+/* the + rides on the picture, not on the item, so the caption below cannot push it off */
+.stories-strip-photo {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* the ringed circle's footprint, held whether or not a ring is drawn */
+  width: 50px;
+  height: 50px;
+  line-height: 0;
 }
 .stories-strip-add {
   position: absolute;
-  right: 0;
-  bottom: 2px;
-  width: 22px;
-  height: 22px;
+  right: -2px;
+  bottom: -1px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   border: 2px solid #555758;
   background: #8a2be2;
   color: #fff;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1;
   font-weight: 700;
   display: flex;
@@ -126,14 +168,25 @@
   padding: 0;
 }
 @media (max-width: 768px) {
-  /* The phone mockup runs the strip edge to edge, without the rounded card. The feed
-     column has its own side padding, so the row breaks out of it rather than trying to
-     guess that padding: full viewport width, pulled back to the middle. The viewer is a
-     sibling of this element, so the transform here cannot trap its fixed positioning. */
   .stories-strip-wrap {
-    /* it lines up with the posts below it rather than bleeding off the screen — 100vw
-       counts the page's scrollbar, which is what pushed it past the right edge */
-    margin-bottom: 14px;
+    /* Full bleed. The feed column (.fh5co-narrow-content) pads 16px a side at every phone
+       width measured — 360, 390 and 768 alike — so stepping back by exactly that reaches
+       the screen edge. 100vw was tried here first and overshot, because it counts the
+       page's scrollbar; this does not. The row also sits tighter to the posts below. */
+    margin: 0 -16px 14px;
+    /* the bar now touches both edges, so a side rule would be drawn off the screen */
+    border-left: 0;
+    border-right: 0;
+    border-top-width: 4px;
+    border-bottom-width: 4px;
+    /* the phone has no width to spare: the arrows go right into the corners, so the
+       circles get the room the side padding was taking */
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .stories-strip-arrow {
+    padding-left: 2px;
+    padding-right: 2px;
   }
 }
 

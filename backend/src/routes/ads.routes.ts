@@ -195,17 +195,33 @@ adsRouter.post(
 );
 
 /* ---------------- posts to promote (post picker) ---------------- */
+/* Laravel's UserController::getUserPosts() pulls every post of the signed-in user, keeps only
+   the still-image ones and then takes 200. The picker draws each tile in an <img>, so a video
+   there could only ever be a broken thumbnail — hence the extension filter, mirrored here.
+   One deliberate difference from Laravel: a hidden post is left out. Laravel still offered
+   them, which is what David reported — a post taken off the profile was still on offer to
+   promote, and reads to the owner as one they had deleted. */
+const PICKER_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+
 adsRouter.get(
   '/posts',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const posts = await Post.find({ influencer: req.auth!.userId }, { imageVideo: 1 })
+    const posts = await Post.find(
+      { influencer: req.auth!.userId, visible: true },
+      { imageVideo: 1 },
+    )
       .sort({ createdAt: -1 })
-      .limit(60)
       .lean();
     res.json({
       success: true,
-      posts: posts.map((p) => ({ id: String(p._id), imageVideo: (p as { imageVideo?: string }).imageVideo ?? null })),
+      posts: posts
+        .map((p) => ({ id: String(p._id), imageVideo: (p as { imageVideo?: string }).imageVideo ?? null }))
+        .filter((p) => {
+          const ext = p.imageVideo?.split('.').pop()?.toLowerCase() ?? '';
+          return PICKER_IMAGE_EXTENSIONS.has(ext);
+        })
+        .slice(0, 200),
     });
   }),
 );

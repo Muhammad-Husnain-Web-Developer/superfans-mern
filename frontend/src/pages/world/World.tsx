@@ -347,8 +347,6 @@ function WorldPostCard({
   const taggedUsers = (item.tags ?? []).map((s) => s.trim()).filter(Boolean);
   const taggedPics = item.taggedProfilePictures ?? [];
 
-  /* blade: videos only get native controls if the viewer follows the creator (or owns the post). */
-  const canControlVideo = !!authUser && item.influencer?.viewerFollowing === true;
 
   /** blade like_dislike_post: toggles the like and updates the count optimistically. */
   function toggleLike() {
@@ -464,12 +462,16 @@ function WorldPostCard({
       <div className="image-hover-wrapper" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
         {isVideoFile(media) ? (
           <div className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
+            {/* No native control bar: the mute button beside it is the control, and two of
+                them stacked on one card is what the client asked to be rid of. The blade
+                draws the bar for a creator you follow (world.blade.php:2293) — running that
+                page shows only the mute button, since almost nothing in the feed is someone
+                you follow, and the wall never drew one at all. */}
             <video
               className="autoplay-video"
               id={`video-${item.id}`}
               controlsList="nodownload"
               style={{ maxWidth: '100%' }}
-              controls={canControlVideo}
               loop
               muted
               playsInline

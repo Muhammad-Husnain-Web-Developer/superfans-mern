@@ -379,6 +379,9 @@ meRouter.post(
  * avatar, verified) and a view count (likes table + legacy no_of_likes), exactly like
  * the two blade loops (subscriptions ordered by created_at, followerships by updated_at).
  */
+/** How many posts one page of the feed carries, now that it is one date-ordered list. */
+const FEED_POSTS = 60;
+
 meRouter.get(
   '/feed',
   requireAuth,
@@ -388,25 +391,26 @@ meRouter.get(
       Followership.find({ followerUser: req.auth!.userId }, { followedUser: 1 }).lean(),
     ]);
 
-    // Creator groups in blade order: subscriptions first, then followerships.
-    const groups: { creatorId: string; sort: 'created' | 'updated' }[] = [
-      ...subs.map((s) => ({ creatorId: String(s.influencer), sort: 'created' as const })),
-      ...follows.map((f) => ({ creatorId: String(f.followedUser), sort: 'updated' as const })),
+    /* Everyone the viewer follows or subscribes to, once each. The blade walked the two
+       lists separately and printed five posts per creator, which stacked one creator's
+       whole run above another's newer post; the client asked for a single feed in date
+       order, so the creators only decide WHICH posts are eligible here. */
+    const creatorIds = [
+      ...new Set([
+        ...subs.map((s) => String(s.influencer)),
+        ...follows.map((f) => String(f.followedUser)),
+      ]),
     ];
 
-    // Load each creator's latest 5 posts (created_at / updated_at desc) preserving order.
-    const grouped = await Promise.all(
-      groups.map((g) =>
-        Post.find({ influencer: g.creatorId })
-          .sort(g.sort === 'created' ? { createdAt: -1 } : { updatedAt: -1 })
-          .limit(5)
-          .lean(),
-      ),
-    );
-
-    const allPosts = grouped.flat();
+    /* One list, newest first. FEED_POSTS caps the page the way the per-creator five used
+       to cap it — a busy creator can now fill more of it, which is what date order means. */
+    const allPosts = creatorIds.length
+      ? await Post.find({ influencer: { $in: creatorIds } })
+          .sort({ createdAt: -1 })
+          .limit(FEED_POSTS)
+          .lean()
+      : [];
     const postIds = allPosts.map((p) => p._id);
-    const creatorIds = [...new Set(groups.map((g) => g.creatorId))];
 
     /* Batch: like/hate counts per post, the viewer's own votes, and author docs (avoids N
        queries). The rating pill on the feed cards runs on the same numbers the world feed
@@ -430,9 +434,10 @@ meRouter.get(
     const hatedSet = new Set(myHates.map((h) => String(h.post)));
     const authorById = new Map(authors.map((a) => [String(a._id), a]));
 
-    const data = groups.flatMap((g, i) => {
-      const author = authorById.get(g.creatorId);
-      return grouped[i].map((p) => ({
+    const data = allPosts.map((p) => {
+      const creatorId = String(p.influencer);
+      const author = authorById.get(creatorId);
+      return {
         id: String(p._id),
         imageVideo: p.imageVideo ?? null,
         thumbnail: p.thumbnail ?? null,
@@ -445,12 +450,12 @@ meRouter.get(
         viewerLiked: likedSet.has(String(p._id)),
         viewerHated: hatedSet.has(String(p._id)),
         author: {
-          id: g.creatorId,
+          id: creatorId,
           usernameUrl: author?.usernameUrl ?? null,
           profilePicture: author?.profilePicture ?? null,
           verified: author?.verified ?? false,
         },
-      }));
+      };
     });
 
     res.json({ success: true, data });

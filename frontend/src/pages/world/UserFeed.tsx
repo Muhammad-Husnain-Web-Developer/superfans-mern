@@ -6,8 +6,11 @@ import { fetchFeed, type FeedPost } from '../../api/profiles';
 import { assetImage, isVideoFile, formatNumber, likePercent, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { rememberScroll, useScrollMemory } from '../../utils/useScrollMemory';
+import { observeNewVideos } from '../../utils/video';
 import { api } from '../../api/client';
 import { PageLoader } from '../../components/PageLoader';
+import { PostHeading } from '../../components/PostHeading';
+import { VolumeButton } from '../../components/VolumeButton';
 import { RatingPill } from '../../components/RatingPill';
 import { useRatingFeedback } from '../../utils/useRatingFeedback';
 import { NavToggle } from '../../components/NavToggle';
@@ -51,14 +54,19 @@ export function UserFeed() {
       .finally(() => setReady(true));
   }, [authUser, loading]);
 
+  /* the observer only knows about videos that exist, so it is re-run whenever the feed
+     changes — the same call the world feed and the profile grids make */
+  useEffect(() => {
+    observeNewVideos();
+  }, [posts]);
+
   return (
     <div id="fh5co-page">
       <style>{`
         .feed-head-title{font-family:'Roboto Slab',serif;color:#dd2110}
-        .feed_posts_heading_img{max-width:25px;border-radius:50%;margin-right:6px;vertical-align:middle}
-        .feed_posts_heading_p{padding:10px;margin-bottom:0;font-size:14px;font-weight:600;position:relative;top:25px}
+        /* the handle strip is PostHeading's now — its own weight, marquee and blue tick
+           come from post-heading.css, the same as the world feed and the walls */
         .feed-card-media{border-radius:26px;border:7px solid lightgray;width:100%;max-height:411px;object-fit:cover;cursor:pointer}
-        @keyframes feedScrollLeft{0%{transform:translateX(50%)}100%{transform:translateX(-100%)}}
       `}</style>
       <PageLoader />
       <NavToggle />
@@ -195,65 +203,46 @@ function FeedCard({ post }: { post: FeedPost }) {
       .catch(() => undefined);
   }
 
-  // Author heading + any tagged users, scrolling if tagged (marquee) like the blade.
-  const tagged = post.tags.filter(Boolean);
-  const heading =
-    tagged.length > 0 ? (
-      <p className="feed_posts_heading_p" style={{ overflow: 'hidden', width: '70%', height: 55, marginBottom: 12 }}>
-        <span style={{ display: 'inline-block', whiteSpace: 'nowrap', animation: 'feedScrollLeft 10s linear infinite' }}>
-          <a
-            href={`/${author.usernameUrl ?? ''}`}
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); rememberScroll(); if (author.usernameUrl) navigate(`/${author.usernameUrl}`); }}
-            style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10, textDecoration: 'none' }}
-          >
-            <img className="feed_posts_heading_img" src={author.profilePicture ? assetImage(author.profilePicture) : assetImage('output-onlinepngtools (2).png')} alt="" />
-            <span>@</span>{author.usernameUrl}
-          </a>
-          {author.verified && <img src={assetImage('verified.png')} alt="Verified" width={18} height={18} style={{ position: 'relative', bottom: 2 }} />}
-          {tagged.map((tag, i) => {
-            const pic = post.taggedProfilePictures[i];
-            if (!pic) return null;
-            return (
-              <a
-                key={tag}
-                href={`/${tag.trim()}`}
-                onClick={(e) => { e.preventDefault(); e.stopPropagation(); rememberScroll(); navigate(`/${tag.trim()}`); }}
-                style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10, textDecoration: 'none' }}
-              >
-                <img className="feed_posts_heading_img" src={assetImage(pic.trim())} alt="" />
-                <span>@{tag.trim()}</span>
-              </a>
-            );
-          })}
-        </span>
-      </p>
-    ) : (
-      <p
-        className="feed_posts_heading_p feed_posts_heading_pi"
-        style={{ cursor: 'pointer', marginBottom: 12 }}
-        onClick={(e) => { e.stopPropagation(); rememberScroll(); if (author.usernameUrl) navigate(`/${author.usernameUrl}`); }}
-      >
-        <img className="feed_posts_heading_img" src={author.profilePicture ? assetImage(author.profilePicture) : assetImage('output-onlinepngtools (2).png')} alt="" />
-        <span>@</span>{author.usernameUrl}
-      </p>
-    );
+  /* The strip above the post is the shared one the world feed and the walls draw: bold
+     handles, the blue tick on every verified name, and the marquee only when the row is
+     actually too long for its slot. This page used to draw its own — which left an
+     unverified-looking name on any post with no tags, and scrolled the tagged rows even
+     when they fitted. */
+  const taggedHandles = post.tags
+    .map((name, i) => ({ usernameUrl: name.trim(), profilePicture: post.taggedProfilePictures[i]?.trim() || null }))
+    .filter((h) => h.usernameUrl);
 
   return (
     <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item image-hover-wrapper" onClick={onClick} style={{ position: 'relative', cursor: 'pointer' }}>
       <div className={`animated-heart${heart ? ' show' : ''}`} id={`heart-${post.id}`}></div>
-      {heading}
+      <PostHeading
+        author={{
+          usernameUrl: author.usernameUrl ?? '',
+          profilePicture: author.profilePicture,
+          verified: author.verified,
+        }}
+        tagged={taggedHandles}
+      />
       <div className="image-hover-wrapper" style={{ position: 'relative', width: '100%' }}>
         {media && isVideoFile(media) ? (
-          <video
-            className="feed-card-media"
-            controls
-            loop
-            muted
-            playsInline
-            poster={post.thumbnail ? assetImage(`thumbnails/${post.thumbnail}`) : undefined}
-          >
-            <source src={assetImage(media)} type={videoMime(media)} />
-          </video>
+          /* observeNewVideos drives these: muted playback starts when the card scrolls into
+             view and stops when it leaves, with the app's own volume button over it — the
+             world feed and the walls have always behaved this way, and only this page was
+             left with a still frame and bare native controls. */
+          <div className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
+            <video
+              className="feed-card-media autoplay-video"
+              id={`video-${post.id}`}
+              controlsList="nodownload"
+              loop
+              muted
+              playsInline
+              poster={post.thumbnail ? assetImage(`thumbnails/${post.thumbnail}`) : undefined}
+            >
+              <source src={assetImage(media)} type={videoMime(media)} />
+            </video>
+            <VolumeButton videoId={`video-${post.id}`} variant="world" />
+          </div>
         ) : (
           <img
             src={media ? assetImage(media) : LOCKED_POST_IMAGE}

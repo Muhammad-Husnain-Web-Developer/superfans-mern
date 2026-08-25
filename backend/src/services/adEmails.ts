@@ -1,4 +1,5 @@
 import { env } from '../config/env.js';
+import { renderEmailHtml } from './emailTemplate.js';
 
 /**
  * The six mails the blade sends around ads and price changes, which the rewrite
@@ -30,7 +31,7 @@ export interface Mail {
 export function adCreatedUser(a: { name: string; adType: string; amount: number }): Mail {
   return {
     subject: 'Your ad has been created',
-    html: `<p>Dear ${a.name},</p>
+    html: renderEmailHtml(`<p>Dear ${a.name},</p>
 
 <p>
     We are pleased to inform you that your ad of type
@@ -53,7 +54,7 @@ export function adCreatedUser(a: { name: string; adType: string; amount: number 
 <p>
     Warm regards,<br>
     <strong>The Superfans Team</strong>
-</p>`,
+</p>`),
   };
 }
 
@@ -66,7 +67,7 @@ export function adCreatedAdmin(a: {
 }): Mail {
   return {
     subject: 'New ad submitted for approval',
-    html: `<p>Hello Admin,</p>
+    html: renderEmailHtml(`<p>Hello Admin,</p>
 
 <p>
 A new ad has been submitted and is awaiting your review and approval.
@@ -90,7 +91,7 @@ Please review the ad at your earliest convenience:<br>
 <p>
 Best regards,<br>
 <strong>Superfans Team</strong>
-</p>`,
+</p>`),
   };
 }
 
@@ -105,7 +106,7 @@ export function adPaymentSuccessUser(a: {
   const link = a.linkUrl ? `<a href="${a.linkUrl}">${a.linkUrl}</a>` : '—';
   return {
     subject: 'Your Ad payment was successful',
-    html: `<p>Dear ${a.name || 'User'},</p>
+    html: renderEmailHtml(`<p>Dear ${a.name || 'User'},</p>
 
 <p>You paid successfully for the Ad. Our team are checking your Ads. After review it will be posted on the World in 48 hours. If the Ad is rejected, you'll receive your amount back in 5 work days.</p>
 
@@ -121,7 +122,7 @@ export function adPaymentSuccessUser(a: {
 
 <p>If you have any questions, please contact our support team.</p>
 
-<p>Warm regards,<br><strong>The Super Ads Team</strong></p>`,
+<p>Warm regards,<br><strong>The Super Ads Team</strong></p>`),
   };
 }
 
@@ -138,7 +139,7 @@ export function adPaymentSuccessAdmin(a: {
   const link = a.linkUrl ? `<a href="${a.linkUrl}">${a.linkUrl}</a>` : '—';
   return {
     subject: `New Ad payment received – ${a.adType}`,
-    html: `<p>Hello Admin,</p>
+    html: renderEmailHtml(`<p>Hello Admin,</p>
 
 <p>A new Ad payment has been received. Details below:</p>
 
@@ -152,7 +153,7 @@ export function adPaymentSuccessAdmin(a: {
 
 <p>Please review the ad when convenient.</p>
 
-<p>Best regards,<br><strong>Super Ads</strong></p>`,
+<p>Best regards,<br><strong>Super Ads</strong></p>`),
   };
 }
 
@@ -175,7 +176,7 @@ export function adStatusChanged(a: {
 
   return {
     subject: 'Your Ad Status Has Been Updated',
-    html: `<p>Hello ${a.name},</p>
+    html: renderEmailHtml(`<p>Hello ${a.name},</p>
 
 <p>Your ad <strong>#${a.adId}</strong> has been updated.</p>
 
@@ -187,7 +188,7 @@ export function adStatusChanged(a: {
 
 ${body}
 
-<p>Best regards,<br>Superfans Team</p>`,
+<p>Best regards,<br>Superfans Team</p>`),
   };
 }
 
@@ -199,33 +200,7 @@ ${body}
 export function priceIncrease(a: { subscriberName: string; subscriptionPrice: number | string }): Mail {
   return {
     subject: 'Notify User Price Increase Mail',
-    html: `<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Subscription Fee Update</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style type="text/css">
-        body {
-            font-family: Arial, sans-serif;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-
-        .footer {
-            margin-top: 20px;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-<p><strong>Subject:</strong> Update on Your Subscription Fee 🦸🏻</p>
+    html: renderEmailHtml(`<p><strong>Subject:</strong> Update on Your Subscription Fee 🦸🏻</p>
 
 <p>Hola ${a.subscriberName}!</p>
 
@@ -246,9 +221,6 @@ export function priceIncrease(a: { subscriberName: string; subscriptionPrice: nu
     <i>Instagram: @superfansworld</i>
     <br>
 
-</div>
-<img src="${origin()}/assets/images/SuperfansT-01.png" width="150px" alt="">
-</body>
-</html>`,
+</div>`),
   };
 }
