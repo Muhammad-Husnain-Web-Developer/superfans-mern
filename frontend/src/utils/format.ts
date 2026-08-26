@@ -70,11 +70,13 @@ export function assetImage(filename: string): string {
  */
 const SEED_VOTES = 100;
 /**
- * The client's rule: a post is never shown as fully liked. A pill that works out at 100
- * is shown as this instead — whether the 100 came from a typed figure or from real votes
- * that happen to be one-sided.
+ * The client's rule: a post is never shown as fully liked, and never as fully hated either
+ * — "antifake" at the top, "anti-depression" at the bottom, in his words. A pill that works
+ * out at 100 or at 0 is shown as these instead, whether the figure came from an admin or
+ * from real votes that happen to be one-sided.
  */
 const NEVER_FULL = 93;
+const NEVER_EMPTY = 10;
 export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
   let pct: number;
   if (seed == null) {
@@ -85,5 +87,44 @@ export function likePercent(likes: number, hates: number, seed?: number | null):
     const seedLikes = (seed / 100) * SEED_VOTES;
     pct = Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
   }
-  return pct === 100 ? NEVER_FULL : pct;
+  if (pct >= 100) return NEVER_FULL;
+  if (pct <= 0) return NEVER_EMPTY;
+  return pct;
+}
+
+/**
+ * The bar behind the number moves in four steps rather than following the figure exactly —
+ * the client's "4 levels of bar: 25, 50, 75, 100". The number itself stays true (83% reads
+ * 83% while the bar stands at 75), so the reading is honest and only the drawing is coarse.
+ */
+export function likeLevel(pct: number | null): 25 | 50 | 75 | 100 {
+  if (pct === null) return 50;
+  if (pct < 38) return 25;
+  if (pct < 63) return 50;
+  if (pct < 88) return 75;
+  return 100;
+}
+
+/**
+ * How far the red is drawn for each of the four levels.
+ *
+ * Not the level itself: at 100 a plain fill runs into the pill's rounded end and the slanted
+ * divider disappears into it, and the "Hate" label loses the dark ground it is written on.
+ * These stop short of that, so the slant is visible at every level and the two labels always
+ * sit on their own colour. The middle one is a true half — the client asked for 50/50 before
+ * anybody has voted, which is the level a post with no votes carries.
+ */
+export function likeFill(level: 25 | 50 | 75 | 100): number {
+  switch (level) {
+    case 25:
+      return 30;
+    case 50:
+      return 50;
+    case 75:
+      return 64;
+    default:
+      /* the top mark stops short of the "Hate" label so that word keeps the dark ground it
+         is written on, and the slant stays clear of the pill's rounded end */
+      return 76;
+  }
 }

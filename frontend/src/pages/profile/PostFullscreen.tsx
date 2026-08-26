@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { assetImage, isVideoFile, likePercent, videoMime } from '../../utils/format';
+import { playHateSound, playLikeSound } from '../../utils/postSounds';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from './Profile';
@@ -84,8 +85,6 @@ export function PostFullscreen() {
   const [expanded, setExpanded] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
-  const likeSound = useRef<HTMLAudioElement>(null);
-  const hateSound = useRef<HTMLAudioElement>(null);
   const lastTap = useRef(0);
   const singleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStart = useRef({ x: 0, y: 0 });
@@ -211,13 +210,14 @@ export function PostFullscreen() {
     void document.documentElement.requestFullscreen().catch(() => setExpanded(true));
   }
 
+  /* The viewer used to hold its own two <audio> elements. The like sound is now a run of
+     eleven the client set out, and it has to carry across the whole app rather than restart
+     here — so both sounds come from the same helpers the walls use. */
   function playLike() {
-    const el = likeSound.current;
-    if (el) { el.currentTime = 0; void el.play().catch(() => {}); }
+    playLikeSound();
   }
   function playHate() {
-    const el = hateSound.current;
-    if (el) { el.currentTime = 0; void el.play().catch(() => {}); }
+    playHateSound();
   }
 
   function doLike(skipSound?: boolean) {
@@ -454,8 +454,8 @@ export function PostFullscreen() {
         .post-fs-pill-liked{background:#8c001b;color:#fff;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
         .post-fs-pill-liked .pct{font-size:14px}
         .post-fs-pill-hated{background:#333;color:#fff;min-height:35px;font-size:12px;display:flex;align-items:center;justify-content:center}
-        .post-fs-poop{font-size:28px;cursor:pointer;opacity:.55;filter:brightness(1.25);transition:opacity .2s,filter .2s}
-        .post-fs-poop.hated{opacity:1;filter:brightness(.4)}
+        .post-fs-poop{cursor:pointer;line-height:0;display:inline-flex}
+        .post-fs-poop img{width:28px;height:28px;object-fit:contain;display:block}
         .post-fs-media-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;touch-action:none}
         .post-fullscreen-media,.post-fullscreen-media video,.post-fullscreen-media img{width:100%;height:100%;object-fit:contain}
         /* The locked tile is a square graphic. Left to the rule above it stretched
@@ -665,13 +665,11 @@ export function PostFullscreen() {
             title={hated ? 'Hated' : 'Hate'}
             onClick={(e) => { e.stopPropagation(); doHate(); }}
           >
-            💩
+            <img src="/brand/caca.webp" alt="Hate" draggable={false} />
           </span>
         </div>
       )}
 
-      <audio ref={likeSound} src="/assets/music/coin-sound.mp3" />
-      <audio ref={hateSound} src="/assets/music/woosh-260275.mp3" />
 
       {swal && <SwalResult {...swal} onClose={() => setSwal(null)} />}
     </div>

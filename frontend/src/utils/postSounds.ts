@@ -8,11 +8,27 @@
  * so a burst of fast clicks makes a single sound.
  */
 
-/* /assets/music is the Laravel public folder, served by the backend */
+/* The client's own recordings, shipped with the frontend rather than the Laravel asset
+   folder — that folder is not in git and only exists on the server. */
 const sources = {
-  like: '/assets/music/coin-sound.mp3',
-  hate: '/assets/music/woosh-260275.mp3',
+  cor11: '/sounds/cor11.mp3',
+  cor22: '/sounds/cor22.mp3',
+  hate: '/sounds/caca11.mp3',
 };
+
+/**
+ * The like sound is not one sound but a run of eleven, given by the client in this order and
+ * repeated from the top: two of cor22 then cor11, twice over, then two more of cor22 and
+ * three of cor11 to close. It works the way the socials slider's arrows already do — one
+ * counter, walked on every click, so the run carries across posts rather than restarting.
+ */
+const LIKE_RUN = [
+  'cor22', 'cor22', 'cor11',
+  'cor22', 'cor22', 'cor11',
+  'cor22', 'cor22', 'cor11',
+  'cor11', 'cor11',
+] as const;
+let likeStep = 0;
 
 const elements: Partial<Record<keyof typeof sources, HTMLAudioElement>> = {};
 
@@ -32,12 +48,13 @@ function play(name: keyof typeof sources) {
   void audio(name).play().catch(() => undefined);
 }
 
-/** blade clickSound3 — the coin, on like and unlike. */
+/** The next sound in the client's run, on like and unlike alike. */
 export function playLikeSound() {
-  play('like');
+  play(LIKE_RUN[likeStep]);
+  likeStep = (likeStep + 1) % LIKE_RUN.length;
 }
 
-/** blade clickSound5 — the woosh, on hate and unhate. */
+/** caca11 — on hate and unhate. */
 export function playHateSound() {
   play('hate');
 }

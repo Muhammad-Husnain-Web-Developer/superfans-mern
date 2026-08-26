@@ -200,7 +200,11 @@ export function NavToggle() {
       className={`js-fh5co-nav-toggle fh5co-nav-toggle${active ? ' active' : ''}`}
       onClick={toggle}
     >
-      <i></i>
+      {/* The client's own artwork for the handle — the tab and the bar inside it are the
+          one image, so nothing here is drawn in CSS any more. It ships with the frontend,
+          beside the other brand pieces, rather than in the Laravel asset folder that only
+          exists on the server. */}
+      <img src="/brand/sidebar-menu.png" alt="" className="nav-toggle-grip" draggable={false} />
     </a>
   );
 }

@@ -87,7 +87,10 @@
     border: 2px solid #000;
     border-radius: 20px;
     overflow: hidden;
-    background-color: #000;
+    position: relative;
+    width: 146px;
+    justify-content: space-between;
+    background-color: #555758;
     user-select: none;
     /* the card around it is clickable and passes its pointer down by inheritance; the pill
        is not, so it says so */
@@ -98,40 +101,60 @@
     transform: none;
 }
 
-/* Red half, cut on the diagonal. Its width is fixed rather than sized by the text: the
-   label runs from "Liked" to "100% Liked" depending on what a post has, and a pill that
-   changed width with it made every card in a grid a different size. */
-.stats-wrapper.has-actions .liked-segment {
-    flex: 0 0 auto;
-    width: 104px;
-    justify-content: center;
+/* The red is a fill on the track, standing at one of the client's four marks (25, 50, 75,
+   100) which the component sets as --sf-fill. It slides and fades between them rather than
+   jumping. The diagonal is cut in pixels, not in per cent, so the slant looks the same at
+   every mark. */
+.stats-wrapper.has-actions .rating-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    /* the slant straddles the mark — 6px past it on top, 6px short of it underneath — so
+       the eye reads the divider as standing exactly where the level says */
+    width: calc(var(--sf-fill, 68%) + 6px);
     background-color: #8c001b;
+    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    transition: width 0.3s ease, opacity 0.3s ease;
+    z-index: 0;
+}
+
+/* The labels keep their places on top of the fill — a mark of 25 would otherwise squeeze
+   "12% Liked" out of the pill entirely. White reads on the red and on the track alike. */
+.stats-wrapper.has-actions .liked-segment {
+    position: relative;
+    z-index: 1;
+    flex: 0 0 auto;
+    /* world-page.css still carries the blade's own red block and diagonal for this class;
+       the fill behind draws both now, so the label is stripped back to text */
+    background: none;
+    clip-path: none;
+    margin-right: 0;
+    width: auto;
     color: white;
     display: flex;
     align-items: center;
-    padding: 0 15px 0 12px;
+    padding: 0 8px 0 10px;
     gap: 6px;
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
-    clip-path: polygon(0 0, 100% 0, 85% 100%, 0% 100%);
-    margin-right: -15px;
-    z-index: 2;
 }
 
 .stats-wrapper.has-actions .hated-segment {
+    position: relative;
+    z-index: 1;
     flex: 0 0 auto;
-    background-color: #555758;
+    background: none;
     color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 10px 0 20px;
+    padding: 0 8px;
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
-    z-index: 1;
 }
 
 /* the black half stacks 👎🏻 over its label, so both lines are held to their own height —
@@ -153,9 +176,10 @@
     line-height: 1;
 }
 
-/* blade: dimmed until the viewer has hated the post */
+/* The blade dimmed this until the viewer had hated the post. The client asked for the
+   dimming to go, so it is drawn at full strength in both states. */
 .stats-wrapper.has-actions .poop {
-    opacity: 0.5;
+    opacity: 1;
     transition: opacity 0.3s ease;
     font-size: 22px !important;
     line-height: 1;
@@ -168,6 +192,16 @@
     opacity: 1;
 }
 
+/* The artwork stands where the emoji did — the 22px the emoji measured, so the row's
+   height and the heart beside it are unchanged. */
+.stats-wrapper.has-actions .poop-img {
+    width: 22px;
+    height: 22px;
+    display: block;
+    object-fit: contain;
+    user-select: none;
+}
+
 /* Narrow cards: the group stays on the row beside the count instead of pushing past the
    card edge, so the pill and both icons step down with the card. */
 @media screen and (max-width: 768px) {
@@ -175,15 +209,18 @@
         height: 30px;
     }
 
+    .stats-wrapper.has-actions .rating-pill {
+        width: 130px;
+    }
+
     .stats-wrapper.has-actions .liked-segment {
-        width: 96px;
-        padding: 0 12px 0 8px;
+        padding: 0 6px 0 8px;
         gap: 5px;
         font-size: 10px;
     }
 
     .stats-wrapper.has-actions .hated-segment {
-        padding: 0 8px 0 16px;
+        padding: 0 6px;
         font-size: 10px;
     }
 
@@ -220,8 +257,8 @@
         height: 28px;
     }
 
-    .stats-wrapper.has-actions .liked-segment {
-        width: 86px;
+    .stats-wrapper.has-actions .rating-pill {
+        width: 118px;
     }
 
     .stats-wrapper.has-actions .liked-segment,

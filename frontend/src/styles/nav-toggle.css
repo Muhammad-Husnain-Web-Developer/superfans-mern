@@ -18,51 +18,54 @@
   .fh5co-nav-toggle,
   body.offcanvas .fh5co-nav-toggle {
     /* halfway down, less half the tab — never `transform`, which the offcanvas rule owns */
-    top: calc(50% - 15px);
+    top: calc(50% - 35px);
     left: 0;
     /* The post cards start at exactly x=16 on both the feed and World (measured: the card
        is the media itself, border-left 7px, radius 26). The tab is kept to 12 so it not
        only misses them but leaves 4px of daylight — a fixed tab halfway down the screen
        is always beside a card while the page scrolls, so the gap has to be built in. */
-    width: 12px;
-    height: 30px;
+    /* The artwork is 22x108. The post media begins at x=16 on a phone (measured on the
+       world feed and on a wall), so 14 is as wide as the tab can be and still leave
+       daylight beside it; the height follows the artwork's own proportion. */
+    width: 14px;
+    height: 69px;
     padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    /* the client's icon: a black tab, deeply rounded on the side that shows, carrying a
-       single purple bar — not a purple tab with a chevron */
-    background: #000;
+    /* the tab, its curve and the bar inside are all in the image now */
+    background: none;
     border: 0;
-    /* elliptical, so the visible side is one smooth curve rather than two corners */
-    border-radius: 0 50% 50% 0;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35);
+    border-radius: 0;
+    box-shadow: none;
     /* the same curve the modals arrive on, so the panel lands rather than stops */
     transition: transform 0.38s cubic-bezier(0.21, 1.02, 0.32, 1);
   }
   .fh5co-nav-toggle:hover,
   .fh5co-nav-toggle:focus,
   .fh5co-nav-toggle:active {
-    background: #1a1a1a;
+    background: none;
   }
 
   /* the burger's three bars are gone; the tab carries a chevron instead */
+  /* the burger's own <i> is gone; nothing should draw in its place */
   .fh5co-nav-toggle i {
     display: none;
   }
-  .fh5co-nav-toggle::after {
-    /* the bar inside, in the app's purple */
-    content: '';
-    /* the bar carries the icon: a little over half the tab's height, as the client drew it */
-    width: 4px;
-    height: 17px;
-    border-radius: 2px;
-    background: #8a2be2;
-    transition: height 0.38s cubic-bezier(0.21, 1.02, 0.32, 1);
+
+  /* the artwork fills the tab */
+  .nav-toggle-grip {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    pointer-events: none;
+    user-select: none;
   }
-  /* open: the bar shortens, so the tab reads as pressed rather than swapping symbol */
-  .fh5co-nav-toggle.active::after {
-    height: 10px;
+
+  /* open: the handle presses in a little rather than swapping symbol */
+  .fh5co-nav-toggle.active .nav-toggle-grip {
+    transform: scale(0.88);
   }
 
   /* the panel itself arrives on the same curve rather than the stylesheet's flat half-second */
@@ -73,7 +76,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fh5co-nav-toggle,
-  .fh5co-nav-toggle::after,
+  .nav-toggle-grip,
   #fh5co-aside {
     transition: none;
   }

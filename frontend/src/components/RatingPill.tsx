@@ -1,3 +1,4 @@
+import { likeFill, likeLevel } from '../utils/format';
 import '../styles/rating-pill.css';
 
 /**
@@ -44,8 +45,16 @@ export function RatingPill({
 
       {/* The pill only reports the split — the two icons beside it are the buttons. The blade
           wired the whole pill to hate (`class="rating-pill hate_post"`), so clicking the red
-          "83% Liked" half hated the post; the client asked for that click to go away. */}
-      <div className="rating-pill">
+          "83% Liked" half hated the post; the client asked for that click to go away.
+
+          The red is a fill on a black track, and it stands at one of four marks — 25, 50, 75
+          or 100 — while the number beside it stays true. The labels keep their places so a
+          low mark cannot squeeze them out; only the fill moves, and it slides. */}
+      <div
+        className="rating-pill"
+        style={{ '--sf-fill': `${likeFill(likeLevel(pct))}%` } as React.CSSProperties}
+      >
+        <span className="rating-fill" aria-hidden="true" />
         <div className="liked-segment">
           <span className="thumb-up">👍🏻</span>
           {/* With a percentage the half speaks for everyone — "83% Liked" — and the viewer's
@@ -60,13 +69,15 @@ export function RatingPill({
         </div>
       </div>
 
-      {/* blade: `poop` is the dimmed idle state, `enable` the one the viewer has hated */}
+      {/* The client's own artwork in place of the emoji, and at full strength whether or not
+          the viewer has hated the post — the blade dimmed the idle state, which the client
+          asked to drop. `enable` stays on the element for anything else hanging off it. */}
       <span
         className={`${hated ? 'poop enable' : 'poop'}${bounce ? ' poop-animate' : ''}`}
-        style={{ cursor: 'pointer', color: 'rgba(0, 0, 0, 1)', fontSize: 25 }}
+        style={{ cursor: 'pointer' }}
         onClick={(e) => stop(e, onHate)}
       >
-        💩
+        <img src="/brand/caca.webp" alt="Hate" className="poop-img" draggable={false} />
       </span>
     </div>
   );
