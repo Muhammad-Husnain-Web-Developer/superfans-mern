@@ -249,7 +249,7 @@ export function PostItem({
   }
 
   return (
-    <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item image-hover-wrapper" onClick={onMediaClick} style={{ position: 'relative', cursor: 'pointer' }}>
+    <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item image-hover-wrapper" style={{ position: 'relative' }}>
       <div className={`animated-heart${heart ? ' show' : ''}`} id={`heart-${post.id}`}></div>
       {/* Every post is headed by its author's handle, then anyone tagged in it —
           the shape the world feed uses. The blade only ever printed the tagged
@@ -258,6 +258,9 @@ export function PostItem({
         author={author ? { ...author, verified: author.verified } : null}
         tagged={taggedPairs.map(([usernameUrl, profilePicture]) => ({ usernameUrl, profilePicture }))}
       />
+      {/* only the media opens the viewer — the handle strip above it and the rating row
+          below are not the post, and clicking those used to open it too */}
+      <div style={{ position: 'relative', width: '100%', cursor: 'pointer' }} onClick={onMediaClick}>
       {locked || !media ? (
         <img src={LOCKED_POST_IMAGE} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
       ) : isVideoFile(media) ? (
@@ -278,6 +281,7 @@ export function PostItem({
       ) : (
         <img src={assetImage(media)} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
       )}
+      </div>
       {/* views on the left, the rating group on the right — the horizontal wall row
           the client asked for, the same one the world feed carries */}
       <div className="stats-wrapper has-actions" onClick={(e) => e.stopPropagation()}>

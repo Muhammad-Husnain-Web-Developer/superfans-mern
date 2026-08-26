@@ -1,0 +1,80 @@
+/* The phone's way into the sidebar.
+ *
+ * The three-bar burger in the top-left corner is replaced by the tab the client drew: a
+ * rounded purple handle on the left edge, halfway down the screen, with a chevron that
+ * turns to point back once the panel is open.
+ *
+ * It is the same element the burger always was (.js-fh5co-nav-toggle), only dressed
+ * differently, so every behaviour hanging off it is untouched — the click, the click
+ * outside that closes, the finger-drag in NavToggle.tsx, and the translateX(270px) the
+ * original stylesheet gives it so the handle travels out with the panel.
+ *
+ * Two things have to be stated in both states: `top`, because body.offcanvas resets it to
+ * 0 for the corner burger and the tab does not live in the corner; and the padding, which
+ * the base rule sets to 20px for a burger that no longer exists here.
+ */
+
+@media (max-width: 768px) {
+  .fh5co-nav-toggle,
+  body.offcanvas .fh5co-nav-toggle {
+    /* halfway down, less half the tab — never `transform`, which the offcanvas rule owns */
+    top: calc(50% - 15px);
+    left: 0;
+    /* The post cards start at exactly x=16 on both the feed and World (measured: the card
+       is the media itself, border-left 7px, radius 26). The tab is kept to 12 so it not
+       only misses them but leaves 4px of daylight — a fixed tab halfway down the screen
+       is always beside a card while the page scrolls, so the gap has to be built in. */
+    width: 12px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* the client's icon: a black tab, deeply rounded on the side that shows, carrying a
+       single purple bar — not a purple tab with a chevron */
+    background: #000;
+    border: 0;
+    /* elliptical, so the visible side is one smooth curve rather than two corners */
+    border-radius: 0 50% 50% 0;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.35);
+    /* the same curve the modals arrive on, so the panel lands rather than stops */
+    transition: transform 0.38s cubic-bezier(0.21, 1.02, 0.32, 1);
+  }
+  .fh5co-nav-toggle:hover,
+  .fh5co-nav-toggle:focus,
+  .fh5co-nav-toggle:active {
+    background: #1a1a1a;
+  }
+
+  /* the burger's three bars are gone; the tab carries a chevron instead */
+  .fh5co-nav-toggle i {
+    display: none;
+  }
+  .fh5co-nav-toggle::after {
+    /* the bar inside, in the app's purple */
+    content: '';
+    /* the bar carries the icon: a little over half the tab's height, as the client drew it */
+    width: 4px;
+    height: 17px;
+    border-radius: 2px;
+    background: #8a2be2;
+    transition: height 0.38s cubic-bezier(0.21, 1.02, 0.32, 1);
+  }
+  /* open: the bar shortens, so the tab reads as pressed rather than swapping symbol */
+  .fh5co-nav-toggle.active::after {
+    height: 10px;
+  }
+
+  /* the panel itself arrives on the same curve rather than the stylesheet's flat half-second */
+  #fh5co-aside {
+    transition: transform 0.38s cubic-bezier(0.21, 1.02, 0.32, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fh5co-nav-toggle,
+  .fh5co-nav-toggle::after,
+  #fh5co-aside {
+    transition: none;
+  }
+}

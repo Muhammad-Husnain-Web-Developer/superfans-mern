@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import '../styles/nav-toggle.css';
 
 /**
  * Mobile/tablet sidebar toggle — exact port of burgerMenu + mobileMenuOutsideClick

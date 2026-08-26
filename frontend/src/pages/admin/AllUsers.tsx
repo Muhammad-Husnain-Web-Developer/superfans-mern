@@ -345,15 +345,29 @@ export function AllUsers() {
   const [sort, setSort] = useState<{ col: number; dir: 'asc' | 'desc' }>({ col: 0, dir: 'asc' });
   const [flash, setFlash] = useState<Flash>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'denied'>('loading');
+  /* What was typed, and what has actually been sent. The table only ever held 700 of the
+     users, so its own Search box could not find anybody outside that slice; the term now
+     goes to the server and the whole table is searched. */
+  const [term, setTerm] = useState('');
+  const [query, setQuery] = useState('');
 
   useEffect(() => {
     document.title = 'Superfans | All Users';
   }, []);
 
+  /* a beat after the typing stops, so a search is one request rather than one per letter */
+  useEffect(() => {
+    const id = window.setTimeout(() => {
+      setQuery(term.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(id);
+  }, [term]);
+
   useEffect(() => {
     api
       .get<{ users: PanelUser[]; lastPage: number; total: number; perPage: number }>(
-        `/admin/all-users?page=${page}`,
+        `/admin/all-users?page=${page}&search=${encodeURIComponent(query)}`,
       )
       .then((r) => {
         setUsers(r.data.users);
@@ -363,7 +377,7 @@ export function AllUsers() {
         setState('ok');
       })
       .catch(() => setState('denied'));
-  }, [page]);
+  }, [page, query]);
 
   const patch = useCallback((u: Partial<PanelUser> & { id: string }) => {
     setUsers((prev) => prev.map((p) => (p.id === u.id ? { ...p, ...u } : p)));
@@ -398,7 +412,12 @@ export function AllUsers() {
 
       <Alert flash={flash} onClose={() => setFlash(null)} />
 
-      <DataTableShell rows={sorted} searchText={(u) => `${u.usernameUrl} ${u.email} ${u.role}`} numbered>
+      <DataTableShell
+        rows={sorted}
+        searchText={(u) => `${u.usernameUrl} ${u.email} ${u.role}`}
+        numbered
+        onSearch={setTerm}
+      >
         {(pageRows) => (
           <table id="allUsersTable" className="table table-striped table-bordered dataTable no-footer">
             <thead>

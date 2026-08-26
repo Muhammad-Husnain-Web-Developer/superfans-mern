@@ -66,6 +66,11 @@ export function UserFeed() {
         .feed-head-title{font-family:'Roboto Slab',serif;color:#dd2110}
         /* the handle strip is PostHeading's now — its own weight, marquee and blue tick
            come from post-heading.css, the same as the world feed and the walls */
+        /* The column's 80px of head room was there for the avatar-and-title header, which
+           the client took off this page; with the stories row moved above the column it
+           left an empty band between the two. Only this page drops it — the rule lives in
+           the page's own style block, which goes away with the page. */
+        #fh5co-main > .fh5co-narrow-content{padding-top:0}
         .feed-card-media{border-radius:26px;border:7px solid lightgray;width:100%;max-height:411px;object-fit:cover;cursor:pointer}
       `}</style>
       <PageLoader />
@@ -83,6 +88,12 @@ export function UserFeed() {
       <AddPostHost open={addPostOpen} onClose={() => setAddPostOpen(false)} />
 
       <div id="fh5co-main">
+        {/* Stories, Pas 7. Outside the narrow column on purpose: the client wants the row
+            flush with the top of the page and running the full width, and that column is
+            both inset on either side and padded 80px down from the top. The posts stay
+            inside it, at the width they have always had. */}
+        <StoriesStrip />
+
         <div className="fh5co-narrow-content">
           {/* The client asked for this header — avatar, name, handle, Subscribe and the
               "My Feed Superfans World" title — to come off the feed, so the page opens on
@@ -118,10 +129,7 @@ export function UserFeed() {
           <span>"{t('feed_of_me', { defaultValue: 'My Feed' })} <br /> Superfans World"</span>
           </h2>
           </center>
-          ]
-
-          {/* Stories, Pas 7: the ringed avatars sit between the heading and the posts */}
-          <StoriesStrip />
+          ] */}
 
           <div className="row animate-box" style={{ display: 'flex', flexWrap: 'wrap' }}>
             {ready && posts.length === 0 ? (
@@ -213,7 +221,10 @@ function FeedCard({ post }: { post: FeedPost }) {
     .filter((h) => h.usernameUrl);
 
   return (
-    <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item image-hover-wrapper" onClick={onClick} style={{ position: 'relative', cursor: 'pointer' }}>
+    /* the click belongs to the media, not to the card: the handle strip, the rating row
+       and the white space around them are not the post, and opening the viewer from them
+       is what the client reported. The world feed has always worked this way. */
+    <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item image-hover-wrapper" style={{ position: 'relative' }}>
       <div className={`animated-heart${heart ? ' show' : ''}`} id={`heart-${post.id}`}></div>
       <PostHeading
         author={{
@@ -223,7 +234,11 @@ function FeedCard({ post }: { post: FeedPost }) {
         }}
         tagged={taggedHandles}
       />
-      <div className="image-hover-wrapper" style={{ position: 'relative', width: '100%' }}>
+      <div
+        className="image-hover-wrapper"
+        style={{ position: 'relative', width: '100%', cursor: 'pointer' }}
+        onClick={onClick}
+      >
         {media && isVideoFile(media) ? (
           /* observeNewVideos drives these: muted playback starts when the card scrolls into
              view and stops when it leaves, with the app's own volume button over it — the

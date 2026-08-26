@@ -13,6 +13,8 @@ interface PanelPost {
   noOfLikes: number;
   /** the typed ❤️/💩 figure; null means the pill runs on the real votes alone */
   likePercent: number | null;
+  /** typed on this post on its own — "apply to all" leaves it alone, and the row says so */
+  likePercentManual: boolean;
 }
 
 type Flash = { kind: 'success' | 'danger'; text: string } | null;
@@ -26,11 +28,23 @@ function PostRow({
   post: PanelPost;
   influencerId: number | null;
   onFlash: (f: Flash) => void;
-  onChanged: (p: { id: string; noOfLikes?: number; likePercent?: number | null }) => void;
+  onChanged: (p: {
+    id: string;
+    noOfLikes?: number;
+    likePercent?: number | null;
+    likePercentManual?: boolean;
+  }) => void;
 }) {
   const [amount, setAmount] = useState('');
   const [pct, setPct] = useState(post.likePercent == null ? '' : String(post.likePercent));
   const [busy, setBusy] = useState(false);
+
+  /* "Apply to all" rewrites the figure on every open post. The box holds its own copy so
+     it can be typed in, and that copy would otherwise sit on the old number until the
+     page was reloaded — which reads as though nothing happened. */
+  useEffect(() => {
+    setPct(post.likePercent == null ? '' : String(post.likePercent));
+  }, [post.likePercent]);
 
   const send = useCallback(
     async (action: 'add' | 'remove') => {
@@ -60,12 +74,17 @@ function PostRow({
     setBusy(true);
     try {
       const percent = pct.trim() === '' ? null : Number(pct);
-      const { data } = await api.post<{ message: string; likePercent: number | null }>(
-        `/admin/posts/${post.id}/like-percent`,
-        { percent },
-      );
+      const { data } = await api.post<{
+        message: string;
+        likePercent: number | null;
+        likePercentManual: boolean;
+      }>(`/admin/posts/${post.id}/like-percent`, { percent });
       onFlash({ kind: 'success', text: data.message });
-      onChanged({ id: post.id, likePercent: data.likePercent });
+      onChanged({
+        id: post.id,
+        likePercent: data.likePercent,
+        likePercentManual: data.likePercentManual,
+      });
     } catch (err) {
       const text = isAxiosError(err)
         ? ((err.response?.data as { message?: string } | undefined)?.message ?? 'Something went wrong')
@@ -131,6 +150,16 @@ function PostRow({
             style={{ width: 70 }}
             onChange={(e) => setPct(e.target.value)}
           />
+          {/* A figure typed on this post alone is left where it is by "apply to all", so
+              the row says which ones the bulk apply will step over. Emptying the box and
+              saving hands the post back to the bulk apply, and the padlock goes. */}
+          {post.likePercentManual && (
+            <i
+              className="fa fa-lock text-warning ml-1"
+              title="Set by hand — Apply to all will not change this post"
+              aria-label="Set by hand — Apply to all will not change this post"
+            />
+          )}
           <span>%</span>
           <input
             type="submit"
@@ -175,19 +204,29 @@ export function AllUserPosts() {
       .catch(() => setState('denied'));
   }, [id]);
 
-  const patch = useCallback((p: { id: string; noOfLikes?: number; likePercent?: number | null }) => {
-    setPosts((prev) =>
-      prev.map((x) =>
-        x.id === p.id
-          ? {
-              ...x,
-              noOfLikes: p.noOfLikes ?? x.noOfLikes,
-              likePercent: p.likePercent !== undefined ? p.likePercent : x.likePercent,
-            }
-          : x,
-      ),
-    );
-  }, []);
+  const patch = useCallback(
+    (p: {
+      id: string;
+      noOfLikes?: number;
+      likePercent?: number | null;
+      likePercentManual?: boolean;
+    }) => {
+      setPosts((prev) =>
+        prev.map((x) =>
+          x.id === p.id
+            ? {
+                ...x,
+                noOfLikes: p.noOfLikes ?? x.noOfLikes,
+                likePercent: p.likePercent !== undefined ? p.likePercent : x.likePercent,
+                likePercentManual:
+                  p.likePercentManual !== undefined ? p.likePercentManual : x.likePercentManual,
+              }
+            : x,
+        ),
+      );
+    },
+    [],
+  );
 
   const [bulkPct, setBulkPct] = useState('');
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -196,12 +235,23 @@ export function AllUserPosts() {
     setBulkBusy(true);
     try {
       const percent = bulkPct.trim() === '' ? null : Number(bulkPct);
-      const { data } = await api.post<{ message: string; likePercent: number | null }>(
+      const { data } = await api.post<{
+        message: string;
+        likePercent: number | null;
+        applied: { id: string; likePercent: number | null }[];
+      }>(
         `/admin/users/${id}/like-percent`,
         { percent },
       );
       setFlash({ kind: 'success', text: data.message });
-      setPosts((prev) => prev.map((x) => ({ ...x, likePercent: data.likePercent })));
+      /* Each post now carries its own figure from the band, so the one number in the
+         response is only the base. The table is updated from what actually landed on
+         each row — and posts left alone because they were set by hand are simply not in
+         that list, so they keep what they had. */
+      const landed = new Map(data.applied.map((a) => [a.id, a.likePercent]));
+      setPosts((prev) =>
+        prev.map((x) => (landed.has(x.id) ? { ...x, likePercent: landed.get(x.id) ?? null } : x)),
+      );
     } catch (err) {
       const text = isAxiosError(err)
         ? ((err.response?.data as { message?: string } | undefined)?.message ?? 'Something went wrong')

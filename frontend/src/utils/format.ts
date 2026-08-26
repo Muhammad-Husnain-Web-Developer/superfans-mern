@@ -69,11 +69,21 @@ export function assetImage(filename: string): string {
  * on nearly every card.
  */
 const SEED_VOTES = 100;
+/**
+ * The client's rule: a post is never shown as fully liked. A pill that works out at 100
+ * is shown as this instead — whether the 100 came from a typed figure or from real votes
+ * that happen to be one-sided.
+ */
+const NEVER_FULL = 93;
 export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
+  let pct: number;
   if (seed == null) {
     const total = likes + hates;
-    return total > 0 ? Math.round((likes / total) * 100) : null;
+    if (total === 0) return null;
+    pct = Math.round((likes / total) * 100);
+  } else {
+    const seedLikes = (seed / 100) * SEED_VOTES;
+    pct = Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
   }
-  const seedLikes = (seed / 100) * SEED_VOTES;
-  return Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
+  return pct === 100 ? NEVER_FULL : pct;
 }

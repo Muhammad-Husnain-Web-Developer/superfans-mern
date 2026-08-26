@@ -10,6 +10,7 @@ export function DataTableShell<T>({
   searchText,
   children,
   numbered = false,
+  onSearch,
 }: {
   rows: T[];
   searchText: (row: T) => string;
@@ -17,14 +18,24 @@ export function DataTableShell<T>({
   /** Draw DataTables' numbered pager (Previous 1 2 3 … Next) instead of the
       plain Previous/Next pair. The admin panel blades show the numbers. */
   numbered?: boolean;
+  /**
+   * Hand the typed term to the page instead of filtering here. A table that holds only
+   * one slice of its data cannot answer a search on its own — the page fetches the
+   * matches and passes them back as `rows`, already filtered. Tables that hold all
+   * their rows leave this out and keep searching locally, as they always have.
+   */
+  onSearch?: (term: string) => void;
 }) {
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
   const filtered = useMemo(
-    () => rows.filter((r) => searchText(r).toLowerCase().includes(search.trim().toLowerCase())),
-    [rows, search, searchText],
+    () =>
+      onSearch
+        ? rows
+        : rows.filter((r) => searchText(r).toLowerCase().includes(search.trim().toLowerCase())),
+    [rows, search, searchText, onSearch],
   );
 
   const total = filtered.length;
@@ -59,7 +70,11 @@ export function DataTableShell<T>({
             className="form-control form-control-sm d-inline-block"
             style={{ width: 177 }}
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+              onSearch?.(e.target.value);
+            }}
           />
         </label>
       </div>

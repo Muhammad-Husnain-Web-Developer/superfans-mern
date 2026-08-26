@@ -78,7 +78,9 @@
 }
 
 /* not a button: the pill reports the ❤️/💩 split, the two icons beside it act. No pointer
-   cursor and no hover lift, so nothing invites a click that does nothing. */
+   cursor and no hover lift, so nothing invites a click that does nothing. The blade's own
+   `.rating-pill:hover { transform: scale(1.02) }` is still in world-page.css, extracted
+   verbatim from world.blade.php, so it is switched off below rather than deleted there. */
 .stats-wrapper.has-actions .rating-pill {
     display: flex;
     height: 34px;
@@ -90,6 +92,10 @@
     /* the card around it is clickable and passes its pointer down by inheritance; the pill
        is not, so it says so */
     cursor: default;
+}
+
+.stats-wrapper.has-actions .rating-pill:hover {
+    transform: none;
 }
 
 /* Red half, cut on the diagonal. Its width is fixed rather than sized by the text: the
@@ -151,7 +157,7 @@
 .stats-wrapper.has-actions .poop {
     opacity: 0.5;
     transition: opacity 0.3s ease;
-    font-size: 18px !important;
+    font-size: 22px !important;
     line-height: 1;
     /* margin-left: 1px; */
     display: inline-flex;
@@ -191,13 +197,7 @@
         font-size: 10px;
     }
 
-    .stats-wrapper.has-actions .heart {
-        font-size: 18px;
-    }
 
-    .stats-wrapper.has-actions .poop {
-        font-size: 16px !important;
-    }
 }
 
 @media screen and (max-width: 480px) {
@@ -246,6 +246,8 @@
     .stats-wrapper.has-actions .poop {
         font-size: 15px !important;
     }
+
+
 }
 
 /* Click feedback, verbatim from user/world.blade.php:320-378: the heart beats on a like,

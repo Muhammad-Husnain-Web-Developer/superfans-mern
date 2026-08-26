@@ -9,6 +9,10 @@ export interface IPost {
   noOfViews: number;
   /** admin-typed ❤️/💩 percentage seed (0-100); null = derive from the real rows alone */
   likePercent?: number | null;
+  /** true when that percentage was typed on this post on its own. The client's rule: a
+   *  figure set post by post is the admin's judgement and the bulk "apply to all" must
+   *  leave it exactly as it is. */
+  likePercentManual?: boolean;
   visible: boolean;
   tags: string[];
   taggedProfilePictures: string[];
@@ -29,6 +33,7 @@ const postSchema = new Schema<IPost>(
     noOfLikes: { type: Number, default: 0 },
     noOfViews: { type: Number, default: 0 },
     likePercent: { type: Number, default: null },
+    likePercentManual: { type: Boolean, default: false },
     visible: { type: Boolean, default: false }, // Laravel default 0
     tags: { type: [String], default: [] },
     taggedProfilePictures: { type: [String], default: [] },

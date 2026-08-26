@@ -56,9 +56,14 @@
   display: flex;
   align-items: center;
   /* gap: 6px; */
-  margin: 0 auto 24px;
-  max-width: 1290px;
-  padding: 4px 8px;
+  /* full width of the column it sits in — the client's own instruction; it is no longer
+     centred inside a narrower one */
+  margin: 0 0 24px;
+  max-width: none;
+  width: 100%;
+  /* the 6px black rule below is part of what the eye reads as the bar, so the top carries
+     the same 6px back and the circles sit in the middle of it rather than riding high */
+  padding: 10px 8px 4px;
   background: #555758;
   border-bottom: 6px solid #000;
   border-radius: 0;
@@ -70,6 +75,7 @@
   justify-content: flex-start;
   gap: 8px;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-behavior: smooth;
   flex: 1;
   /* the row is dragged or arrowed, not scrollbar-ed */
@@ -95,6 +101,10 @@
 }
 .stories-strip-name {
   max-width: 100%;
+  /* Consolas by the client's pick — the same stack the sidebar handle already uses */
+  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Courier New', monospace;
+  font-weight: 700;
   font-size: 11px;
   line-height: 13px;
   color: #fff;
@@ -107,7 +117,7 @@
 /* ◀ ▶ — the shape is unchanged; what is new is the blue centre, drawn as a triangle
    filled with the app's own #8a2be2 and edged in the bar's black. */
 .stories-strip-arrow {
-  background: none;
+  background: transparent;
   border: none;
   cursor: pointer;
   line-height: 0;
@@ -169,11 +179,11 @@
 }
 @media (max-width: 768px) {
   .stories-strip-wrap {
-    /* Full bleed. The feed column (.fh5co-narrow-content) pads 16px a side at every phone
-       width measured — 360, 390 and 768 alike — so stepping back by exactly that reaches
-       the screen edge. 100vw was tried here first and overshot, because it counts the
-       page's scrollbar; this does not. The row also sits tighter to the posts below. */
-    margin: 0 -16px 14px;
+    /* Full bleed. The row used to sit inside the feed column, which pads 16px a side on a
+       phone, and stepped back by exactly that to reach the screen edge. It now sits in
+       #fh5co-main, which has no side padding, so the step-back would push it off the left
+       instead — the margin only carries the tighter gap to the posts below. */
+    margin: 0 0 14px;
     /* the bar now touches both edges, so a side rule would be drawn off the screen */
     border-left: 0;
     border-right: 0;

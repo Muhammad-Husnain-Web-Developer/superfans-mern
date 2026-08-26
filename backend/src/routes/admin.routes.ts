@@ -31,6 +31,14 @@ async function requireAdmin(userId: string): Promise<void> {
   if (!allowed) throw ApiError.forbidden('Admin access only');
 }
 
+/** A typed search term is data, not a pattern: every regex metacharacter in it is made
+    literal so a stray "(" or "*" cannot break the query or cost the server real work. */
+function escapeRegex(v: string): string {
+  let out = '';
+  for (const ch of v) out += /[A-Za-z0-9_]/.test(ch) ? ch : `\\${ch}`;
+  return out;
+}
+
 /** Wrap every admin route: auth + admin check, then the handler. */
 function admin(handler: (req: import('express').Request, res: import('express').Response) => Promise<void>) {
   return asyncHandler(async (req, res) => {
@@ -122,9 +130,24 @@ adminRouter.get(
   admin(async (req, res) => {
     const perPage = 700;
     const page = Math.max(1, Number(req.query.page ?? 1));
+
+    /* The table's own Search box only ever saw the 700 rows on screen, so looking a user
+       up meant guessing which page they were on. The box now asks the server instead and
+       the whole table is the haystack. Blank means everybody, as before. */
+    const term = String(req.query.search ?? '').trim();
+    const filter = term
+      ? {
+          $or: [
+            { usernameUrl: { $regex: escapeRegex(term), $options: 'i' } },
+            { email: { $regex: escapeRegex(term), $options: 'i' } },
+            { name: { $regex: escapeRegex(term), $options: 'i' } },
+          ],
+        }
+      : {};
+
     const [total, users] = await Promise.all([
-      User.countDocuments({}),
-      User.find({})
+      User.countDocuments(filter),
+      User.find(filter)
         .select('name usernameUrl email role status verified vip noOfFollowers growthStatus growthGearLevel createdAt')
         .sort({ mysqlId: 1, createdAt: 1 })
         .skip((page - 1) * perPage)
@@ -137,6 +160,7 @@ adminRouter.get(
       page,
       perPage,
       total,
+      search: term,
       lastPage: Math.max(1, Math.ceil(total / perPage)),
     });
   }),
@@ -221,7 +245,7 @@ adminRouter.get(
     /* the panel is the one place that should see everything, including the
        posts whose media went missing in the migration */
     const posts = await Post.find({ influencer: req.params.id })
-      .select('mysqlId imageVideo noOfLikes likePercent createdAt')
+      .select('mysqlId imageVideo noOfLikes likePercent likePercentManual createdAt')
       .sort({ mysqlId: -1, createdAt: -1 })
       .setOptions({ withMissing: true })
       .lean();
@@ -235,6 +259,8 @@ adminRouter.get(
         imageVideo: p.imageVideo ?? null,
         noOfLikes: p.noOfLikes ?? 0,
         likePercent: p.likePercent ?? null,
+        /* the table marks these with a padlock: "apply to all" steps over them */
+        likePercentManual: !!p.likePercentManual,
       })),
     });
   }),
@@ -282,16 +308,30 @@ adminRouter.post(
     const p = await Post.findById(req.params.id).setOptions({ withMissing: true });
     if (!p) throw ApiError.notFound('Post not found');
     p.likePercent = percent === null ? null : Math.round(percent);
+    /* Typed on this post on its own, so "apply to all" must not touch it again. Clearing
+       the box lifts that protection, which is the only way back into the bulk apply. */
+    p.likePercentManual = percent !== null;
     await p.save();
     res.json({
       success: true,
       likePercent: p.likePercent,
+      likePercentManual: p.likePercentManual,
       message: percent === null ? 'Percentage cleared' : 'Percentage saved',
     });
   }),
 );
 
-/** Same value across every post of one influencer — the "help an influencer" bulk apply,
+/* The client asked for the bulk figure to land differently on each post rather than the
+   same number everywhere: three either side of what was typed, so 17 spreads over
+   14…20. The band is clipped at 0 and 100 so the ends of the scale stay legal. */
+export const LIKE_PERCENT_SPREAD = 3;
+function spreadPercent(base: number): number {
+  const low = Math.max(0, base - LIKE_PERCENT_SPREAD);
+  const high = Math.min(100, base + LIKE_PERCENT_SPREAD);
+  return low + Math.floor(Math.random() * (high - low + 1));
+}
+
+/** One figure per post across a whole influencer — the "help an influencer" bulk apply,
     the counterpart of starting the growth engine on a user. */
 adminRouter.post(
   '/users/:id/like-percent',
@@ -304,18 +344,48 @@ adminRouter.post(
     const u = await User.findById(req.params.id, { _id: 1 }).lean();
     if (!u) throw ApiError.notFound('User not found');
     const value = percent === null ? null : Math.round(percent);
-    const r = await Post.updateMany(
+
+    /* Posts carrying a hand-typed figure are left exactly as they are, applying and
+       clearing alike — the client's rule is that an individual judgement stands. The
+       admin can still reach one by emptying its own box first. */
+    const posts = await Post.find(
       { influencer: req.params.id },
-      { $set: { likePercent: value } },
-    );
+      { _id: 1, likePercentManual: 1 },
+    )
+      .setOptions({ withMissing: true })
+      .lean();
+    const open = posts.filter((p) => !p.likePercentManual);
+    const kept = posts.length - open.length;
+
+    /* every post gets its own figure from the band, so a row of posts does not read as one
+       number stamped across all of them. They are worked out before the write and sent
+       back with the response, so the table can show what actually landed on each row
+       without the admin having to reload the page to find out. */
+    const applied = open.map((p) => ({
+      id: String(p._id),
+      likePercent: value === null ? null : spreadPercent(value),
+    }));
+
+    if (applied.length > 0) {
+      await Post.bulkWrite(
+        applied.map((a) => ({
+          updateOne: { filter: { _id: a.id }, update: { $set: { likePercent: a.likePercent } } },
+        })),
+      );
+    }
+
+    const keptNote = kept > 0 ? `, ${kept} left as set by hand` : '';
     res.json({
       success: true,
       likePercent: value,
-      modified: r.modifiedCount,
+      /** what landed on each post, so the table can update in place */
+      applied,
+      modified: open.length,
+      kept,
       message:
         percent === null
-          ? `Percentage cleared on ${r.modifiedCount} post(s)`
-          : `${value}% applied to ${r.modifiedCount} post(s)`,
+          ? `Percentage cleared on ${open.length} post(s)${keptNote}`
+          : `${value}% (±${LIKE_PERCENT_SPREAD}) applied to ${open.length} post(s)${keptNote}`,
     });
   }),
 );
