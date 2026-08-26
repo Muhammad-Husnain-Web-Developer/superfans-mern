@@ -41,7 +41,9 @@
     position: static;
     left: auto;
     transform: none;
-    min-width: 0;
+    /* never squeezed by the group beside it: the row is sized so both fit, and a squeeze
+       is what pushed the figure under the heart before */
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 2px;
@@ -88,7 +90,9 @@
     border-radius: 20px;
     overflow: hidden;
     position: relative;
-    width: 146px;
+    /* wide enough for the longest pair the pill can carry — "👍 100% Liked" and "👎 Hate" —
+       with room left between them. At 146 they touched (measured: 0px gap on "23% Liked"). */
+    width: 144px;
     justify-content: space-between;
     background-color: #555758;
     user-select: none;
@@ -101,41 +105,33 @@
     transform: none;
 }
 
-/* The red is a fill on the track, standing at one of the client's four marks (25, 50, 75,
-   100) which the component sets as --sf-fill. It slides and fades between them rather than
-   jumping. The diagonal is cut in pixels, not in per cent, so the slant looks the same at
-   every mark. */
+/* The red carries its own label rather than sitting behind it. It stands at one of the
+   client's four marks (25, 50, 75, 100, set on the pill as --sf-fill) but never narrower
+   than the words inside it: at the lowest mark "10% Liked" is wider than a quarter of the
+   pill, and a fill drawn behind the text left that text half on the grey, which is what the
+   client reported. min-width is the mark, the content is the floor, and the larger wins. */
 .stats-wrapper.has-actions .rating-fill {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    /* the slant straddles the mark — 6px past it on top, 6px short of it underneath — so
-       the eye reads the divider as standing exactly where the level says */
-    width: calc(var(--sf-fill, 68%) + 6px);
-    background-color: #8c001b;
-    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
-    transition: width 0.3s ease, opacity 0.3s ease;
-    z-index: 0;
+    display: none;
 }
 
-/* The labels keep their places on top of the fill — a mark of 25 would otherwise squeeze
-   "12% Liked" out of the pill entirely. White reads on the red and on the track alike. */
 .stats-wrapper.has-actions .liked-segment {
     position: relative;
     z-index: 1;
-    flex: 0 0 auto;
-    /* world-page.css still carries the blade's own red block and diagonal for this class;
-       the fill behind draws both now, so the label is stripped back to text */
-    background: none;
-    clip-path: none;
-    margin-right: 0;
+    flex: 0 1 auto;
+    min-width: var(--sf-fill, 68%);
+    background-color: #8c001b;
+    /* the divider's slant, cut in pixels so it looks the same at every mark; the grey
+       starts under it, which the negative margin arranges */
+    clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+    margin-right: -12px;
+    transition: min-width 0.3s ease;
     width: auto;
     color: white;
     display: flex;
     align-items: center;
-    padding: 0 8px 0 10px;
-    gap: 6px;
+    justify-content: center;
+    padding: 0 18px 0 8px;
+    gap: 5px;
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
@@ -143,15 +139,15 @@
 
 .stats-wrapper.has-actions .hated-segment {
     position: relative;
-    z-index: 1;
-    flex: 0 0 auto;
+    z-index: 0;
+    flex: 1 1 auto;
     background: none;
     color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 0 8px;
+    padding: 0 6px 0 14px;
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
@@ -210,17 +206,17 @@
     }
 
     .stats-wrapper.has-actions .rating-pill {
-        width: 130px;
+        width: 146px;
     }
 
     .stats-wrapper.has-actions .liked-segment {
-        padding: 0 6px 0 8px;
+        padding: 0 16px 0 8px;
         gap: 5px;
         font-size: 10px;
     }
 
     .stats-wrapper.has-actions .hated-segment {
-        padding: 0 6px;
+        padding: 0 6px 0 14px;
         font-size: 10px;
     }
 
@@ -244,13 +240,16 @@
         min-height: 35px;
     }
 
+    /* The eye and its figure read at the bar's height too, so the whole row is one size on
+       a phone rather than large buttons beside a small count. They already share a centre
+       line — this is only the size. */
     .stats-wrapper.has-actions .view-count {
-        font-size: 12px;
+        font-size: 16px;
         margin-top: -5px;
     }
 
     .stats-wrapper.has-actions .eye-icon {
-        font-size: 14px;
+        font-size: 16px;
     }
 
     .stats-wrapper.has-actions .rating-pill {
@@ -258,7 +257,7 @@
     }
 
     .stats-wrapper.has-actions .rating-pill {
-        width: 118px;
+        width: 134px;
     }
 
     .stats-wrapper.has-actions .liked-segment,
@@ -276,12 +275,20 @@
         font-size: 9px;
     }
 
+    /* The client circled these two on a phone: they take the bar's own height there. The
+       desktop card has no room for it — its row is 290px wide and the bar alone is 146 —
+       but a phone gives the card the full screen, so only this breakpoint carries it. */
     .stats-wrapper.has-actions .heart {
-        font-size: 17px;
+        font-size: 28px;
     }
 
     .stats-wrapper.has-actions .poop {
-        font-size: 15px !important;
+        font-size: 28px !important;
+    }
+
+    .stats-wrapper.has-actions .poop-img {
+        width: 28px;
+        height: 28px;
     }
 
 
