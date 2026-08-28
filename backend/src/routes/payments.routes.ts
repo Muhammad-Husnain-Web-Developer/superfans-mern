@@ -60,8 +60,11 @@ paymentsRouter.post(
         influencerId: String(influencer._id),
         amount: String(PREMIUM_ACCESS_AMOUNT),
       },
-      successUrl: `${APP}/${influencer.usernameUrl}?premium=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${APP}/${influencer.usernameUrl}?premium=cancelled`,
+      /* `payment`, not a name of this flow's own: usePaymentReturn keys off that one word,
+         and it is what reconciles the charge on the way back. Every other checkout here
+         uses it; this one did not, so the fan returned with the money taken and no access. */
+      successUrl: `${APP}/${influencer.usernameUrl}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${APP}/${influencer.usernameUrl}?payment=cancelled`,
     });
     res.json({ success: true, url });
   }),
