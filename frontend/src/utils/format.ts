@@ -77,6 +77,20 @@ const SEED_VOTES = 100;
  */
 const NEVER_FULL = 93;
 const NEVER_EMPTY = 10;
+// export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
+//   let pct: number;
+//   if (seed == null) {
+//     const total = likes + hates;
+//     if (total === 0) return null;
+//     pct = Math.round((likes / total) * 100);
+//   } else {
+//     const seedLikes = (seed / 100) * SEED_VOTES;
+//     pct = Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
+//   }
+//   if (pct >= 100) return NEVER_FULL;
+//   if (pct <= 0) return NEVER_EMPTY;
+//   return pct;
+// }
 export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
   let pct: number;
   if (seed == null) {
@@ -87,11 +101,12 @@ export function likePercent(likes: number, hates: number, seed?: number | null):
     const seedLikes = (seed / 100) * SEED_VOTES;
     pct = Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
   }
-  if (pct >= 100) return NEVER_FULL;
-  if (pct <= 0) return NEVER_EMPTY;
+  // Show actual 100% instead of clamping to 93%
+  if (pct >= 100) return 100;
+  // Show "Like" text instead of showing 0% or 10%
+  if (pct <= 0) return null;
   return pct;
 }
-
 /**
  * The bar behind the number moves in four steps rather than following the figure exactly —
  * the client's "4 levels of bar: 25, 50, 75, 100". The number itself stays true (83% reads
