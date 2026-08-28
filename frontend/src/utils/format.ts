@@ -75,8 +75,8 @@ const SEED_VOTES = 100;
  * out at 100 or at 0 is shown as these instead, whether the figure came from an admin or
  * from real votes that happen to be one-sided.
  */
-const NEVER_FULL = 93;
-const NEVER_EMPTY = 10;
+// const NEVER_FULL = 93;
+// const NEVER_EMPTY = 10;
 // export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
 //   let pct: number;
 //   if (seed == null) {
