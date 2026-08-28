@@ -349,38 +349,115 @@ function WorldPostCard({
 
 
   /** blade like_dislike_post: toggles the like and updates the count optimistically. */
-  function toggleLike() {
-    api
-      .post<{ data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
-        `/posts/${item.id}/like-toggle`,
-      )
-      .then((r) => {
-        const nowLiked = r.data.data.status === 'post liked';
-        setLiked(nowLiked);
-        if (nowLiked) setHated(false);
-        setLikesTotal(r.data.data.likesTotal);
-        setLikes(r.data.data.likesCount);
-        setHates(r.data.data.hatesCount);
-        feedback.onLiked();
-      })
-      .catch(() => {});
+  // function toggleLike() {
+  //   api
+  //     .post<{ data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+  //       `/posts/${item.id}/like-toggle`,
+  //     )
+  //     .then((r) => {
+  //       const nowLiked = r.data.data.status === 'post liked';
+  //       setLiked(nowLiked);
+  //       if (nowLiked) setHated(false);
+  //       setLikesTotal(r.data.data.likesTotal);
+  //       setLikes(r.data.data.likesCount);
+  //       setHates(r.data.data.hatesCount);
+  //       feedback.onLiked();
+  //     })
+  //     .catch(() => {});
+  // }
+function toggleLike() {
+  /* optimistic sound + UI update — the user sees the heart fill and the
+     count change immediately, even if the API fails later */
+  feedback.onLiked();
+
+  // Optimistic state update
+  const willBeLiked = !liked;
+  setLiked(willBeLiked);
+  if (willBeLiked) {
+    setHated(false);
+    setLikes((prev) => prev + 1);
+    if (hated) setHates((prev) => prev - 1);
+    setLikesTotal((prev) => prev + 1);
+  } else {
+    setLikes((prev) => prev - 1);
+    setLikesTotal((prev) => prev - 1);
   }
 
+  api
+    .post<{ data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+      `/posts/${item.id}/like-toggle`,
+    )
+    .then((r) => {
+      // Sync with server response (correct any optimistic mismatch)
+      const nowLiked = r.data.data.status === 'post liked';
+      setLiked(nowLiked);
+      if (nowLiked) setHated(false);
+      setLikesTotal(r.data.data.likesTotal);
+      setLikes(r.data.data.likesCount);
+      setHates(r.data.data.hatesCount);
+    })
+    .catch(() => {
+      // On failure, revert the optimistic update (optional, but keeps UI honest)
+      setLiked(!willBeLiked);
+      if (!willBeLiked) {
+        setHated(true);
+        setLikes((prev) => prev - 1);
+        setHates((prev) => prev + 1);
+        setLikesTotal((prev) => prev - 1);
+      } else {
+        setLikes((prev) => prev + 1);
+        setLikesTotal((prev) => prev + 1);
+      }
+    });
+}
   /** the pill's 💩 half — /me/hate, the same endpoint the full-screen viewer uses. */
-  function toggleHate() {
-    api
-      .post<{ data: { status: string; likesCount: number; hatesCount: number } }>(`/me/hate/${item.id}`)
-      .then((r) => {
-        const nowHated = r.data.data.status === 'post hated';
-        setHated(nowHated);
-        if (nowHated) setLiked(false);
-        setLikes(r.data.data.likesCount);
-        setHates(r.data.data.hatesCount);
-        feedback.onHated();
-      })
-      .catch(() => {});
+  // function toggleHate() {
+  //   api
+  //     .post<{ data: { status: string; likesCount: number; hatesCount: number } }>(`/me/hate/${item.id}`)
+  //     .then((r) => {
+  //       const nowHated = r.data.data.status === 'post hated';
+  //       setHated(nowHated);
+  //       if (nowHated) setLiked(false);
+  //       setLikes(r.data.data.likesCount);
+  //       setHates(r.data.data.hatesCount);
+  //       feedback.onHated();
+  //     })
+  //     .catch(() => {});
+  // }
+function toggleHate() {
+  feedback.onHated();
+
+  // Optimistic state update
+  const willBeHated = !hated;
+  setHated(willBeHated);
+  if (willBeHated) {
+    setLiked(false);
+    setHates((prev) => prev + 1);
+    if (liked) setLikes((prev) => prev - 1);
+    // hatesTotal does not affect the eye icon, so no likesTotal change here
+  } else {
+    setHates((prev) => prev - 1);
   }
 
+  api
+    .post<{ data: { status: string; likesCount: number; hatesCount: number } }>(`/me/hate/${item.id}`)
+    .then((r) => {
+      const nowHated = r.data.data.status === 'post hated';
+      setHated(nowHated);
+      if (nowHated) setLiked(false);
+      setLikes(r.data.data.likesCount);
+      setHates(r.data.data.hatesCount);
+    })
+    .catch(() => {
+      setHated(!willBeHated);
+      if (!willBeHated) {
+        setHates((prev) => prev - 1);
+        if (liked) setLikes((prev) => prev + 1);
+      } else {
+        setHates((prev) => prev + 1);
+      }
+    });
+}
   /* guests get the register modal here exactly as they do on the media */
   const guardGuest = (run: () => void) => () => {
     if (!authUser) {

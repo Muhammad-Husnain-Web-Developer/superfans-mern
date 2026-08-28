@@ -32,16 +32,28 @@ let likeStep = 0;
 
 const elements: Partial<Record<keyof typeof sources, HTMLAudioElement>> = {};
 
+// function audio(name: keyof typeof sources) {
+//   let el = elements[name];
+//   if (!el) {
+//     el = new Audio(sources[name]);
+//     el.preload = 'auto';
+//     elements[name] = el;
+//   }
+//   return el;
+// }
 function audio(name: keyof typeof sources) {
   let el = elements[name];
   if (!el) {
     el = new Audio(sources[name]);
     el.preload = 'auto';
+    /* ensure the audio is loaded before play() is called — prevents
+       intermittent playback failures after the browser has suspended
+       the audio context */
+    el.load();
     elements[name] = el;
   }
   return el;
 }
-
 function play(name: keyof typeof sources) {
   /* autoplay policy rejects this until the page has been interacted with; the blade lets the
      same failure pass silently rather than breaking the toggle it belongs to */

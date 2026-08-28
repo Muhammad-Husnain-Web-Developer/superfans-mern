@@ -178,39 +178,114 @@ function FeedCard({ post }: { post: FeedPost }) {
     }
   }
 
-  function doLike() {
-    api
-      .post<{ success: boolean; data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
-        `/posts/${post.id}/like-toggle`,
-      )
-      .then((r) => {
-        const nowLiked = r.data.data.status === 'post liked';
-        setLiked(nowLiked);
-        if (nowLiked) setHated(false);
-        setViews(r.data.data.likesTotal);
-        setLikeRows(r.data.data.likesCount);
-        setHateRows(r.data.data.hatesCount);
-        feedback.onLiked();
-      })
-      .catch(() => undefined);
+  // function doLike() {
+  //   api
+  //     .post<{ success: boolean; data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+  //       `/posts/${post.id}/like-toggle`,
+  //     )
+  //     .then((r) => {
+  //       const nowLiked = r.data.data.status === 'post liked';
+  //       setLiked(nowLiked);
+  //       if (nowLiked) setHated(false);
+  //       setViews(r.data.data.likesTotal);
+  //       setLikeRows(r.data.data.likesCount);
+  //       setHateRows(r.data.data.hatesCount);
+  //       feedback.onLiked();
+  //     })
+  //     .catch(() => undefined);
+  // }
+
+
+  // function doHate() {
+  //   api
+  //     .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+  //       `/me/hate/${post.id}`,
+  //     )
+  //     .then((r) => {
+  //       const nowHated = r.data.data.status === 'post hated';
+  //       setHated(nowHated);
+  //       if (nowHated) setLiked(false);
+  //       setLikeRows(r.data.data.likesCount);
+  //       setHateRows(r.data.data.hatesCount);
+  //       feedback.onHated();
+  //     })
+  //     .catch(() => undefined);
+  // }
+
+function doLike() {
+  feedback.onLiked();
+
+  const willBeLiked = !liked;
+  setLiked(willBeLiked);
+  if (willBeLiked) {
+    setHated(false);
+    setLikeRows((prev) => prev + 1);
+    if (hated) setHateRows((prev) => prev - 1);
+    setViews((prev) => prev + 1);
+  } else {
+    setLikeRows((prev) => prev - 1);
+    setViews((prev) => prev - 1);
   }
 
-  function doHate() {
-    api
-      .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
-        `/me/hate/${post.id}`,
-      )
-      .then((r) => {
-        const nowHated = r.data.data.status === 'post hated';
-        setHated(nowHated);
-        if (nowHated) setLiked(false);
-        setLikeRows(r.data.data.likesCount);
-        setHateRows(r.data.data.hatesCount);
-        feedback.onHated();
-      })
-      .catch(() => undefined);
+  api
+    .post<{ success: boolean; data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+      `/posts/${post.id}/like-toggle`,
+    )
+    .then((r) => {
+      const nowLiked = r.data.data.status === 'post liked';
+      setLiked(nowLiked);
+      if (nowLiked) setHated(false);
+      setViews(r.data.data.likesTotal);
+      setLikeRows(r.data.data.likesCount);
+      setHateRows(r.data.data.hatesCount);
+    })
+    .catch(() => {
+      setLiked(!willBeLiked);
+      if (!willBeLiked) {
+        setHated(true);
+        setLikeRows((prev) => prev - 1);
+        setHateRows((prev) => prev + 1);
+        setViews((prev) => prev - 1);
+      } else {
+        setLikeRows((prev) => prev + 1);
+        setViews((prev) => prev + 1);
+      }
+    });
+}
+function doHate() {
+  feedback.onHated();
+
+  const willBeHated = !hated;
+  setHated(willBeHated);
+  if (willBeHated) {
+    setLiked(false);
+    setHateRows((prev) => prev + 1);
+    if (liked) setLikeRows((prev) => prev - 1);
+  } else {
+    setHateRows((prev) => prev - 1);
   }
 
+  api
+    .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+      `/me/hate/${post.id}`,
+    )
+    .then((r) => {
+      const nowHated = r.data.data.status === 'post hated';
+      setHated(nowHated);
+      if (nowHated) setLiked(false);
+      setLikeRows(r.data.data.likesCount);
+      setHateRows(r.data.data.hatesCount);
+    })
+    .catch(() => {
+      setHated(!willBeHated);
+      if (!willBeHated) {
+        setHateRows((prev) => prev - 1);
+        if (liked) setLikeRows((prev) => prev + 1);
+      } else {
+        setHateRows((prev) => prev + 1);
+      }
+    });
+}
   /* The strip above the post is the shared one the world feed and the walls draw: bold
      handles, the blue tick on every verified name, and the marquee only when the row is
      actually too long for its slot. This page used to draw its own — which left an

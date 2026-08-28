@@ -220,40 +220,110 @@ export function PostFullscreen() {
     playHateSound();
   }
 
-  function doLike(skipSound?: boolean) {
-    if (!post) return;
-    api
-      .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
-        `/posts/${post.id}/like-toggle`,
-      )
-      .then((r) => {
-        const nowLiked = r.data.data.status === 'post liked';
-        setLiked(nowLiked);
-        if (nowLiked) setHated(false);
-        setLikes(r.data.data.likesCount);
-        setHates(r.data.data.hatesCount);
-        if (!skipSound) playLike();
-      })
-      .catch(() => undefined);
+  // function doLike(skipSound?: boolean) {
+  //   if (!post) return;
+  //   api
+  //     .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+  //       `/posts/${post.id}/like-toggle`,
+  //     )
+  //     .then((r) => {
+  //       const nowLiked = r.data.data.status === 'post liked';
+  //       setLiked(nowLiked);
+  //       if (nowLiked) setHated(false);
+  //       setLikes(r.data.data.likesCount);
+  //       setHates(r.data.data.hatesCount);
+  //       if (!skipSound) playLike();
+  //     })
+  //     .catch(() => undefined);
+  // }
+
+  // function doHate() {
+  //   if (!post) return;
+  //   api
+  //     .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+  //       `/me/hate/${post.id}`,
+  //     )
+  //     .then((r) => {
+  //       const nowHated = r.data.data.status === 'post hated';
+  //       setHated(nowHated);
+  //       if (nowHated) setLiked(false);
+  //       setLikes(r.data.data.likesCount);
+  //       setHates(r.data.data.hatesCount);
+  //       playHate();
+  //     })
+  //     .catch(() => undefined);
+  // }
+function doLike(skipSound?: boolean) {
+  if (!post) return;
+  if (!skipSound) playLike();
+
+  const willBeLiked = !liked;
+  setLiked(willBeLiked);
+  if (willBeLiked) {
+    setHated(false);
+    setLikes((prev) => prev + 1);
+    if (hated) setHates((prev) => prev - 1);
+  } else {
+    setLikes((prev) => prev - 1);
   }
 
-  function doHate() {
-    if (!post) return;
-    api
-      .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
-        `/me/hate/${post.id}`,
-      )
-      .then((r) => {
-        const nowHated = r.data.data.status === 'post hated';
-        setHated(nowHated);
-        if (nowHated) setLiked(false);
-        setLikes(r.data.data.likesCount);
-        setHates(r.data.data.hatesCount);
-        playHate();
-      })
-      .catch(() => undefined);
+  api
+    .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+      `/posts/${post.id}/like-toggle`,
+    )
+    .then((r) => {
+      const nowLiked = r.data.data.status === 'post liked';
+      setLiked(nowLiked);
+      if (nowLiked) setHated(false);
+      setLikes(r.data.data.likesCount);
+      setHates(r.data.data.hatesCount);
+    })
+    .catch(() => {
+      setLiked(!willBeLiked);
+      if (!willBeLiked) {
+        setHated(true);
+        setLikes((prev) => prev - 1);
+        setHates((prev) => prev + 1);
+      } else {
+        setLikes((prev) => prev + 1);
+      }
+    });
+}
+function doHate() {
+  if (!post) return;
+  playHate();
+
+  const willBeHated = !hated;
+  setHated(willBeHated);
+  if (willBeHated) {
+    setLiked(false);
+    setHates((prev) => prev + 1);
+    if (liked) setLikes((prev) => prev - 1);
+  } else {
+    setHates((prev) => prev - 1);
   }
 
+  api
+    .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+      `/me/hate/${post.id}`,
+    )
+    .then((r) => {
+      const nowHated = r.data.data.status === 'post hated';
+      setHated(nowHated);
+      if (nowHated) setLiked(false);
+      setLikes(r.data.data.likesCount);
+      setHates(r.data.data.hatesCount);
+    })
+    .catch(() => {
+      setHated(!willBeHated);
+      if (!willBeHated) {
+        setHates((prev) => prev - 1);
+        if (liked) setLikes((prev) => prev + 1);
+      } else {
+        setHates((prev) => prev + 1);
+      }
+    });
+}
   function follow() {
     if (!post?.influencer) return;
     api
