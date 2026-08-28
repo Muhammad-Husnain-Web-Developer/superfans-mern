@@ -238,7 +238,12 @@ function doLike() {
       setLikeRows(r.data.data.likesCount);
       setHateRows(r.data.data.hatesCount);
     })
-    .catch(() => {
+    .catch((err) => {
+        // If 401, keep the optimistic state – interceptor will retry
+      if (err?.response?.status === 401) {
+        console.log('🔄 Token expired – keeping optimistic state');
+        return;
+      }
       // Revert
       setLiked(!willBeLiked);
       if (willBeLiked) {
@@ -275,7 +280,12 @@ function doHate() {
       setLikeRows(r.data.data.likesCount);
       setHateRows(r.data.data.hatesCount);
     })
-    .catch(() => {
+    .catch((err) => {
+        // If 401, keep the optimistic state – interceptor will retry
+      if (err?.response?.status === 401) {
+        console.log('🔄 Token expired – keeping optimistic state');
+        return;
+      }
       setHated(!willBeHated);
       if (willBeHated) {
         setHateRows((prev) => prev - 1);
