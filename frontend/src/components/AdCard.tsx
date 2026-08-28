@@ -101,7 +101,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
     return (
       <>
         <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
-          <p className="feed_posts_heading_p" style={{ position: 'relative', fontSize: 14 }}>
+          <p className="feed_posts_heading_p ad-card-heading" style={{ position: 'relative', fontSize: 14 }}>
             <span>Super Ads</span>
             {showType && <TypeTag adType={item.adType} />}
           </p>
@@ -167,7 +167,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
 
   return (
     <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
-      <p className="feed_posts_heading_p" style={{ position: 'relative', fontSize: 14 }}>
+      <p className="feed_posts_heading_p ad-card-heading" style={{ position: 'relative', fontSize: 14 }}>
         <span>Super Ads</span>
         {showType && <TypeTag adType={item.adType} />}
       </p>

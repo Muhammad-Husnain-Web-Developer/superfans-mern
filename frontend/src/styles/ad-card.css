@@ -99,7 +99,9 @@
   transition: filter 0.2s ease;
 }
 
-.ad-cta-btn.cta-more-details { width: calc(54.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.5cqw * var(--cta-scale)), 38px); }
+.ad-cta-btn.cta-more-details { width: calc(54.9% * var(--cta-scale)); 
+  /* font-size: clamp(7px, calc(7.5cqw * var(--cta-scale)), 38px); */
+ }
 .ad-cta-btn.cta-more-details .cta-mark { font-size: 0.88em; }
 
 /* Override for clients‑form ads (custom button labels) – auto‑size to fit the text */
@@ -363,4 +365,8 @@
   font-weight: 700;
   line-height: 1.45;
   text-align: left;
+}
+/* Reduce gap between heading and media on ad tiles only */
+.ad-card-heading {
+  margin-bottom: 0px !important;
 }
