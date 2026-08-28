@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../api/client';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
@@ -368,9 +368,24 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
      stopped spinning and nothing else happened, so a rejected video looked like a dead form. */
   const [error, setError] = useState<string | null>(null);
 
+  // Ref for the Website URL input – used to scroll into view
+  const websiteUrlRef = useRef<HTMLInputElement>(null);
+
   const estimated = Math.round((amount / 1000) * card.audience);
   const perDay = days > 0 ? Math.round(estimated / days) : 0;
   const setField = (k: string, v: string) => setFields((s) => ({ ...s, [k]: v }));
+
+  // Scroll to Website URL field when it becomes visible (buttonAction === 'Check Website')
+  useEffect(() => {
+    if (buttonAction === 'Check Website' && websiteUrlRef.current) {
+      setTimeout(() => {
+        websiteUrlRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }, 100);
+    }
+  }, [buttonAction]);
 
   /* The creative travels inside the JSON body as base64, which adds about a third to it,
      and the server refuses a body over 20MB. Catching it here means the advertiser is told
@@ -411,10 +426,17 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
         city,
         ...fields,
       };
+
+      // Only send link if "Check Website" is selected and a URL is entered
+      if (buttonAction === 'Check Website' && fields.website_url) {
+        body.link = fields.website_url;
+      }
+
       if (media) body.media = media;
       if (postId) body.post_id = postId;
       body.button_size = buttonSize;
       body.button_position = buttonPosition;
+
       if (card.type === 'clients-form') {
         body.question1 = questions[0] ?? '';
         body.question2 = questions[1] ?? '';
@@ -426,6 +448,7 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
         body.ask_company = asks.ask_company ? 1 : 0;
         body.button_action = buttonAction;
       }
+
       const { data } = await api.post<{ url?: string }>(`/ads/initiate-payment/${card.type}`, body);
       if (data.url) window.location.href = data.url;
       else setError('The payment page could not be opened. Please try again.');
@@ -505,6 +528,19 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
               <>
                 <h3 className="ads-section-title mt-2 mb-3">📄 FORMULARY POTENTIAL CLIENTS</h3>
                 <input className="form-control ads-input mb-3 w-75 mx-auto" placeholder="Choose a name for your Ad" value={fields.ad_name ?? ''} onChange={(e) => setField('ad_name', e.target.value)} required />
+
+                {/* Website URL field – only shown when "Check Website" is selected */}
+                {buttonAction === 'Check Website' && (
+                  <input
+                    ref={websiteUrlRef}
+                    className="form-control ads-input mb-3 w-75 mx-auto"
+                    placeholder="Website URL (e.g., https://example.com)"
+                    value={fields.website_url ?? ''}
+                    onChange={(e) => setField('website_url', e.target.value)}
+                    required
+                  />
+                )}
+
                 {questions.map((q, i) => (
                   <div className="extra-question-box" key={i}>
                     <input className="form-control" maxLength={400} placeholder={`Choose a question ${i + 1}. (Max. 400 chars)`} value={q} onChange={(e) => setQuestions((s) => s.map((x, j) => (j === i ? e.target.value : x)))} required={i === 0} />

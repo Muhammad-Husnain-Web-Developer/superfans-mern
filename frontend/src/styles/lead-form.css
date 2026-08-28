@@ -185,15 +185,15 @@
 .lead-form-btn-send {
   min-width: 132px;
   padding: 11px 22px;
-  border: 3px solid green;
-  border-radius: 2px;
+  border: 5px solid green;
+ 
   background: limegreen;
   color: #000000;
   font-family: inherit;
   font-size: 16px;
   font-weight: 700;
   text-align: center;
-  text-decoration: none;
+  text-decoration: none !important;
   cursor: pointer;
   
 }
@@ -203,9 +203,14 @@
   color: white;
  transition:0.5s !important;
  outline: none;
- 
 }
-
+.lead-form-btn-send:visited {
+  border: 5px solid green;
+  background: limegreen;
+  color: #000000;
+ transition:0.5s !important;
+ outline: none;
+}
 .lead-form-btn-send:disabled {
   opacity: 0.65;
   cursor: default;
