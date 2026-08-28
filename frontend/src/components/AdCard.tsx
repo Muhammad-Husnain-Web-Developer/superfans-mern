@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { AdLeadForm } from '../pages/ads/AdLeadForm';
 import { PremiumFanModal } from './PremiumFanModal';
 import { api } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import { SubscribeModal } from '../pages/profile/SubscribeModal';
 import { assetImage, isVideoFile, videoMime } from '../utils/format';
 
@@ -103,6 +104,7 @@ function safeLink(link: string | undefined): string | null {
 
 export function AdCard({ item, showType = false }: { item: AdCardItem; showType?: boolean }) {
   const navigate = useNavigate();
+  const { user: authUser } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
   /* the $10 that stands in front of writing when the advertiser is Busy */
   const [premiumOpen, setPremiumOpen] = useState(false);
@@ -127,18 +129,23 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   const [subOpen, setSubOpen] = useState(false);
   const [subBusy, setSubBusy] = useState(false);
   const advertiserId = item.advertiser?.id ?? null;
+  /* An advertiser meets their own ad on the preview wall, and can meet it in their own
+     feed. `POST /me/follow/:id` refuses that with a 400 — "You cannot follow yourself" —
+     so the tile stopped asking. It still draws the button, because seeing the ad as
+     others will is what the preview is for; it just does not fire the request. */
+  const isOwnAd = !!authUser && !!advertiserId && authUser.id === advertiserId;
 
   /* "they start to follow the user directly, still navigating in WORLD page" — no
      navigation, no dialog; the button reports it and the viewer carries on scrolling. */
   function follow() {
-    if (!advertiserId || done) return;
+    if (!advertiserId || done || isOwnAd) return;
     setDone(true);
     void api.post(`/me/follow/${advertiserId}`).catch(() => setDone(false));
   }
 
   /* the profile's own checkout, behind the profile's own dialog */
   function subscribe() {
-    if (!advertiserId || subBusy) return;
+    if (!advertiserId || subBusy || isOwnAd) return;
     setSubBusy(true);
     api
       .post<{ url?: string }>(`/payments/subscribe/${advertiserId}`)
@@ -244,7 +251,8 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
     onClick = () =>
       advertiserBusy ? setPremiumOpen(true) : navigate(`/user/messages?to=${handle}`);
   else if (action === 'follow' && advertiserId) onClick = follow;
-  else if (action === 'subscribe' && advertiserId) onClick = () => setSubOpen(true);
+  else if (action === 'subscribe' && advertiserId)
+    onClick = () => { if (!isOwnAd) setSubOpen(true); };
   else href = safeLink(item.link);
 
   return (
