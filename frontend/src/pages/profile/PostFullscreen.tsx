@@ -280,10 +280,9 @@ function doLike(skipSound?: boolean) {
     })
     .catch(() => {
       setLiked(!willBeLiked);
-      if (!willBeLiked) {
-        setHated(true);
+      if (willBeLiked) {
         setLikes((prev) => prev - 1);
-        setHates((prev) => prev + 1);
+        if (hated) setHates((prev) => prev + 1);
       } else {
         setLikes((prev) => prev + 1);
       }
@@ -316,7 +315,7 @@ function doHate() {
     })
     .catch(() => {
       setHated(!willBeHated);
-      if (!willBeHated) {
+      if (willBeHated) {
         setHates((prev) => prev - 1);
         if (liked) setLikes((prev) => prev + 1);
       } else {

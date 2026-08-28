@@ -247,7 +247,7 @@ export function PostItem({
   //     })
   //     .catch(() => undefined);
   // }
-  function doLike() {
+function doLike() {
   feedback.onLiked();
 
   const willBeLiked = !liked;
@@ -276,10 +276,9 @@ export function PostItem({
     })
     .catch(() => {
       setLiked(!willBeLiked);
-      if (!willBeLiked) {
-        setHated(true);
+      if (willBeLiked) {
         setLikeRows((prev) => prev - 1);
-        setHateRows((prev) => prev + 1);
+        if (hated) setHateRows((prev) => prev + 1);
         setLikes((prev) => prev - 1);
       } else {
         setLikeRows((prev) => prev + 1);
@@ -313,7 +312,7 @@ function doHate() {
     })
     .catch(() => {
       setHated(!willBeHated);
-      if (!willBeHated) {
+      if (willBeHated) {
         setHateRows((prev) => prev - 1);
         if (liked) setLikeRows((prev) => prev + 1);
       } else {

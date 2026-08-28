@@ -366,11 +366,8 @@ function WorldPostCard({
   //     .catch(() => {});
   // }
 function toggleLike() {
-  /* optimistic sound + UI update — the user sees the heart fill and the
-     count change immediately, even if the API fails later */
   feedback.onLiked();
 
-  // Optimistic state update
   const willBeLiked = !liked;
   setLiked(willBeLiked);
   if (willBeLiked) {
@@ -388,7 +385,6 @@ function toggleLike() {
       `/posts/${item.id}/like-toggle`,
     )
     .then((r) => {
-      // Sync with server response (correct any optimistic mismatch)
       const nowLiked = r.data.data.status === 'post liked';
       setLiked(nowLiked);
       if (nowLiked) setHated(false);
@@ -397,14 +393,15 @@ function toggleLike() {
       setHates(r.data.data.hatesCount);
     })
     .catch(() => {
-      // On failure, revert the optimistic update (optional, but keeps UI honest)
+      // Revert – undo the optimistic changes
       setLiked(!willBeLiked);
-      if (!willBeLiked) {
-        setHated(true);
+      if (willBeLiked) {
+        // We had increased likes, so decrease back
         setLikes((prev) => prev - 1);
-        setHates((prev) => prev + 1);
+        if (hated) setHates((prev) => prev + 1);
         setLikesTotal((prev) => prev - 1);
       } else {
+        // We had decreased likes, so increase back
         setLikes((prev) => prev + 1);
         setLikesTotal((prev) => prev + 1);
       }
@@ -427,14 +424,12 @@ function toggleLike() {
 function toggleHate() {
   feedback.onHated();
 
-  // Optimistic state update
   const willBeHated = !hated;
   setHated(willBeHated);
   if (willBeHated) {
     setLiked(false);
     setHates((prev) => prev + 1);
     if (liked) setLikes((prev) => prev - 1);
-    // hatesTotal does not affect the eye icon, so no likesTotal change here
   } else {
     setHates((prev) => prev - 1);
   }
@@ -449,11 +444,14 @@ function toggleHate() {
       setHates(r.data.data.hatesCount);
     })
     .catch(() => {
+      // Revert
       setHated(!willBeHated);
-      if (!willBeHated) {
+      if (willBeHated) {
+        // We had increased hates, so decrease back
         setHates((prev) => prev - 1);
         if (liked) setLikes((prev) => prev + 1);
       } else {
+        // We had decreased hates, so increase back
         setHates((prev) => prev + 1);
       }
     });
