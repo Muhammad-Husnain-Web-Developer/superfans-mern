@@ -68,6 +68,10 @@ export function PostFullscreen() {
   // World context: full-screen scroll follows the WORLD feed order (passed via router state),
   // not the influencer's own posts. Absent → fall back to the backend's sibling prev/next.
   const worldSeq = (location.state as { world?: string[] } | null)?.world ?? null;
+  /* an ad for a paid creator sends the viewer here with the payment dialog already asked
+     for: "Full Screen + Modal Payment. But they can close the modal to see the post and
+     they have the Subscribe button beside Nickname." */
+  const askSubscribe = (location.state as { subscribe?: boolean } | null)?.subscribe === true;
   const { t: tReport } = useTranslation('report');
   const { t: tContent, i18n } = useTranslation('content');
   const { user: authUser } = useAuth();
@@ -81,7 +85,7 @@ export function PostFullscreen() {
   const [following, setFollowing] = useState(false);
   /* a paid creator is subscribed to, not followed — same button, different word and a
      different road behind it */
-  const [subOpen, setSubOpen] = useState(false);
+  const [subOpen, setSubOpen] = useState(askSubscribe);
   const [subBusy, setSubBusy] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [swal, setSwal] = useState<{ icon?: 'success' | 'error'; title: string; text?: string } | null>(null);

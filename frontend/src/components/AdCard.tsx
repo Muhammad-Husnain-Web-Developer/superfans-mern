@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdLeadForm } from '../pages/ads/AdLeadForm';
 import { PremiumFanModal } from './PremiumFanModal';
+import { api } from '../api/client';
+import { SubscribeModal } from '../pages/profile/SubscribeModal';
 import { assetImage, isVideoFile, videoMime } from '../utils/format';
 
 /**
@@ -32,7 +34,15 @@ export interface AdCardItem {
     chatToggle?: boolean;
     /** this viewer has already bought priority access to them */
     viewerPremium?: boolean;
+    /** a creator with a price is subscribed to, not followed */
+    role?: string | null;
+    priceOfSubscription?: number | null;
+    /** what this viewer already is to them */
+    viewerFollowing?: boolean;
+    viewerSubscribed?: boolean;
   } | null;
+  /** the post a picker ad promotes, opened full screen when the creative is clicked */
+  postId?: string | null;
   /** clients-form ads carry the advertiser's own choice of wording */
   buttonAction?: string | null;
   /** how big the advertiser asked for the button, and where on the creative */
@@ -70,19 +80,16 @@ export function adAction(adType: string | null | undefined): AdAction {
       return 'call';
     case 'whatsapp':
       return 'whatsapp';
-    case 'profile-followers':
-      return 'follow';
     case 'messages':
       return 'send-card';
-    case 'youtube':
-      /* card 7, "Promote Youtube Content" — Subscribe is YouTube's own word for it. It was
-         wired to `super-video` before, which is not an ad type at all: the Ads Center's
-         Super Video card (14) is sold as `website-visits`, so no ad could ever have shown
-         this button. */
-      return 'subscribe';
+    case 'profile-followers':
+      /* Follow on a free account, Subscribe on a creator who charges — the caller settles
+         which, since it depends on the advertiser and not on the type. */
+      return 'follow';
     default:
-      /* website-visits, instagram, tiktok, twitch, amazon, spotify, promote-post and
-         anything migrated without a type all lead outward */
+      /* youtube, website-visits, instagram, tiktok, twitch, amazon, spotify,
+         promote-post and anything migrated without a type all lead outward. YouTube was
+         Subscribe for a while; the client moved it back here. */
       return 'more-details';
   }
 }
@@ -100,8 +107,60 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   /* the $10 that stands in front of writing when the advertiser is Busy */
   const [premiumOpen, setPremiumOpen] = useState(false);
   const media = item.media ?? '';
-  const action = adAction(item.adType);
   const handle = item.advertiser?.usernameUrl ?? null;
+
+  /* A `profile-followers` ad asks the viewer for a relationship with the advertiser, and
+     which relationship depends on the advertiser: a creator who charges is subscribed to,
+     everyone else is followed. Same test the profile and the full-screen viewer make. */
+  const advertiserPaid =
+    item.advertiser?.role === 'influencer' && (item.advertiser?.priceOfSubscription ?? 0) > 0;
+  const baseAction = adAction(item.adType);
+  const action: AdAction =
+    baseAction === 'follow' && advertiserPaid ? 'subscribe' : baseAction;
+
+  /* already following / subscribed — the button has nothing left to ask for */
+  const [done, setDone] = useState(
+    action === 'subscribe'
+      ? !!item.advertiser?.viewerSubscribed
+      : !!item.advertiser?.viewerFollowing,
+  );
+  const [subOpen, setSubOpen] = useState(false);
+  const [subBusy, setSubBusy] = useState(false);
+  const advertiserId = item.advertiser?.id ?? null;
+
+  /* "they start to follow the user directly, still navigating in WORLD page" — no
+     navigation, no dialog; the button reports it and the viewer carries on scrolling. */
+  function follow() {
+    if (!advertiserId || done) return;
+    setDone(true);
+    void api.post(`/me/follow/${advertiserId}`).catch(() => setDone(false));
+  }
+
+  /* the profile's own checkout, behind the profile's own dialog */
+  function subscribe() {
+    if (!advertiserId || subBusy) return;
+    setSubBusy(true);
+    api
+      .post<{ url?: string }>(`/payments/subscribe/${advertiserId}`)
+      .then(({ data }) => {
+        if (data.url) window.location.href = data.url;
+        else setSubBusy(false);
+      })
+      .catch(() => setSubBusy(false));
+  }
+
+  /* Clicking the creative opens the promoted post full screen, and takes the same step the
+     button would: a free advertiser is followed on the way, a paid one raises the payment
+     dialog over the post — which can be closed to read it, the Subscribe button then
+     sitting beside the nickname. */
+  function openPost() {
+    if (!item.postId) return false;
+    if (action === 'follow') follow();
+    navigate(`/user/post_detail/${item.postId}`, {
+      state: action === 'subscribe' ? { subscribe: true } : undefined,
+    });
+    return true;
+  }
 
   /* A clients-form ad is its own tile: the creative with the advertiser's button under it,
      walking the viewer through the formulary in place rather than leading anywhere.
@@ -173,8 +232,6 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   /* Send Card is the client's own answer for this one: "We open Modal for send direct
      message to the user/influencer." So it opens that dialog here rather than leading
      anywhere. Follow and Subscribe still go to the advertiser's profile. */
-  const advertiserId = item.advertiser?.id ?? null;
-  const goesToProfile = action === 'follow' || action === 'subscribe';
   let href: string | null = null;
   let onClick: (() => void) | null = null;
 
@@ -186,7 +243,8 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   if (action === 'send-card' && advertiserId && handle)
     onClick = () =>
       advertiserBusy ? setPremiumOpen(true) : navigate(`/user/messages?to=${handle}`);
-  else if (goesToProfile && handle) onClick = () => navigate(`/${handle}`);
+  else if (action === 'follow' && advertiserId) onClick = follow;
+  else if (action === 'subscribe' && advertiserId) onClick = () => setSubOpen(true);
   else href = safeLink(item.link);
 
   return (
@@ -197,7 +255,15 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
       </p>
 
       <div className="ad-media">
-        <a className="ad-media-link" href={safeLink(item.link) ?? '#'} target="_blank" rel="noreferrer">
+        <a
+          className="ad-media-link"
+          href={item.postId ? `/user/post_detail/${item.postId}` : safeLink(item.link) ?? '#'}
+          target={item.postId ? undefined : '_blank'}
+          rel="noreferrer"
+          onClick={(e) => {
+            if (openPost()) e.preventDefault();
+          }}
+        >
           {isVideoFile(media) ? (
             <video
               className="autoplay-video"
@@ -222,13 +288,30 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
 
         <AdCta
           action={action}
-          label={item.buttonAction || AD_ACTION_LABEL[action]}
+          label={
+            item.buttonAction ||
+            (done
+              ? action === 'subscribe'
+                ? 'Subscribed'
+                : 'Following'
+              : AD_ACTION_LABEL[action])
+          }
           href={href}
           onClick={onClick}
           size={item.buttonSize ?? 'medium'}
           position={item.buttonPosition ?? 'bottom'}
         />
       </div>
+
+      {handle && (
+        <SubscribeModal
+          usernameUrl={handle}
+          open={subOpen}
+          busy={subBusy}
+          onClose={() => setSubOpen(false)}
+          onConfirm={subscribe}
+        />
+      )}
 
       {premiumOpen && advertiserId && (
         <PremiumFanModal
@@ -297,13 +380,19 @@ function AdCta({
   /* The mark leads on every one of them. The client's cards put it on the right for four
      of the six and on the left for the other two; he asked for one side throughout, and
      chose the left — so a row of tiles reads down a single column of marks. */
-  const inner = (
-    <>
-      <CtaMark action={action} />
-      <span>{label}</span>
-    </>
-  );
-
+// Icon on the right for Follow and Subscribe; on the left for all others.
+const markFirst = !(action === 'follow' || action === 'subscribe');
+const inner = markFirst ? (
+  <>
+    <CtaMark action={action} />
+    <span>{label}</span>
+  </>
+) : (
+  <>
+    <span>{label}</span>
+    <CtaMark action={action} />
+  </>
+);
   if (onClick) {
     return (
       <button

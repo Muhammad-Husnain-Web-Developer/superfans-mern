@@ -12,6 +12,8 @@ import { adCreatedUser, adCreatedAdmin, adStatusChanged } from '../services/adEm
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Post } from '../models/Post.js';
+import { Followership } from '../models/Followership.js';
+import { Subscription } from '../models/Subscription.js';
 import { PremiumAccess } from '../models/PremiumAccess.js';
 import {
   AD_TYPES,
@@ -244,8 +246,22 @@ adsRouter.get(
       .filter((u): u is NonNullable<typeof u> => !!u);
     const owners = await User.find(
       { _id: { $in: ownerIds } },
-      { usernameUrl: 1, name: 1, profilePicture: 1, chatToggle: 1 },
+      /* role + price decide whether a profile-followers ad asks to be followed or
+         subscribed to, the same test the feed and the profile make */
+      { usernameUrl: 1, name: 1, profilePicture: 1, chatToggle: 1, role: 1, priceOfSubscription: 1 },
     ).lean();
+
+    /* what this viewer already is to each advertiser */
+    const [followed, subscribed] = await Promise.all([
+      Followership.find(
+        { followerUser: req.auth!.userId, followedUser: { $in: ownerIds } },
+        { followedUser: 1 },
+      ).lean().then((rows) => new Set(rows.map((r) => String(r.followedUser)))),
+      Subscription.find(
+        { user: req.auth!.userId, influencer: { $in: ownerIds } },
+        { influencer: 1 },
+      ).lean().then((rows) => new Set(rows.map((r) => String(r.influencer)))),
+    ]);
 
     /* A Send Card writes to the advertiser's inbox, so it answers to the same rule the
        profile's ✉️ does: an advertiser who has set themselves Busy is behind the $10.
@@ -259,6 +275,29 @@ adsRouter.get(
       ).map((r) => String(r.influencer)),
     );
     const byId = new Map(owners.map((u) => [String(u._id), u]));
+
+    /* The three picker types carry `<app>/post/<id>` as their link; ads migrated from
+       Laravel carry the old row number there instead, resolved through Post.mysqlId. */
+    const previewRefs = ads.map((a) => {
+      const href = a.link ?? '';
+      const oid = /\/post\/([a-f0-9]{24})(?:[/?#]|$)/i.exec(href);
+      if (oid) return { ad: String(a._id), id: oid[1] };
+      const legacy = /\/post\/(\d+)(?:[/?#]|$)/.exec(href);
+      return legacy ? { ad: String(a._id), mysqlId: Number(legacy[1]) } : { ad: String(a._id) };
+    });
+    const previewLegacy = [...new Set(previewRefs.map((r) => r.mysqlId).filter((n): n is number => !!n))];
+    const previewLegacyMap = new Map<number, string>(
+      previewLegacy.length
+        ? (await Post.find({ mysqlId: { $in: previewLegacy } }, { mysqlId: 1 })
+            .setOptions({ withMissing: true })
+            .lean()).map((d) => [d.mysqlId as number, String(d._id)])
+        : [],
+    );
+    const previewPostIds = new Map<string, string>();
+    for (const r of previewRefs) {
+      const id = r.id ?? (r.mysqlId ? previewLegacyMap.get(r.mysqlId) : undefined);
+      if (id) previewPostIds.set(r.ad, id);
+    }
 
     /* clients-form ads carry the advertiser's own wording for the button */
     const forms = await AdFormularyForm.find(
@@ -297,8 +336,14 @@ adsRouter.get(
                 /* the two the tile needs to decide between writing and paying */
                 chatToggle: owner.chatToggle !== false,
                 viewerPremium: paidTo.has(String(owner._id)),
+                role: owner.role ?? null,
+                priceOfSubscription: owner.priceOfSubscription ?? null,
+                viewerFollowing: followed.has(String(owner._id)),
+                viewerSubscribed: subscribed.has(String(owner._id)),
               }
             : null,
+          /* the post a picker ad promotes, so the creative opens it full screen */
+          postId: previewPostIds.get(String(a._id)) ?? null,
         };
       }),
     });

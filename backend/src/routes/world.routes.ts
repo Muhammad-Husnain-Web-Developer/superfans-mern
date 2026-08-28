@@ -9,9 +9,22 @@ import { PremiumAccess } from '../models/PremiumAccess.js';
 import { Like } from '../models/Like.js';
 import { Hate } from '../models/Hate.js';
 import { Followership } from '../models/Followership.js';
+import { Subscription } from '../models/Subscription.js';
 import { Ad } from '../models/Ad.js';
 
 export const worldRouter = Router();
+
+/** buildAd writes `<app>/post/<id>` for the three picker types (promote-post,
+    profile-followers, messages); anything else is an outward link and has no post.
+    Ads migrated from Laravel carry the MySQL row number there instead — `/post/714` —
+    which is resolved against Post.mysqlId rather than left to fail. */
+function promotedPostRef(link: string | null | undefined): { id?: string; mysqlId?: number } {
+  const href = link ?? '';
+  const oid = /\/post\/([a-f0-9]{24})(?:[/?#]|$)/i.exec(href);
+  if (oid) return { id: oid[1] };
+  const legacy = /\/post\/(\d+)(?:[/?#]|$)/.exec(href);
+  return legacy ? { mysqlId: Number(legacy[1]) } : {};
+}
 
 const PER_PAGE = 15;
 const MAX_FEED_POSTS = 300;
@@ -175,7 +188,10 @@ worldRouter.get(
     const adOwnerDocs = adOwnerIds.length
       ? await User.find(
           { _id: { $in: adOwnerIds } },
-          { usernameUrl: 1, name: 1, profilePicture: 1, chatToggle: 1 },
+          /* role + price say whether this advertiser is followed or subscribed to — a
+             `profile-followers` ad's button is Follow on a free account and Subscribe on
+             a creator who charges, the same test the profile and the viewer make */
+          { usernameUrl: 1, name: 1, profilePicture: 1, chatToggle: 1, role: 1, priceOfSubscription: 1 },
         ).lean()
       : [];
     /* which of these advertisers this viewer has already bought priority access to */
@@ -189,6 +205,38 @@ worldRouter.get(
           ).map((r) => String(r.influencer))
         : [],
     );
+    /* what this viewer already is to each advertiser, so the tile knows whether to offer
+       the button at all */
+    const [adFollowed, adSubscribed] = req.auth && adOwnerIds.length
+      ? await Promise.all([
+          Followership.find(
+            { followerUser: req.auth.userId, followedUser: { $in: adOwnerIds } },
+            { followedUser: 1 },
+          ).lean().then((rows) => new Set(rows.map((r) => String(r.followedUser)))),
+          Subscription.find(
+            { user: req.auth.userId, influencer: { $in: adOwnerIds } },
+            { influencer: 1 },
+          ).lean().then((rows) => new Set(rows.map((r) => String(r.influencer)))),
+        ])
+      : [new Set<string>(), new Set<string>()];
+
+    /* the posts those picker ads promote, the migrated ones looked up by their old row
+       number in one query rather than one per ad */
+    const adRefs = ads.map((a) => promotedPostRef(a.link));
+    const legacyIds = [...new Set(adRefs.map((r) => r.mysqlId).filter((n): n is number => !!n))];
+    const legacyMap = new Map<number, string>(
+      legacyIds.length
+        ? (await Post.find({ mysqlId: { $in: legacyIds } }, { mysqlId: 1 })
+            .setOptions({ withMissing: true })
+            .lean()).map((d) => [d.mysqlId as number, String(d._id)])
+        : [],
+    );
+    const promotedPostId = (i: number): string | null => {
+      const ref = adRefs[i];
+      if (ref?.id) return ref.id;
+      return ref?.mysqlId ? legacyMap.get(ref.mysqlId) ?? null : null;
+    };
+
     const adOwners = new Map(
       adOwnerDocs.map((u) => [
         String(u._id),
@@ -199,6 +247,10 @@ worldRouter.get(
           profilePicture: u.profilePicture ?? null,
           chatToggle: u.chatToggle !== false,
           viewerPremium: adPaidTo.has(String(u._id)),
+          role: u.role ?? null,
+          priceOfSubscription: u.priceOfSubscription ?? null,
+          viewerFollowing: adFollowed.has(String(u._id)),
+          viewerSubscribed: adSubscribed.has(String(u._id)),
         },
       ]),
     );
@@ -255,6 +307,10 @@ worldRouter.get(
             /* who the ad belongs to — a Send Card writes to them, and Follow/Subscribe
                lead to their profile */
             advertiser: adOwners.get(String(ads[adIndex].user ?? '')) ?? null,
+            /* the post a picker ad promotes. buildAd writes `${APP}/post/<id>` as the
+               link for those three types, so the id is already here — the tile opens it
+               full screen when the creative itself is clicked. */
+            postId: promotedPostId(adIndex),
           });
         }
       }
