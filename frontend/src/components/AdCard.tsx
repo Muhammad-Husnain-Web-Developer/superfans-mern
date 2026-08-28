@@ -135,12 +135,17 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
      others will is what the preview is for; it just does not fire the request. */
   const isOwnAd = !!authUser && !!advertiserId && authUser.id === advertiserId;
 
-  /* "they start to follow the user directly, still navigating in WORLD page" — no
-     navigation, no dialog; the button reports it and the viewer carries on scrolling. */
-  function follow() {
-    if (!advertiserId || done || isOwnAd) return;
-    setDone(true);
-    void api.post(`/me/follow/${advertiserId}`).catch(() => setDone(false));
+  /* Follow does both: the advertiser is followed and the viewer is taken to their
+     profile. The request goes first so the profile it opens already shows Followed —
+     it is awaited rather than fired past the navigation, since leaving the page mid-flight
+     is what would make a click look like it did nothing. */
+  async function follow() {
+    if (!advertiserId) return;
+    if (!isOwnAd && !done) {
+      setDone(true);
+      await api.post(`/me/follow/${advertiserId}`).catch(() => setDone(false));
+    }
+    if (handle) navigate(`/${handle}`);
   }
 
   /* the profile's own checkout, behind the profile's own dialog */
@@ -162,7 +167,12 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
      sitting beside the nickname. */
   function openPost() {
     if (!item.postId) return false;
-    if (action === 'follow') follow();
+    /* the creative goes full screen, not to the profile — "FULL SCREEN + Following the
+       user" — so it follows on its own rather than through follow() above */
+    if (action === 'follow' && advertiserId && !isOwnAd && !done) {
+      setDone(true);
+      void api.post(`/me/follow/${advertiserId}`).catch(() => setDone(false));
+    }
     navigate(`/user/post_detail/${item.postId}`, {
       state: action === 'subscribe' ? { subscribe: true } : undefined,
     });
@@ -250,7 +260,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   if (action === 'send-card' && advertiserId && handle)
     onClick = () =>
       advertiserBusy ? setPremiumOpen(true) : navigate(`/user/messages?to=${handle}`);
-  else if (action === 'follow' && advertiserId) onClick = follow;
+  else if (action === 'follow' && advertiserId) onClick = () => void follow();
   else if (action === 'subscribe' && advertiserId)
     onClick = () => { if (!isOwnAd) setSubOpen(true); };
   else href = safeLink(item.link);
