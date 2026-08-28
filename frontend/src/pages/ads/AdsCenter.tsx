@@ -11,7 +11,8 @@ import {
   AD_BUTTON_POSITIONS,
   AD_BUTTON_SIZES,
   CtaMark,
-  adAction,
+  resolveAdAction,
+  isPaidAdvertiser,
   type AdButtonPosition,
   type AdButtonSize,
 } from '../../components/AdCard';
@@ -35,6 +36,7 @@ function AdButtonPreview({
   size,
   position,
   buttonAction,
+  advertiserPaid = false,
 }: {
   /** the uploaded file as a data URL, or the picked post's own media URL */
   src: string;
@@ -43,8 +45,10 @@ function AdButtonPreview({
   size: AdButtonSize;
   position: AdButtonPosition;
   buttonAction: string | null;
+  /** the advertiser is a creator who charges, so this ad will read Subscribe */
+  advertiserPaid?: boolean;
 }) {
-  const action = adAction(adType);
+  const action = resolveAdAction(adType, advertiserPaid);
   const label = buttonAction || AD_ACTION_LABEL[action];
   return (
     <div className="ads-cta-preview work-item">
@@ -114,11 +118,13 @@ const CARDS: AdCard[] = [
   { id: 14, type: 'website-visits', min: 500, max: 40000, audience: 1380000, emoji: '🪄🎬', title: 'Super Video', desc: 'Reproduce a full screen video. Only for big companies.' },
 ];
 
-/* the country list moved to data/countryCities, where it sits beside each one's cities */
+/* the country and city lists come from /api/geo, via data/geo */
 const BUTTON_ACTIONS = ['More Info', 'Ask Offer', 'Fill Out Survey', 'Check Website'];
 
 interface CenterData {
   role: string;
+  /** a creator who charges is subscribed to, not followed — the preview says which */
+  priceOfSubscription: number | null;
   profile: Record<string, unknown> | null;
   missing: string[];
 }
@@ -284,7 +290,17 @@ export function AdsCenter() {
         </div>
       )}
 
-      {card && <CreateAdModal card={card} onClose={() => setCard(null)} />}
+      {card && (
+        <CreateAdModal
+          card={card}
+          onClose={() => setCard(null)}
+          /* so the live preview draws the button this advertiser's ad will actually carry */
+          advertiserPaid={isPaidAdvertiser({
+            role: data?.role,
+            priceOfSubscription: data?.priceOfSubscription,
+          })}
+        />
+      )}
     </>
   );
 }
@@ -394,7 +410,15 @@ function ProfileModal({
 }
 
 /* ================= create-ad modal ================= */
-function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void }) {
+function CreateAdModal({
+  card,
+  onClose,
+  advertiserPaid = false,
+}: {
+  card: AdCard;
+  onClose: () => void;
+  advertiserPaid?: boolean;
+}) {
   const [amount, setAmount] = useState(card.min);
   const [days, setDays] = useState(4);
   const [terms, setTerms] = useState(false);
@@ -669,6 +693,7 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
                 size={buttonSize}
                 position={buttonPosition}
                 buttonAction={card.type === 'clients-form' ? buttonAction : null}
+                advertiserPaid={advertiserPaid}
               />
             </div>
 

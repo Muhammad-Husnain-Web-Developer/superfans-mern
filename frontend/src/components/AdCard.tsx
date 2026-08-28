@@ -95,6 +95,25 @@ export function adAction(adType: string | null | undefined): AdAction {
   }
 }
 
+/**
+ * Follow or Subscribe, settled by who bought the ad rather than by the ad. A creator who
+ * charges is subscribed to; a free account, creator or not, is followed. Kept here so the
+ * tile, the full-screen viewer and the Ads Center's own preview cannot drift apart — they
+ * did once already, with the tile saying Follow for a paid creator.
+ */
+export function resolveAdAction(
+  adType: string | null | undefined,
+  advertiserPaid: boolean,
+): AdAction {
+  const base = adAction(adType);
+  return base === 'follow' && advertiserPaid ? 'subscribe' : base;
+}
+
+/** Whether an advertiser is one who charges — the same test the profile and viewer make. */
+export function isPaidAdvertiser(a: { role?: string | null; priceOfSubscription?: number | null } | null | undefined): boolean {
+  return a?.role === 'influencer' && (a?.priceOfSubscription ?? 0) > 0;
+}
+
 /** A `mailto:` is never followed from a tile: it does nothing on most machines, and it is
     the advertiser's own address. Anything else the Ads Center writes is left alone. */
 function safeLink(link: string | undefined): string | null {
@@ -111,14 +130,8 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   const media = item.media ?? '';
   const handle = item.advertiser?.usernameUrl ?? null;
 
-  /* A `profile-followers` ad asks the viewer for a relationship with the advertiser, and
-     which relationship depends on the advertiser: a creator who charges is subscribed to,
-     everyone else is followed. Same test the profile and the full-screen viewer make. */
-  const advertiserPaid =
-    item.advertiser?.role === 'influencer' && (item.advertiser?.priceOfSubscription ?? 0) > 0;
-  const baseAction = adAction(item.adType);
-  const action: AdAction =
-    baseAction === 'follow' && advertiserPaid ? 'subscribe' : baseAction;
+  const advertiserPaid = isPaidAdvertiser(item.advertiser);
+  const action = resolveAdAction(item.adType, advertiserPaid);
 
   /* already following / subscribed — the button has nothing left to ask for */
   const [done, setDone] = useState(

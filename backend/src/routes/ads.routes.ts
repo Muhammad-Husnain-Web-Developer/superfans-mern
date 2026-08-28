@@ -146,6 +146,9 @@ adsRouter.get(
       success: true,
       adTypes: [...AD_TYPES],
       role: me.role,
+      /* what the advertiser charges, so the create form's live preview can show the same
+         button the feed will — Subscribe for a creator with a price, Follow otherwise */
+      priceOfSubscription: me.priceOfSubscription ?? null,
       profile: profileDto(profile),
       missing: missingProfileFields(me.role, profile ? profileDto(profile) : null),
     });
