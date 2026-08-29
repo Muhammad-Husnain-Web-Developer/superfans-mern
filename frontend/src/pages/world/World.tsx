@@ -645,7 +645,10 @@ function toggleHate() {
           </span>
         </div>
         <RatingPill
-          pct={likePercent(likes, hates, item.likePercent)}
+          pct={likePercent(likes, hates, item.likePercent, {
+            id: item.id,
+            views: item.likesTotal ?? item.noOfLikes,
+          })}
           liked={liked}
           hated={hated}
           beat={feedback.beat}

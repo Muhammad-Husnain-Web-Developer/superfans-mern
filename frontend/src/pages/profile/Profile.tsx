@@ -294,7 +294,10 @@ function doHate() {
         </div>
         {!locked && (
           <RatingPill
-            pct={likePercent(likeRows, hateRows, post.likePercent)}
+            pct={likePercent(likeRows, hateRows, post.likePercent, {
+              id: post.id,
+              views: post.noOfLikes,
+            })}
             liked={liked}
             hated={hated}
             beat={feedback.beat}

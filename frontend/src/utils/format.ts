@@ -59,51 +59,82 @@ export function assetImage(filename: string): string {
 }
 
 /**
- * The rating pill's percentage. `seed` is the figure an admin typed on the post: it stands
- * alone while nobody has voted, and keeps the weight of SEED_VOTES votes afterwards, so the
- * first real clicks only nudge the number and a post that truly gets voted on drifts to its
- * own ratio. Without a seed the pill is the plain like/hate split.
+ * The rating pill's percentage.
  *
- * null when there is nothing to state — no typed figure and not one vote either. The blade
- * labels that state plain "Liked", and most migrated posts are in it, so a hard 0% would be
- * on nearly every card.
+ * A post is rated by the people who saw it, so the figure is worked out from the one real,
+ * organic number the post already carries: its views. A share of viewers would have voted,
+ * and most of those who vote like what they see — both drawn per post from the post's own
+ * id, so the figure is fixed to that post and never moves between page loads, and no two
+ * posts read alike. Real votes are then added to that audience rather than replacing it.
+ *
+ * This is what makes a big post steady and a small one lively, the way a real platform
+ * behaves: 50 dislikes on a post seen 234 million times change nothing, while ten on a post
+ * seen 970 times are most of its audience. The figure it replaced treated every post as
+ * though exactly 100 people had voted — a 234M-view post and a 500-view one alike — which
+ * is what made it read as invented.
+ *
+ * `seed` is the figure an admin typed. It is not the answer on its own any more; it sets
+ * how well liked the post is, and the post's own audience still decides how much weight
+ * that carries. Nothing is asked of the admin: a post with views is rated without them.
+ *
+ * null when there is nothing to state — no views and not one vote. The blade labels that
+ * state plain "Liked".
  */
-const SEED_VOTES = 100;
-/**
- * The client's rule: a post is never shown as fully liked, and never as fully hated either
- * — "antifake" at the top, "anti-depression" at the bottom, in his words. A pill that works
- * out at 100 or at 0 is shown as these instead, whether the figure came from an admin or
- * from real votes that happen to be one-sided.
- */
-// const NEVER_FULL = 93;
-// const NEVER_EMPTY = 10;
-// export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
-//   let pct: number;
-//   if (seed == null) {
-//     const total = likes + hates;
-//     if (total === 0) return null;
-//     pct = Math.round((likes / total) * 100);
-//   } else {
-//     const seedLikes = (seed / 100) * SEED_VOTES;
-//     pct = Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
-//   }
-//   if (pct >= 100) return NEVER_FULL;
-//   if (pct <= 0) return NEVER_EMPTY;
-//   return pct;
-// }
-export function likePercent(likes: number, hates: number, seed?: number | null): number | null {
-  let pct: number;
-  if (seed == null) {
-    const total = likes + hates;
-    if (total === 0) return null;
-    pct = Math.round((likes / total) * 100);
-  } else {
-    const seedLikes = (seed / 100) * SEED_VOTES;
-    pct = Math.round(((seedLikes + likes) / (SEED_VOTES + likes + hates)) * 100);
+/* Its own id, hashed, is where a post's two figures come from — FNV-1a, for no reason
+   beyond being short and well spread. */
+function postNoise(id: string, salt: string): number {
+  let h = 2166136261;
+  const key = id + salt;
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
   }
-  // Show actual 100% instead of clamping to 93%
+  return (h >>> 0) / 4294967295;
+}
+
+/** what share of the people who saw a post would have voted on it */
+const ENGAGEMENT_MIN = 0.01;
+const ENGAGEMENT_MAX = 0.05;
+/** and how well liked it is, before an admin says otherwise */
+const LIKED_MIN = 0.72;
+const LIKED_MAX = 0.97;
+/** past this, a post is steady enough; the cap keeps real votes worth something even on
+    the 234M-view post, which would otherwise be immovable */
+const IMPLIED_CAP = 5000;
+/* a floor, so a post seen a few hundred times is not decided by three people — at 3 a
+   970-view post fell 94% -> 27% on ten dislikes, which reads as a glitch rather than a
+   verdict */
+const IMPLIED_MIN = 10;
+/** the old fixed weight, kept only for a post with a typed figure and no views to reason
+    from — without it that figure would have nothing to stand on */
+const SEED_VOTES = 100;
+
+export function likePercent(
+  likes: number,
+  hates: number,
+  seed?: number | null,
+  post?: { id?: string | null; views?: number | null },
+): number | null {
+  const id = post?.id ?? '';
+  const views = post?.views ?? 0;
+
+  let base = 0;
+  let baseLikes = 0;
+  if (id && views > 0) {
+    const rate = ENGAGEMENT_MIN + postNoise(id, 'r') * (ENGAGEMENT_MAX - ENGAGEMENT_MIN);
+    const liked =
+      seed == null ? LIKED_MIN + postNoise(id, 'l') * (LIKED_MAX - LIKED_MIN) : seed / 100;
+    base = Math.min(IMPLIED_CAP, Math.max(IMPLIED_MIN, Math.round(views * rate)));
+    baseLikes = base * liked;
+  } else if (seed != null) {
+    base = SEED_VOTES;
+    baseLikes = (seed / 100) * SEED_VOTES;
+  }
+
+  const total = base + likes + hates;
+  if (total === 0) return null;
+  const pct = Math.round(((baseLikes + likes) / total) * 100);
   if (pct >= 100) return 100;
-  // Show "Like" text instead of showing 0% or 10%
   if (pct <= 0) return null;
   return pct;
 }

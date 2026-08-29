@@ -499,7 +499,10 @@ function doHate() {
   const isPaidCreator = author?.role === 'influencer' && (author?.priceOfSubscription ?? 0) > 0;
   const isOwner = !!authUser && author?.id === authUser.id;
   const worldBack = authUser?.role === 'influencer' ? '/influencer/world' : '/user/world';
-  const pct = likePercent(likes, hates, post?.likePercent);
+  const pct = likePercent(likes, hates, post?.likePercent, {
+    id: post?.id,
+    views: post?.likesTotal,
+  });
   // Locked: reached (via swipe) a post the viewer can't see — show the subscribe/follow tile
   // instead of the media (David's "blocked post" full-screen state).
   const locked = !post.canView;

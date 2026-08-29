@@ -356,7 +356,10 @@ function doHate() {
           <span className="number_of_post_likes">{formatNumber(views)}</span>
         </div>
         <RatingPill
-          pct={likePercent(likeRows, hateRows, post.likePercent)}
+          pct={likePercent(likeRows, hateRows, post.likePercent, {
+            id: post.id,
+            views: post.viewsTotal,
+          })}
           liked={liked}
           hated={hated}
           beat={feedback.beat}
