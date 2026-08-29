@@ -50,6 +50,10 @@ export interface IUser extends Document {
   bankAccount?: string;
   paypalAccount?: string;
   earnings: number;
+  /** what the creator has been paid for Super Video ads — shown as its own line in the
+      control panel, set by hand from the admin table. Kept beside `earnings` rather than
+      inside it: the total is what a withdrawal draws on, and this is a breakdown. */
+  videoAdsEarnings: number;
   externalCustomerId?: string;
 
   // Engagement & growth engine
@@ -119,6 +123,7 @@ const userSchema = new Schema<IUser>(
     bankAccount: String,
     paypalAccount: String,
     earnings: { type: Number, default: 0 },
+    videoAdsEarnings: { type: Number, default: 0 },
     externalCustomerId: String,
 
     noOfFollowers: { type: Number, default: 0 },

@@ -116,6 +116,7 @@ profilesRouter.get(
         ...(req.auth && String(user._id) === req.auth.userId
           ? {
               earnings: user.earnings,
+              videoAdsEarnings: user.videoAdsEarnings ?? 0,
               bankAccount: user.bankAccount ?? null,
               paypalAccount: user.paypalAccount ?? null,
             }

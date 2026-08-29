@@ -36,6 +36,8 @@ export interface ProfileData {
   viewerPremium?: boolean;
   /** owner-only payout fields (absent for other viewers) */
   earnings?: number;
+  /** the Super Video ads share of it, shown as its own line in the control panel */
+  videoAdsEarnings?: number;
   bankAccount?: string | null;
   paypalAccount?: string | null;
   instagramLink: string | null;

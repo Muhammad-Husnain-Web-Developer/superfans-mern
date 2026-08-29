@@ -53,8 +53,14 @@ export function InfluencerControlPanelModal({
   /* blade: round(earnings, 2), then append '.00' when the result has no decimal point */
   const [earnings, setEarnings] = useState(Math.round((profile.earnings ?? 0) * 100) / 100);
   const earningsDisplay = String(earnings).includes('.') ? String(earnings) : `${earnings}.00`;
+  /* the client asked for this line beside the total: "Update in panels — Earnings of
+     Video Ads". It is a breakdown, not a second purse — the total above is still what a
+     withdrawal draws on, and this says how much of it came from Super Video. */
+  const videoAds = Math.round((profile.videoAdsEarnings ?? 0) * 100) / 100;
+  const videoAdsDisplay = String(videoAds).includes('.') ? String(videoAds) : `${videoAds}.00`;
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [subListOpen, setSubListOpen] = useState(false);
+  const [partnershipOpen, setPartnershipOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState(profile.name ?? '');
@@ -562,6 +568,18 @@ export function InfluencerControlPanelModal({
 
             <div className="container-fluid" style={{ paddingLeft: 0 }}>
               <div className="row pb-3">
+                <div className="col-xs-12">
+                  <div className="form-group" style={{ display: 'flex' }}>
+                    <label style={{ color: 'white' }}>
+                      {t('video_ads_earnings', { defaultValue: 'Video Ads Earnings:' })} ${videoAdsDisplay}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="container-fluid" style={{ paddingLeft: 0 }}>
+              <div className="row pb-3">
                 <div className="col-xs-6">
                   <div className="form-group" style={{ display: 'flex' }}>
                     <label style={{ color: 'white' }}>{t('subscriber_history')}</label>
@@ -575,6 +593,28 @@ export function InfluencerControlPanelModal({
                     onClick={() => setSubListOpen(true)}
                   >
                     See All
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* earnings from video views — the blade prints a fixed $0.00 beside a black
+                two-line button that opens the "ask partnership" modal (#askPartnershipOverlay).
+                The figure is hard-coded there too; nothing feeds it yet. */}
+            <div className="container-fluid" style={{ paddingLeft: 0 }}>
+              <div className="row pb-3">
+                <div className="col-xs-6">
+                  <div className="form-group" style={{ display: 'flex' }}>
+                    <span style={{ color: '#fff', fontWeight: 900 }}>
+                      {t('earnings_video_views')} $0.00
+                    </span>
+                  </div>
+                </div>
+                <div className="col-xs-6" style={{ textAlign: 'end', paddingRight: 22 }}>
+                  <button type="button" style={PARTNERSHIP_BTN} onClick={() => setPartnershipOpen(true)}>
+                    <span>{t('notavailable10k_title2')}</span>
+                    <hr style={{ marginTop: 0, marginBottom: 0 }} />
+                    {t('notavailable10k_button')}
                   </button>
                 </div>
               </div>
@@ -763,6 +803,87 @@ export function InfluencerControlPanelModal({
         open={subListOpen}
         onClose={() => setSubListOpen(false)}
       />
+
+      {partnershipOpen && <PartnershipModal onClose={() => setPartnershipOpen(false)} />}
+    </div>
+  );
+}
+
+/** The black two-line button beside the video-views figure (.open-btn in the blade). */
+const PARTNERSHIP_BTN: React.CSSProperties = {
+  background: '#000000',
+  color: '#ffffff',
+  padding: '3px 15px',
+  fontWeight: 'bold',
+  border: 0,
+  outline: 0,
+};
+
+/**
+ * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
+ *
+ * The blade also carries a stray "Send Welcome Email" link to example@email.com inside this
+ * box; it is placeholder debris, not something a creator should be shown, so it is left out.
+ */
+function PartnershipModal({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('content');
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.7)',
+        zIndex: 999999999,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: '90%',
+          maxWidth: 380,
+          padding: '28px 22px',
+          borderRadius: 7,
+          textAlign: 'center',
+          position: 'relative',
+          color: '#fff',
+          background: '#8a2be2',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span
+          onClick={onClose}
+          style={{ position: 'absolute', top: 12, right: 14, fontSize: 24, cursor: 'pointer', opacity: 0.7 }}
+        >
+          &times;
+        </span>
+        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 18, color: 'white' }}>
+          {t('notavailable10k_title')}
+        </h3>
+        <p style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>
+          {t('notavailable10k_message')}
+        </p>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            marginTop: 18,
+            background: 'limegreen',
+            color: 'white',
+            padding: '10px 40px',
+            fontSize: '0.9em',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '3px solid green',
+            fontFamily:
+              'Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace',
+          }}
+        >
+          ⭐OK
+        </button>
+      </div>
     </div>
   );
 }

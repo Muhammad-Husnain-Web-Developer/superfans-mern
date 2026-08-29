@@ -4,7 +4,7 @@ import { AdminShell, AdminModal } from './AdminShell';
 
 interface AdminUser {
   id: string; name: string; usernameUrl: string; email: string; role: string;
-  status: string; verified: boolean; vip: boolean; noOfFollowers: number; earnings: number;
+  status: string; verified: boolean; vip: boolean; noOfFollowers: number; earnings: number; videoAdsEarnings: number;
 }
 
 /** the blade prints earnings as a plain 2-decimal figure; the table follows it */
@@ -35,7 +35,7 @@ export function AdminUsers() {
       {loading ? <p>Loading…</p> : (
         <div style={{ overflowX: 'auto' }}>
           <table className="table table-bordered table-sm bg-white">
-            <thead className="thead-dark"><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Verified</th><th>VIP</th><th>Followers</th><th>Earnings</th><th>Actions</th></tr></thead>
+            <thead className="thead-dark"><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Verified</th><th>VIP</th><th>Followers</th><th>Earnings</th><th>Video Ads</th><th>Actions</th></tr></thead>
             <tbody>
               {filtered.slice(0, 300).map((u) => (
                 <tr key={u.id}>
@@ -43,6 +43,7 @@ export function AdminUsers() {
                   <td><span className={`badge badge-${u.status === 'active' ? 'success' : 'secondary'}`}>{u.status}</span></td>
                   <td>{u.verified ? '✔' : '—'}</td><td>{u.vip ? '✔' : '—'}</td><td>{u.noOfFollowers.toLocaleString()}</td>
                   <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{money(u.earnings)}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{money(u.videoAdsEarnings)}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <button className="btn btn-sm btn-success mr-1" onClick={() => setEditing(u)}>Edit</button>
                     <button className="btn btn-sm btn-danger" onClick={() => del(u)}>Delete</button>
@@ -65,15 +66,18 @@ function EditUser({ user, onClose, onSaved }: { user: AdminUser; onClose: () => 
   /* kept out of `f` because it is typed and must go over as a number, not the string an
      input hands back — the endpoint takes z.number() */
   const [earnings, setEarnings] = useState(String(user.earnings ?? 0));
+  const [videoAds, setVideoAds] = useState(String(user.videoAdsEarnings ?? 0));
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f, v: string | boolean) => setF((s) => ({ ...s, [k]: v }));
   async function save(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
     const amount = Number(earnings);
+    const video = Number(videoAds);
     try {
       await api.put(`/admin/users/${user.id}`, {
         ...f,
         ...(Number.isFinite(amount) && amount >= 0 ? { earnings: amount } : {}),
+        ...(Number.isFinite(video) && video >= 0 ? { videoAdsEarnings: video } : {}),
       });
       onSaved();
     } finally { setBusy(false); }
@@ -112,6 +116,19 @@ function EditUser({ user, onClose, onSaved }: { user: AdminUser; onClose: () => 
             onChange={(e) => setEarnings(e.target.value)}
           />
           <small className="text-muted">Set by hand — subscriptions, video ads and the rest all add up here.</small>
+        </div>
+        {/* the breakdown the client asked to show in the creator's control panel */}
+        <div className="form-group">
+          <label>Video Ads Earnings ($)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            className="form-control"
+            value={videoAds}
+            onChange={(e) => setVideoAds(e.target.value)}
+          />
+          <small className="text-muted">Shown on its own line in the creator's control panel.</small>
         </div>
         <button className="btn btn-primary" disabled={busy}>Save</button>
       </form>
