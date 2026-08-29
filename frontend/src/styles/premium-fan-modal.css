@@ -1,14 +1,19 @@
-/* The SweetAlert shell.
-   SweetAlert2's own geometry with the overrides `layouts_direct_user/main.blade.php:322-347`
-   lays over it — the purple ground, white text and 1.2rem that every dialog on the profile
-   page carries. The premium-fan pair is the last dialog drawn this way; the chat dialog that
-   shared it was dropped when writing moved to the Messages page. */
+/* The premium fan dialogs.
+   The blade raises these as SweetAlerts (user_profile.blade.php:1311-1345) under the
+   overrides `layouts_direct_user/main.blade.php:322-347` — the purple ground, white text
+   and 1.2rem. SweetAlert2 is not a dependency here; the app's own stand-in for it is
+   SwalResult (pages/profile/Profile.tsx:71), and its measurements are what this file
+   follows so every dialog in the app carries the same box, title and spacing.
+
+   What stays the blade's own is only what its markup sets by hand: the 92px picture, the
+   yellow BE PREMIUM FAN, and the Bootstrap green on PAY. */
+
+/* ---- the shell, from SwalResult ------------------------------------------- */
 
 .swal-scrim {
   position: fixed;
   inset: 0;
-  /* .swal2-container { z-index: 100000000000000 } — it must clear the profile's own modals */
-  z-index: 100000000;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -20,77 +25,75 @@
 .swal-pop {
   position: relative;
   margin: auto;
-  max-width: 100%;
-  /* swal2's own box: 5px corners, 1.25em of padding, on the layout's purple at 1.2rem */
-  padding: 1.25em;
+  width: 32em;
+  max-width: 90%;
+  padding: 2em 1.6em;
   border-radius: 5px;
   background: #8a2be2;
   color: #fff;
-  font-size: 1.2rem;
+  /* the 12px base every em here is measured against */
   font-family: Roboto, Arial, sans-serif;
+  font-size: 12px;
   text-align: center;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
 }
 
-/* showCloseButton: true — swal draws it grey at the top right and darkens on hover */
+/* showCloseButton: true. Held inside the popup's own padding so it never sits over the
+   title — the pay step has no picture above it and the title starts at the top. */
 .swal-close {
   position: absolute;
-  top: 0;
-  right: 0;
-  width: 1.2em;
-  height: 1.2em;
+  top: 0.5em;
+  right: 0.7em;
+  width: 1.6em;
+  height: 1.6em;
   padding: 0;
   border: 0;
   background: transparent;
-  color: #cccccc;
-  font-family: serif;
-  font-size: 2.5em;
-  line-height: 1.2;
+  color: #e6d3f7;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 1.5em;
+  line-height: 1;
   cursor: pointer;
   transition: color 0.1s;
 }
 .swal-close:hover {
-  color: #f27474;
+  color: #fff;
 }
 
-/* iconHtml — the creator's picture, at the size the blade gives it */
+/* iconHtml — SwalResult's icon block, at the 92px the blade's own <img> asks for */
 .swal-icon-img {
   display: block;
   width: 92px;
   height: 92px;
-  margin: 0 auto 0.6em;
+  margin: 0 auto 1em;
   border-radius: 74px;
   border: 4px solid white;
   object-fit: cover;
 }
 
-/* .swal2-title, on the layout's white */
+/* .swal2-title */
 .swal-title {
-  margin: 0 0 0.8em;
+  margin: 0 0 0.4em;
+  /* just clear of the close button, which reaches about 13px into the content on the
+     pay step where no picture precedes the title. More than that wraps "Priority
+     Access – $10" onto two lines. */
+  padding: 0 0.7em;
   color: #fff;
-  font-size: 1.875em;
+  font-family: Montserrat, Arial, sans-serif;
+  font-size: 22.5px;
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
   word-wrap: break-word;
 }
 
-/* The premium fan dialogs themselves, on the shell above. What follows is only what
-   the blade sets on this dialog's own two buttons and its body copy
-   (user_profile.blade.php:1311-1345, strings from lang/en/content.php:141-149). */
-
-.premium-box {
-  /* neither dialog passes a width, so both sit at swal2's default 32em */
-  width: 32em;
-}
-
-/* swal's html slot: 1.125em, its own line-height, centred like the rest of the popup */
+/* swal's html slot, at SwalResult's body size */
 .premium-text {
   margin: 0;
   color: #fff;
-  font-size: 1.125em;
+  font-size: 13.5px;
   font-weight: 400;
-  line-height: normal;
+  line-height: 1.45;
   text-align: center;
   word-wrap: break-word;
 }
@@ -100,48 +103,54 @@
   font-size: 11px;
 }
 
-/* class="swal2-styled btnswa-hover" — swal's button geometry, the blade's yellow.
-   `margin-right: 10px` is the blade's own, from a row that once held a second button. */
+/* ---- the two buttons the blade styles itself ------------------------------ */
+
+/* class="swal2-styled btnswa-hover" — swal's button geometry as SwalResult renders it,
+   with the blade's yellow over it. `margin-right: 10px` is the blade's own. */
 .premium-be-fan {
   display: inline-block;
-  margin: 0.3125em 10px 0.3125em 0.3125em;
-  padding: 0.625em 1.1em;
-  border-radius: 0.25em;
+  margin: 0 10px 0 0;
+  padding: 7.5px 13.2px;
+  border-radius: 3px;
   background-color: #ffeb3b;
   border: 2px solid #e1be24;
   color: #6a1b9a;
-  font-size: 1.0625em;
-  font-weight: 500;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
   cursor: pointer;
   transition: 0.3s;
 }
 
 /* .btnswa-hover:hover (user_profile.blade.php:36-41) */
 .premium-be-fan:hover {
-  background: #fdd835 !important;
-  border: 2px solid #fdd835 !important;
-  transition: 0.3s;
+  background: #fdd835;
+  border-color: #fdd835;
   text-decoration: none;
 }
 
-.premium-pay-row {
-  margin-top: 1em;
+.premium-btn-row {
+  margin-top: 1.2em;
 }
 
-/* class="btn btn-success" with the blade's border and its monospace face */
+/* class="btn btn-success" — Bootstrap's geometry, with the blade's border and its
+   monospace face from the button's own style attribute */
 .premium-pay {
   padding: 6px 12px;
-  border: 2px solid #409c40 !important;
+  border: 2px solid #409c40;
   border-radius: 4px;
   background-color: #5cb85c;
   color: #fff;
   font-family:
     Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
-    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif !important;
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
   font-weight: bold;
   font-size: 14px;
   line-height: 1.42857143;
   cursor: pointer;
+}
+.premium-pay:hover {
+  background-color: #449d44;
 }
 .premium-pay:disabled {
   opacity: 0.65;
@@ -149,7 +158,7 @@
 }
 
 .premium-error {
-  margin: 12px 0 0;
+  margin: 1.2em 0 0;
   color: #ffd7d7;
-  font-size: 0.75em;
+  font-size: 11px;
 }

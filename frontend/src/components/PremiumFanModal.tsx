@@ -78,11 +78,13 @@ export function PremiumFanModal({
             <div className="premium-text">
               This influencer is responding to a lot of messages right now, you’re in the
               queue.
-              <br />
-              <br />
-              <button type="button" className="premium-be-fan" onClick={() => setStep('pay')}>
-                🎖 BE ️PREMIUM FAN
-              </button>
+              {/* the blade separates these with <br><br>; the row carries the gap as a
+                  margin instead, so it matches the spacing every other dialog uses */}
+              <div className="premium-btn-row">
+                <button type="button" className="premium-be-fan" onClick={() => setStep('pay')}>
+                  🎖 BE ️PREMIUM FAN
+                </button>
+              </div>
             </div>
           </>
         ) : (
@@ -102,7 +104,7 @@ export function PremiumFanModal({
 
               {error && <p className="premium-error">{error}</p>}
 
-              <div className="premium-pay-row">
+              <div className="premium-btn-row">
                 <button
                   type="button"
                   className="premium-pay"
