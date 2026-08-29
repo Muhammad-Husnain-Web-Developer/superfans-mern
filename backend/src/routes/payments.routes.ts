@@ -62,8 +62,11 @@ paymentsRouter.post(
       },
       /* `payment`, not a name of this flow's own: usePaymentReturn keys off that one word,
          and it is what reconciles the charge on the way back. Every other checkout here
-         uses it; this one did not, so the fan returned with the money taken and no access. */
-      successUrl: `${APP}/${influencer.usernameUrl}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+         uses it; this one did not, so the fan returned with the money taken and no access.
+         The fan lands in the inbox rather than back on the profile — what they paid for is
+         the right to write, so `to` opens the creator's conversation ready for the first
+         message. A cancelled payment goes back to the profile they came from. */
+      successUrl: `${APP}/user/messages?payment=success&session_id={CHECKOUT_SESSION_ID}&to=${influencer.usernameUrl}`,
       cancelUrl: `${APP}/${influencer.usernameUrl}?payment=cancelled`,
     });
     res.json({ success: true, url });

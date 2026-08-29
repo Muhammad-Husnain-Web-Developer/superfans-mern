@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdLeadForm } from '../pages/ads/AdLeadForm';
-import { SendCardModal } from './SendCardModal';
 import { PremiumFanModal } from './PremiumFanModal';
 import { assetImage, isVideoFile, videoMime } from '../utils/format';
 
@@ -98,9 +97,7 @@ function safeLink(link: string | undefined): string | null {
 export function AdCard({ item, showType = false }: { item: AdCardItem; showType?: boolean }) {
   const navigate = useNavigate();
   const [formOpen, setFormOpen] = useState(false);
-  /* the Send Card dialog, for `messages` ads — and the $10 that stands in front of it when
-     the advertiser is Busy */
-  const [cardOpen, setCardOpen] = useState(false);
+  /* the $10 that stands in front of writing when the advertiser is Busy */
   const [premiumOpen, setPremiumOpen] = useState(false);
   const media = item.media ?? '';
   const action = adAction(item.adType);
@@ -186,8 +183,9 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   const advertiserBusy =
     item.advertiser?.chatToggle === false && !item.advertiser?.viewerPremium;
 
-  if (action === 'send-card' && advertiserId)
-    onClick = () => (advertiserBusy ? setPremiumOpen(true) : setCardOpen(true));
+  if (action === 'send-card' && advertiserId && handle)
+    onClick = () =>
+      advertiserBusy ? setPremiumOpen(true) : navigate(`/user/messages?to=${handle}`);
   else if (goesToProfile && handle) onClick = () => navigate(`/${handle}`);
   else href = safeLink(item.link);
 
@@ -231,16 +229,6 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
           position={item.buttonPosition ?? 'bottom'}
         />
       </div>
-
-      {cardOpen && advertiserId && (
-        <SendCardModal
-          receiverId={advertiserId}
-          usernameUrl={item.advertiser?.usernameUrl ?? null}
-          name={item.advertiser?.name ?? null}
-          profilePicture={item.advertiser?.profilePicture ?? null}
-          onClose={() => setCardOpen(false)}
-        />
-      )}
 
       {premiumOpen && advertiserId && (
         <PremiumFanModal

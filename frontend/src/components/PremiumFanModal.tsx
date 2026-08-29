@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { assetImage } from '../utils/format';
-import '../styles/send-card-modal.css';
 import '../styles/premium-fan-modal.css';
 
 /**
@@ -77,7 +76,7 @@ export function PremiumFanModal({
               {usernameUrl ? `@${usernameUrl} ` : ''}Super Busy!
             </h2>
             <div className="premium-text">
-              🇺🇸 This influencer is responding to a lot of messages right now, you’re in the
+              This influencer is responding to a lot of messages right now, you’re in the
               queue.
               <br />
               <br />

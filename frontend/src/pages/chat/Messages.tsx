@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { io, type Socket } from 'socket.io-client';
 import { api } from '../../api/client';
+import { fetchProfile } from '../../api/profiles';
+import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { useAuth } from '../../context/AuthContext';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 
@@ -59,6 +61,27 @@ export function Messages() {
     api.get<ChatUser[]>('/chatbox/users').then(({ data }) => setUsers(data)).catch(() => setUsers([]));
   }
   useEffect(loadUsers, []);
+
+  /* A fan sent here from a profile's ✉️, from an ad's Send Card, or straight off the $10
+     checkout arrives as ?to=<handle>. Open that conversation at once — including one that
+     does not exist yet: a creator nobody has written to is not in /chatbox/users, so they
+     are looked up by handle and put at the top of the list with an empty thread. */
+  useEffect(() => {
+    const handle = new URLSearchParams(window.location.search).get('to');
+    if (!handle) return;
+    void fetchProfile(handle)
+      .then((p) => {
+        const target: ChatUser = { id: p.id, name: p.name, profilePicture: p.profilePicture };
+        setUsers((prev) => (prev.some((u) => u.id === target.id) ? prev : [target, ...prev]));
+        return openChat(target);
+      })
+      .catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /* the $10 priority access is reconciled here now, because this is where its checkout
+     returns to — the webhook cannot reach a developer's machine */
+  const paymentStatus = usePaymentReturn();
 
   // real-time: append messages for the open conversation, and bump the sender to the top
   useEffect(() => {
@@ -124,6 +147,22 @@ export function Messages() {
 
   return (
     <div id="chat-container" style={{ height: '100vh', width: '100%', margin: 0, overflow: 'hidden' }}>
+      {/* one line confirming the priority access just bought, since the fan lands here
+          straight off the checkout rather than on a page of its own */}
+      {paymentStatus && (
+        <div
+          style={{
+            padding: '8px 14px',
+            background: '#5cb85c',
+            color: '#fff',
+            fontFamily: 'Consolas, Menlo, Monaco, monospace',
+            fontSize: 13,
+            textAlign: 'center',
+          }}
+        >
+          {paymentStatus}
+        </div>
+      )}
       <div className="row g-0" style={{ height: '100%', margin: 0 }}>
         {/* left: user list */}
         <div

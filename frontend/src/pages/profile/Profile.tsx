@@ -36,7 +36,6 @@ import '../../styles/profile-page.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { SubscriberListModal } from './SubscriberListModal';
 import { SubscribeModal } from './SubscribeModal';
-import { SendCardModal } from '../../components/SendCardModal';
 import { PremiumFanModal } from '../../components/PremiumFanModal';
 
 /** Bio with newlines → line breaks (nl2br) and @mentions linked, as the Blade page does. */
@@ -1246,12 +1245,12 @@ export function FollowButtons({
   onControlPanel?: () => void;
 }) {
   const { t } = useTranslation('content');
+  const navigate = useNavigate();
   const [following, setFollowing] = useState(profile.viewerFollowing);
   const [subscribed, setSubscribed] = useState(profile.viewerSubscribed);
   const [busy, setBusy] = useState(false);
   const [subModalOpen, setSubModalOpen] = useState(false);
-  /* the two dialogs behind the ✉️ — writing to them, and the $10 that buys the right to */
-  const [sendCardOpen, setSendCardOpen] = useState(false);
+  /* the one dialog left behind the ✉️: the $10 that buys the right to write */
   const [premiumOpen, setPremiumOpen] = useState(false);
 
   /* keep the button in sync when the parent refetches the profile (e.g. after a
@@ -1316,9 +1315,9 @@ export function FollowButtons({
        chat_toggle on, or already paid → #uchatmodal, the write-to-them dialog
        otherwise (the creator is busy) → the premium-fan pair, ending at $10
      Only the first of those was wired here, so on anybody else's profile the button did
-     nothing. `#uchatmodal` is a dead target — no blade defines it — but the click is not
-     dead: a Swal bound to the same button further down the file is the real dialog
-     (user_profile.blade.php:1461-1494), and SendCardModal is that one rebuilt. */
+     nothing. Where the blade opens a dialog to write in, this sends the fan to the
+     Messages page with the creator's conversation open — the client's own call, and the
+     same /chatbox thread either way. */
   const blocked = profile.viewerHasBlocked || profile.viewerIsBlockedBy;
   const canWrite = profile.chatToggle || !!profile.viewerPremium;
 
@@ -1331,7 +1330,11 @@ export function FollowButtons({
       setSubModalOpen(true);
       return;
     }
-    if (canWrite) setSendCardOpen(true);
+    /* Writing happens on the Messages page, not in a dialog of its own: it is the same
+       /chatbox conversation either way, and the client wants the fan to land in the real
+       inbox with the creator open. A pair who have never written to each other yet are
+       opened all the same — the page takes the handle and starts an empty thread. */
+    if (canWrite) navigate(`/user/messages?to=${profile.usernameUrl}`);
     else setPremiumOpen(true);
   }
 
@@ -1407,16 +1410,6 @@ export function FollowButtons({
         onClose={() => setSubModalOpen(false)}
         onConfirm={subscribe}
       />
-
-      {sendCardOpen && (
-        <SendCardModal
-          receiverId={profile.id}
-          usernameUrl={profile.usernameUrl}
-          name={profile.name}
-          profilePicture={profile.profilePicture}
-          onClose={() => setSendCardOpen(false)}
-        />
-      )}
 
       {premiumOpen && (
         <PremiumFanModal
