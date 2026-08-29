@@ -148,9 +148,13 @@
   font-weight: 400;
 }
 .ad-cta-btn.cta-send-card .cta-mark { font-size: 0.88em; }
+/* One size across the three. Measured off the client's own cards they came out at 7.5,
+   7.0 and 6.8cqw — 21.75px, 20.3px and 19.72px on a 290px tile — and side by side that
+   read as three different fonts rather than one button in three states. The middle value
+   carries all three; the widths stay as each card drew them. */
 .ad-cta-btn.cta-subscribe    { width: calc(42.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
-.ad-cta-btn.cta-follow       { width: calc(42.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.5cqw * var(--cta-scale)), 38px); }
-.ad-cta-btn.cta-whatsapp     { width: calc(46.7% * var(--cta-scale)); font-size: clamp(7px, calc(6.8cqw * var(--cta-scale)), 34px); }
+.ad-cta-btn.cta-follow       { width: calc(42.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
+.ad-cta-btn.cta-whatsapp     { width: calc(46.7% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
 
 /* ------------------------------------------ size, as the advertiser chose ---- */
 /* Medium is the size drawn on the client's cards. Small and large step either side of it
