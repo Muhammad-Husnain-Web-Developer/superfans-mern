@@ -232,7 +232,7 @@ export function AdsCenter() {
               <h3 style={{ fontWeight: 800 }} dangerouslySetInnerHTML={{ __html: restricted.title }} />
               <p style={{ fontSize: 16 }} dangerouslySetInnerHTML={{ __html: restricted.message }} />
               <button
-                className="continue-btn"
+                className="continue-btn alert-ok"
                 onClick={() => {
                   const openProfile = restricted.profile;
                   setRestricted(null);
@@ -249,23 +249,36 @@ export function AdsCenter() {
       {superVideo && (
         <div className="ads-modal-overlay" onClick={() => setSuperVideo(false)}>
           <div className="ads-modal-box" style={{ maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ background: '#8a2be2', color: '#fff', borderRadius: '0.3rem', boxShadow: 'none', padding: '28px 24px', textAlign: 'center' }}>
+            <div style={{ background: '#8a2be2', color: '#fff', borderRadius: '0.3rem', boxShadow: 'none', padding: '28px 24px', textAlign: 'center', position: 'relative' }}>
+              {/* the cross every other dialog in this module closes with, in the same corner */}
+              <button className="close-modal-btn" onClick={() => setSuperVideo(false)} aria-label="Close">
+                ✖
+              </button>
               <h3 style={{ fontWeight: 700, fontSize: 26 }}>⚠️ 🪄🎬 SUPER VIDEO ADS</h3>
               <p style={{ fontSize: 17 }}>
                 UPS! This tool is only available for <b>VIP Business Accounts</b>. Become a VIP to activate Super
                 Video Ads and other special tools.
               </p>
+              {/* The blade writes `mailto:martinherrada` — no domain, so it is not an address
+                  at all and the button did nothing, in Laravel as much as here. It goes to
+                  the ads admin, the same one every ad email is sent to (ADMIN_ADS_EMAIL).
+                  The blade's own body text is restored with it; MERN had dropped it. */}
               <a
-                href="mailto:martinherrada?subject=VIP Business Account Request – Super Video Ads"
+                href={
+                  'mailto:dmartinherrada@gmail.com' +
+                  '?subject=' +
+                  encodeURIComponent('VIP Business Account Request – Super Video Ads') +
+                  '&body=' +
+                  encodeURIComponent(
+                    'Hello, I would like to become a VIP Business Account to activate Super Video Ads and other special tools.',
+                  )
+                }
                 style={{ textDecoration: 'none' }}
               >
                 <button style={{ background: 'white', color: '#000', fontWeight: 900, border: 'none', padding: '10px 28px', fontSize: 18, borderRadius: 7, cursor: 'pointer' }}>
                   VERIFICATE
                 </button>
               </a>
-              <div style={{ marginTop: 14 }}>
-                <button className="cancel-btn" onClick={() => setSuperVideo(false)}>CLOSE</button>
-              </div>
             </div>
           </div>
         </div>

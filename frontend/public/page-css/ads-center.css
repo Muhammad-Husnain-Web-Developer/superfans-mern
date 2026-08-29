@@ -135,6 +135,13 @@ input[type="range"]::-webkit-slider-thumb {
   font-weight: 900 !important; border-radius: 0 !important; width: 230px !important; cursor: pointer;
 }
 .continue-btn:hover { background-color: green !important; transition: 0.11s !important; }
+
+/* The alert modals ("Only for Business Accounts") carry a bare OK, for which the campaign
+   form's 230px-wide Continue is far too big. Sized to the login button instead — its padding,
+   and a minimum width so a two-letter label lands on the same 96px. Colour and face unchanged. */
+.continue-btn.alert-ok {
+  width: auto !important; min-width: 96px; padding: 0.375rem 11px !important; line-height: 1.5;
+}
 .cancel-btn {
   padding: 11px !important; background-color: #000; border-color: #fff; color: #fff;
   font-family: Consolas, Menlo, Monaco, monospace, serif !important; text-decoration: none;
@@ -239,4 +246,37 @@ body::-webkit-scrollbar-thumb {
    with a single light hairline, and that is what goes here. */
 .ads-sidebar {
   border-right: 1px solid #e6e6e6 !important;
+}
+
+/* ---- focus ring ------------------------------------------------------------
+   Chrome's own focus mark is `outline: auto`, which it paints as a dark line with a white
+   one inside it. On this module's black panels that reads exactly as the client described:
+   the button's border turning two colours, black and white, the moment it is clicked.
+
+   One deliberate ring replaces it — and only on keyboard focus. `:focus-visible` is what
+   the browser sets when someone tabs; a mouse click no longer leaves any mark, while
+   tabbing still shows plainly where you are. Removing the ring outright would have taken
+   that away from anyone who does not use a mouse. */
+button:focus,
+a:focus,
+input[type='submit']:focus,
+[role='button']:focus,
+.ad-card:focus {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible,
+input[type='submit']:focus-visible,
+[role='button']:focus-visible,
+.ad-card:focus-visible {
+  outline: 2px solid #8a2be2;
+  outline-offset: 2px;
+}
+
+/* the create/profile dialogs are near-black, where purple barely shows */
+.ads-modal-box button:focus-visible,
+.ads-modal-box a:focus-visible,
+.ads-modal-box input[type='submit']:focus-visible {
+  outline-color: #fff;
 }
