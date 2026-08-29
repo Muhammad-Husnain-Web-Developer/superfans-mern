@@ -82,6 +82,19 @@ export function Messages() {
   /* the $10 priority access is reconciled here now, because this is where its checkout
      returns to — the webhook cannot reach a developer's machine */
   const paymentStatus = usePaymentReturn();
+  /* It says its piece and goes. The page is a fixed 100vh with the message box at its
+     foot, so a bar in the flow pushes that box off the bottom edge — this one floats over
+     the top instead, fades at 3.5s and is gone by 4. */
+  const [flash, setFlash] = useState<'in' | 'out' | 'gone'>('in');
+  useEffect(() => {
+    if (!paymentStatus) return;
+    const fade = setTimeout(() => setFlash('out'), 3500);
+    const drop = setTimeout(() => setFlash('gone'), 4000);
+    return () => {
+      clearTimeout(fade);
+      clearTimeout(drop);
+    };
+  }, [paymentStatus]);
 
   // real-time: append messages for the open conversation, and bump the sender to the top
   useEffect(() => {
@@ -149,15 +162,23 @@ export function Messages() {
     <div id="chat-container" style={{ height: '100vh', width: '100%', margin: 0, overflow: 'hidden' }}>
       {/* one line confirming the priority access just bought, since the fan lands here
           straight off the checkout rather than on a page of its own */}
-      {paymentStatus && (
+      {paymentStatus && flash !== 'gone' && (
         <div
           style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 10000,
             padding: '8px 14px',
             background: '#5cb85c',
             color: '#fff',
             fontFamily: 'Consolas, Menlo, Monaco, monospace',
             fontSize: 13,
             textAlign: 'center',
+            opacity: flash === 'out' ? 0 : 1,
+            transition: 'opacity 0.45s',
+            pointerEvents: 'none',
           }}
         >
           {paymentStatus}
