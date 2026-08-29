@@ -4,8 +4,11 @@ import { AdminShell, AdminModal } from './AdminShell';
 
 interface AdminUser {
   id: string; name: string; usernameUrl: string; email: string; role: string;
-  status: string; verified: boolean; vip: boolean; noOfFollowers: number;
+  status: string; verified: boolean; vip: boolean; noOfFollowers: number; earnings: number;
 }
+
+/** the blade prints earnings as a plain 2-decimal figure; the table follows it */
+const money = (n: number) => `$${(Math.round(n * 100) / 100).toFixed(2)}`;
 
 /** Admin Users — port of admin/users.blade.php + edit_user.blade.php (list / edit / delete). */
 export function AdminUsers() {
@@ -32,13 +35,14 @@ export function AdminUsers() {
       {loading ? <p>Loading…</p> : (
         <div style={{ overflowX: 'auto' }}>
           <table className="table table-bordered table-sm bg-white">
-            <thead className="thead-dark"><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Verified</th><th>VIP</th><th>Followers</th><th>Actions</th></tr></thead>
+            <thead className="thead-dark"><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Verified</th><th>VIP</th><th>Followers</th><th>Earnings</th><th>Actions</th></tr></thead>
             <tbody>
               {filtered.slice(0, 300).map((u) => (
                 <tr key={u.id}>
                   <td>@{u.usernameUrl}</td><td>{u.name}</td><td>{u.email}</td><td>{u.role}</td>
                   <td><span className={`badge badge-${u.status === 'active' ? 'success' : 'secondary'}`}>{u.status}</span></td>
                   <td>{u.verified ? '✔' : '—'}</td><td>{u.vip ? '✔' : '—'}</td><td>{u.noOfFollowers.toLocaleString()}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{money(u.earnings)}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <button className="btn btn-sm btn-success mr-1" onClick={() => setEditing(u)}>Edit</button>
                     <button className="btn btn-sm btn-danger" onClick={() => del(u)}>Delete</button>
@@ -58,11 +62,21 @@ export function AdminUsers() {
 
 function EditUser({ user, onClose, onSaved }: { user: AdminUser; onClose: () => void; onSaved: () => void }) {
   const [f, setF] = useState({ name: user.name, email: user.email, usernameUrl: user.usernameUrl, role: user.role, status: user.status, verified: user.verified, vip: user.vip });
+  /* kept out of `f` because it is typed and must go over as a number, not the string an
+     input hands back — the endpoint takes z.number() */
+  const [earnings, setEarnings] = useState(String(user.earnings ?? 0));
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof f, v: string | boolean) => setF((s) => ({ ...s, [k]: v }));
   async function save(e: React.FormEvent) {
     e.preventDefault(); setBusy(true);
-    try { await api.put(`/admin/users/${user.id}`, f); onSaved(); } finally { setBusy(false); }
+    const amount = Number(earnings);
+    try {
+      await api.put(`/admin/users/${user.id}`, {
+        ...f,
+        ...(Number.isFinite(amount) && amount >= 0 ? { earnings: amount } : {}),
+      });
+      onSaved();
+    } finally { setBusy(false); }
   }
   return (
     <AdminModal title={`Edit @${user.usernameUrl}`} onClose={onClose}>
@@ -84,6 +98,21 @@ function EditUser({ user, onClose, onSaved }: { user: AdminUser; onClose: () => 
         </div>
         <div className="form-check"><input type="checkbox" className="form-check-input" id="ev" checked={f.verified} onChange={(e) => set('verified', e.target.checked)} /><label className="form-check-label" htmlFor="ev">Verified</label></div>
         <div className="form-check mb-3"><input type="checkbox" className="form-check-input" id="vp" checked={f.vip} onChange={(e) => set('vip', e.target.checked)} /><label className="form-check-label" htmlFor="vp">VIP</label></div>
+        {/* One figure per user, as in Laravel: `users.earnings` is the total and
+            earnings_logs only records what each payment was for. Video Ads has no bucket
+            of its own, so this is where the client sets it. */}
+        <div className="form-group">
+          <label>Earnings (total, $)</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            className="form-control"
+            value={earnings}
+            onChange={(e) => setEarnings(e.target.value)}
+          />
+          <small className="text-muted">Set by hand — subscriptions, video ads and the rest all add up here.</small>
+        </div>
         <button className="btn btn-primary" disabled={busy}>Save</button>
       </form>
     </AdminModal>

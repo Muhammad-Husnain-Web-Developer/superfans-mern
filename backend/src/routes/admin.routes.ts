@@ -75,7 +75,7 @@ adminRouter.get(
   requireAuth,
   admin(async (_req, res) => {
     const users = await User.find({ role: { $nin: ['admin', 'dummy'] } } as Record<string, unknown>)
-      .select('name usernameUrl email role status verified vip noOfFollowers growthStatus growthGearLevel createdAt')
+      .select('name usernameUrl email role status verified vip noOfFollowers earnings growthStatus growthGearLevel createdAt')
       .sort({ createdAt: -1 })
       .limit(1000)
       .lean();
@@ -106,6 +106,11 @@ adminRouter.put(
         status: z.enum(['active', 'suspended', 'deleted']).optional(),
         verified: z.boolean().optional(),
         vip: z.boolean().optional(),
+        /* Set by hand from the admin table. There is one earnings figure per user — in
+           Laravel too, where `users.earnings` is the total and `earnings_logs` only breaks
+           down what it was paid for. Video Ads has no bucket of its own, so the client's
+           "manipulate Video Ads earnings" lands here, on the total, as he confirmed. */
+        earnings: z.number().min(0).optional(),
       })
       .parse(req.body);
     await User.updateOne({ _id: req.params.id }, { $set: body });
@@ -148,7 +153,7 @@ adminRouter.get(
     const [total, users] = await Promise.all([
       User.countDocuments(filter),
       User.find(filter)
-        .select('name usernameUrl email role status verified vip noOfFollowers growthStatus growthGearLevel createdAt')
+        .select('name usernameUrl email role status verified vip noOfFollowers earnings growthStatus growthGearLevel createdAt')
         .sort({ mysqlId: 1, createdAt: 1 })
         .skip((page - 1) * perPage)
         .limit(perPage)
@@ -701,11 +706,12 @@ adminRouter.get('/orders/:id', requireAuth, admin(async (req, res) => {
 }));
 
 /* ================= DTOs ================= */
-function userDto(u: { _id: unknown; name?: string; usernameUrl?: string; email?: string; role?: string; status?: string; verified?: boolean; vip?: boolean; noOfFollowers?: number; growthStatus?: string; growthGearLevel?: number; createdAt?: Date }) {
+function userDto(u: { _id: unknown; name?: string; usernameUrl?: string; email?: string; role?: string; status?: string; verified?: boolean; vip?: boolean; noOfFollowers?: number; earnings?: number; growthStatus?: string; growthGearLevel?: number; createdAt?: Date }) {
   return {
     id: String(u._id), name: u.name ?? '', usernameUrl: u.usernameUrl ?? '', email: u.email ?? '',
     role: u.role ?? 'user', status: u.status ?? 'active', verified: !!u.verified, vip: !!u.vip,
-    noOfFollowers: u.noOfFollowers ?? 0, growthStatus: u.growthStatus ?? 'inactive', growthGearLevel: u.growthGearLevel ?? 1,
+    noOfFollowers: u.noOfFollowers ?? 0, earnings: u.earnings ?? 0,
+    growthStatus: u.growthStatus ?? 'inactive', growthGearLevel: u.growthGearLevel ?? 1,
     createdAt: u.createdAt,
   };
 }
