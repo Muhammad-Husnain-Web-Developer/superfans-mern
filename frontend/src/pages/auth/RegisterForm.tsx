@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { InfluencerSearch } from '../profile/ProfileSidebar';
+
+/**
+ * Referrals are paused at the client's request — the field below is off and the earnings
+ * they produce are out of the control panel. Set this to true to bring the field back;
+ * nothing else needs touching, `referred` still rides along in the submit payload.
+ */
+const REFERRALS_ENABLED = false;
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { api } from '../../api/client';
@@ -455,7 +462,12 @@ export function RegisterForm({ role }: { role: 'user' | 'influencer' }) {
         />,
       )}
 
-      {role === 'influencer' &&
+      {/* Hidden, not removed: "Referals you can hide in the FORM REGISTER temporally
+          and place this task." The client is holding the whole referrals feature back —
+          its earnings are out of the control panel too — and means to pick it up later.
+          REFERRALS_ENABLED above is the one switch; everything behind it stays compiled
+          and type-checked so it cannot rot while it waits. */}
+      {REFERRALS_ENABLED && role === 'influencer' &&
         group(
           <>
             <label className="auth-label">{t('invited_by')}</label>
