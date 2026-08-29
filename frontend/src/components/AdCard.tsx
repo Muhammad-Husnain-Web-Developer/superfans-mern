@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdLeadForm } from '../pages/ads/AdLeadForm';
 import { assetImage, isVideoFile, videoMime } from '../utils/format';
@@ -85,21 +86,68 @@ function safeLink(link: string | undefined): string | null {
 
 export function AdCard({ item, showType = false }: { item: AdCardItem; showType?: boolean }) {
   const navigate = useNavigate();
+  const [formOpen, setFormOpen] = useState(false);
   const media = item.media ?? '';
   const action = adAction(item.adType);
   const handle = item.advertiser?.usernameUrl ?? null;
 
   /* A clients-form ad is its own tile: the creative with the advertiser's button under it,
-     walking the viewer through the formulary in place rather than leading anywhere. */
+     walking the viewer through the formulary in place rather than leading anywhere.
+     We now render the tile like any other ad, with the button respecting size/position,
+     and open the form in a modal when clicked. */
   if (item.adType === 'clients-form' && item.adId) {
+    const label = item.buttonAction || AD_ACTION_LABEL[action];
+
     return (
-      <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
-        <p className="feed_posts_heading_p" style={{ position: 'relative', fontSize: 14 }}>
-          <span>Super Ads</span>
-          {showType && <TypeTag adType={item.adType} />}
-        </p>
-        <AdLeadForm adId={item.adId} media={media} />
-      </div>
+      <>
+        <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
+          <p className="feed_posts_heading_p" style={{ position: 'relative', fontSize: 14 }}>
+            <span>Super Ads</span>
+            {showType && <TypeTag adType={item.adType} />}
+          </p>
+
+          <div className="ad-media">
+            {isVideoFile(media) ? (
+              <video
+                className="autoplay-video"
+                controlsList="nodownload"
+                style={{ maxWidth: '100%' }}
+                controls
+                loop
+                muted
+                playsInline
+              >
+                <source src={assetImage(media)} type={videoMime(media)} />
+              </video>
+            ) : (
+              <img
+                src={assetImage(media)}
+                alt="Advertisement"
+                className="img-responsive posttt-img"
+                style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
+              />
+            )}
+
+            <AdCta
+              action={action}
+              label={label}
+              href={null}
+              onClick={() => setFormOpen(true)}
+              size={item.buttonSize ?? 'medium'}
+              position={item.buttonPosition ?? 'bottom'}
+              isForm={true}  // <-- NEW: tells CSS to auto-size for long labels
+            />
+          </div>
+        </div>
+
+        {formOpen && (
+          <div className="ads-modal-overlay" onClick={() => setFormOpen(false)}>
+            <div className="ads-modal-box" style={{ maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
+              <AdLeadForm adId={item.adId} media={media} onClose={() => setFormOpen(false)} />
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
@@ -206,6 +254,7 @@ function AdCta({
   onClick,
   size = 'medium',
   position = 'bottom',
+  isForm = false,  // <-- NEW prop
 }: {
   action: AdAction;
   label: string;
@@ -213,9 +262,12 @@ function AdCta({
   onClick: (() => void) | null;
   size?: AdButtonSize;
   position?: AdButtonPosition;
+  isForm?: boolean;
 }) {
   /* Older ads carry neither choice; both fall back to what the client drew. */
-  const className = `ad-cta-btn cta-${action} size-${size} pos-${position}`;
+  let className = `ad-cta-btn cta-${action} size-${size} pos-${position}`;
+  if (isForm) className += ' form-cta';  // <-- add extra class for form buttons
+
   /* Call and Send Card wear their mark on the left, the rest on the right — as drawn */
   const markFirst = action === 'call' || action === 'send-card';
   const inner = markFirst ? (
@@ -265,7 +317,5 @@ function AdCta({
 
 /** Only the preview page asks for this: the tile says which type of ad it is. */
 function TypeTag({ adType }: { adType: string | null | undefined }) {
-  return (
-    <span className="ad-type-tag">{adType ?? 'no type'}</span>
-  );
+  return <span className="ad-type-tag">{adType ?? 'no type'}</span>;
 }

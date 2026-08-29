@@ -65,7 +65,7 @@
   /* Set per action below. The client leaves a different amount of air between the words
      and the mark on each card — none to speak of on More details, a third of the button on
      Call — so one figure for all six would be wrong on five of them. */
-  gap: calc(1cqw * var(--cta-scale));
+  /* gap: calc(1cqw * var(--cta-scale)); */
   /* Measured on all six cards: 29.4, 29.3, 29.3, 30.3, 30.3 and 28.9 per cent of the
      button's own width. A quarter was too short by a fifth. */
   aspect-ratio: 1 / 0.295;
@@ -99,11 +99,20 @@
   transition: filter 0.2s ease;
 }
 
-/* The widths the client drew, each as its share of the creative — and with them the size
-   of the lettering, which he set per button so that each one's words fill it. */
 .ad-cta-btn.cta-more-details { width: calc(54.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.5cqw * var(--cta-scale)), 38px); }
-/* its mark measures 37px on the card, a shade under the lettering's own em */
 .ad-cta-btn.cta-more-details .cta-mark { font-size: 0.88em; }
+
+/* Override for clients‑form ads (custom button labels) – auto‑size to fit the text */
+.ad-cta-btn.cta-more-details.form-cta {
+  width: auto;
+  max-width: 82%;
+  min-width: 30%;
+  padding: 0 1.2em;
+  font-size: clamp(6px, calc(5.5cqw * var(--cta-scale)), 32px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 /* Call alone is drawn in a monospace face — the client asked for that one kept as it is
    in his card, where "Call" fills two thirds of the button in a way no proportional face
    can at a size that still fits the button's height. */
@@ -128,7 +137,9 @@
 .ad-cta-btn.cta-call { gap: calc(8cqw * var(--cta-scale)); }        /* 33px */
 .ad-cta-btn.cta-send-card { gap: calc(7cqw * var(--cta-scale)); }   /* 29px */
 .ad-cta-btn.cta-subscribe,
-.ad-cta-btn.cta-follow { gap: calc(4.6cqw * var(--cta-scale)); }    /* 19px */
+.ad-cta-btn.cta-follow { 
+  /* gap: calc(4.6cqw * var(--cta-scale));  */
+}    /* 19px */
 .ad-cta-btn.cta-whatsapp { gap: calc(4.6cqw * var(--cta-scale)); }
 /* The client sets this one's words in the regular weight, not the bold the others
    carry — his card, so his weight. */
