@@ -165,7 +165,7 @@
    them rather than a border */
 .lead-form-btn {
   min-width: 112px;
-  padding: 11px 20px;
+  padding: 8px 20px;
  border: 5px solid lightgray;
   /* border-radius: 2px; */
   background: #ffffff;
@@ -185,9 +185,9 @@
 .lead-form-btn-send {
   min-width: 132px;
   padding: 11px 22px;
-  border: 3px solid #30c013;
+  border: 3px solid green;
   border-radius: 2px;
-  background: #79e157;
+  background: limegreen;
   color: #000000;
   font-family: inherit;
   font-size: 16px;
@@ -195,12 +195,15 @@
   text-align: center;
   text-decoration: none;
   cursor: pointer;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.18);
+  
 }
 
 .lead-form-btn-send:hover {
-  background: #6cd94a;
-  color: #000000;
+  background: green;
+  color: white;
+ transition:0.5s !important;
+ outline: none;
+ 
 }
 
 .lead-form-btn-send:disabled {
