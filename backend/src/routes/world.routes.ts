@@ -155,10 +155,17 @@ worldRouter.get(
     }
 
     // === ads: 3 random active, injected after every 6th post ===
-    const ads = await Ad.aggregate<{ _id: Types.ObjectId; media: string; link?: string; adType?: string }>([
+    const ads = await Ad.aggregate<{
+      _id: Types.ObjectId;
+      media: string;
+      link?: string;
+      adType?: string;
+      buttonSize?: string;
+      buttonPosition?: string;
+    }>([
       { $match: { status: true } },
       { $sample: { size: 3 } },
-      { $project: { media: 1, link: 1, adType: 1 } },
+      { $project: { media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1 } },
     ]);
 
     const taggedAvatars = await resolveTaggedAvatars(pagePosts);
@@ -199,12 +206,17 @@ worldRouter.get(
             type: 'ad',
             id: `ad_${String(ads[adIndex]._id)}`,
             media: ads[adIndex].media,
-            link: ads[adIndex].link ?? '#',
+            /* an old messages ad holds a mailto: to its advertiser; their address is not
+               the feed's to publish, and the tile navigates in-app instead */
+            link: /^mailto:/i.test(ads[adIndex].link ?? '') ? '' : ads[adIndex].link ?? '#',
             /* the blade branches on the ad's own type here: a clients-form ad draws its
                lead form in the tile rather than a link, so the feed has to say which is
                which and give the plain id the formulary is looked up by */
             adId: String(ads[adIndex]._id),
             adType: ads[adIndex].adType ?? null,
+            /* how big the advertiser asked for the button, and where on the creative */
+            buttonSize: ads[adIndex].buttonSize ?? 'medium',
+            buttonPosition: ads[adIndex].buttonPosition ?? 'bottom',
           });
         }
       }

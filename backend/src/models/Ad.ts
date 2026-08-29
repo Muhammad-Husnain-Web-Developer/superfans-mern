@@ -6,6 +6,11 @@ export interface IAd {
   adType?: string;
   media?: string | null;
   link?: string;
+  /** How big the call-to-action is drawn on the creative, and where on it. The advertiser
+   *  picks both when the ad is created; older rows have neither and fall back to the
+   *  figures measured off the client's own cards (medium, at the foot). */
+  buttonSize?: 'small' | 'medium' | 'large';
+  buttonPosition?: 'top' | 'center' | 'bottom';
   status: boolean;
   approved: boolean;
   amount?: number;
@@ -24,6 +29,8 @@ const adSchema = new Schema<IAd>(
     adType: String,
     media: { type: String, default: null },
     link: String,
+    buttonSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
+    buttonPosition: { type: String, enum: ['top', 'center', 'bottom'], default: 'bottom' },
     status: { type: Boolean, default: false, index: true },
     approved: { type: Boolean, default: false },
     amount: Number,

@@ -36,8 +36,8 @@
 .modal.in,
 .modal.show,
 .ads-modal-overlay,
-.modal-backdrop.show,
-.modal-backdrop.in,
+/* .modal-backdrop.show,
+.modal-backdrop.in, */
 .sf-modal-scrim {
   animation: sfBackdropFade 0.22s ease-out both;
 }

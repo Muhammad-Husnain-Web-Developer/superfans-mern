@@ -249,7 +249,7 @@
     }
 
     .stats-wrapper.has-actions .eye-icon {
-        font-size: 16px;
+        font-size: 20px;
     }
 
     .stats-wrapper.has-actions .rating-pill {
@@ -279,7 +279,7 @@
        desktop card has no room for it — its row is 290px wide and the bar alone is 146 —
        but a phone gives the card the full screen, so only this breakpoint carries it. */
     .stats-wrapper.has-actions .heart {
-        font-size: 28px;
+        font-size: 22px;
     }
 
     .stats-wrapper.has-actions .poop {
@@ -287,8 +287,8 @@
     }
 
     .stats-wrapper.has-actions .poop-img {
-        width: 28px;
-        height: 28px;
+        width: 22px;
+        height: 22px;
     }
 
 

@@ -1222,7 +1222,12 @@ export function FollowButtons({
     />
   );
 
-  /* owner: goes to messages; other users: opens the chat modal (built in the chat milestone) */
+  /* user_profile.blade.php:1047-1066 — the blade branches on whose page it is:
+       own page  → window.location = '…/influencer/messages'
+       otherwise → data-target="#paymentModalCenter", the purple subscribe modal
+     Only the first of those was wired here, so on anybody else's profile the button did
+     nothing at all. (The blade also drops the button entirely when either party has blocked
+     the other; the profile payload does not carry that yet, so it is not branched on here.) */
   const chatBtn = (
     <button
       id="chat_with_me_btn"
@@ -1230,6 +1235,7 @@ export function FollowButtons({
       className="btn btn-success"
       onClick={() => {
         if (isOwner) window.location.href = '/user/messages';
+        else setSubModalOpen(true);
       }}
       style={{ border: '2px solid #409c40', width: 65, height: 59, display: 'inline-block', marginLeft: 1 }}
     >

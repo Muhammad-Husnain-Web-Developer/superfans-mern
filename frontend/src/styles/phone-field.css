@@ -1,0 +1,26 @@
+/* The plugin wraps the input in a .iti of its own, which defaults to shrink-to-fit. Every
+   form here lays its fields out full width, so the wrapper has to carry that through or the
+   field ends up narrower than the ones above and below it. */
+.iti {
+  display: block;
+  width: 100%;
+}
+
+.iti input,
+.iti input[type='tel'] {
+  width: 100%;
+}
+
+/* the flag button sits on the field's own background rather than the plugin's grey, so the
+   control reads as one input in both the auth pages and the ads forms */
+.iti--separate-dial-code .iti__selected-flag {
+  background-color: transparent;
+}
+
+.iti--separate-dial-code .iti__selected-dial-code {
+  font-size: inherit;
+  /* the dial code stands on the input's own white ground, so it is stated rather than
+     inherited — the ads forms sit inside a purple panel whose text is white, which left the
+     code invisible */
+  color: #000;
+}

@@ -1,0 +1,355 @@
+/* The call to action on an ad's creative, and the type tag the preview page adds.
+ *
+ * Every value here was measured off the client's own cards in /ads-images, pixel by pixel:
+ * the button sits on the lower part of the picture, square-cornered, with a heavy border in
+ * a second shade of its own colour. The six are not one button in six labels — each carries
+ * its own pair of colours, and that is what tells them apart at a glance.
+ *
+ *   measured (creative 415px wide in every card)
+ *   ────────────────────────────────────────────────────────────────────────────
+ *                    border     fill       lettering   button (of the 415px creative)
+ *   More details     #6d0acd    #5558e0    white       228 x 67  = 54.9%, h/w 29.4%
+ *   Call             #36b823    #73e553    black       229 x 67  = 55.2%, h/w 29.3%
+ *   Send Card        #36b823    #73e553    black       229 x 67  = 55.2%, h/w 29.3%
+ *   Subscribe        #12d146    #c3ff0d    black       178 x 54  = 42.9%, h/w 30.3%
+ *   Follow           #12d146    #c3ff0d    black       178 x 54  = 42.9%, h/w 30.3%
+ *   Whatsapp         #4b4c52    #b3b3b3    black       194 x 56  = 46.7%, h/w 28.9%
+ *   Border measures 6-7px on every one of them.
+ *
+ * Every size is therefore held as a share of the creative rather than in fixed pixels: the
+ * card is 415px in the mockup and about 330 on our desktop wall and half that on a phone,
+ * and the button has to read the same on all three. `cqw` is one per cent of the creative's
+ * width, so the numbers below are the mockup's own measurements divided by 415.
+ */
+
+/* the creative is the button's frame of reference */
+.work-item .ad-media {
+  position: relative;
+  display: block;
+  line-height: 0;
+}
+
+/* The original style.css floats the picture inside this anchor (`.work-item a img
+   { float: left }`), so the anchor collapsed to nothing and the box the button hangs off
+   had no height. A block formatting context makes it contain its float again. */
+.work-item .ad-media-link,
+.work-item > a:has(> img.posttt-img),
+.work-item > a:has(> video) {
+  display: flow-root;
+  line-height: 0;
+}
+
+.work-item .ad-media {
+  /* the yardstick for every size below */
+  container-type: inline-size;
+}
+
+.work-item .ad-cta-btn,
+.ad-cta-btn {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  /* measured: the foot of the button sits about a twentieth of the picture above its base.
+     `.pos-top` / `.pos-center` move it, per the advertiser's own choice on the form. */
+  bottom: 5%;
+  z-index: 2;
+
+  /* Everything below is multiplied by this. The client's cards were drawn at what we call
+     medium, so medium is 1 and the other two step away from it — one knob rather than three
+     sets of numbers, so a change to the drawn design still only has to be made once. */
+  --cta-scale: 1;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Set per action below. The client leaves a different amount of air between the words
+     and the mark on each card — none to speak of on More details, a third of the button on
+     Call — so one figure for all six would be wrong on five of them. */
+  gap: calc(1cqw * var(--cta-scale));
+  /* Measured on all six cards: 29.4, 29.3, 29.3, 30.3, 30.3 and 28.9 per cent of the
+     button's own width. A quarter was too short by a fifth. */
+  aspect-ratio: 1 / 0.295;
+
+  /* the width is set per action below — each was drawn to its own measurement */
+  box-sizing: border-box;
+  /* 10px of air above and below the lettering, and enough at the sides for the border */
+  padding: 0 calc(0.6cqw * var(--cta-scale));
+  /* 7px on a 415px card */
+  border: calc(1.7cqw * var(--cta-scale)) solid #000;
+  /* square, as drawn */
+  border-radius: 0;
+
+  /* The three mockups that show lettering plainly do not agree with one another: "More
+     details" is a bold proportional sans, "Send Card" the same face unbolded, and "Call" a
+     monospace. They are screenshots of this app with a button pasted on in an image editor,
+     so the faces are whatever that editor reached for rather than a decision. One face is
+     used here for all six — Montserrat, which the app already loads and already sets its
+     own headings in — and the client can name a different one. */
+  font-family: 'Roboto', 'Montserrat', Arial, Helvetica, sans-serif;
+  font-weight: 700;
+  /* 30px on a 415px card, held between what is readable and what the mockup drew */
+  /* set per action below: the client drew each button's lettering to fill its own
+     width, so a short word like "Call" carries a much larger face than "More details" */
+  font-size: clamp(8px, calc(6.4cqw * var(--cta-scale)), 34px);
+  line-height: 1;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: filter 0.2s ease;
+}
+
+/* The widths the client drew, each as its share of the creative — and with them the size
+   of the lettering, which he set per button so that each one's words fill it. */
+.ad-cta-btn.cta-more-details { width: calc(54.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.5cqw * var(--cta-scale)), 38px); }
+/* its mark measures 37px on the card, a shade under the lettering's own em */
+.ad-cta-btn.cta-more-details .cta-mark { font-size: 0.88em; }
+/* Call alone is drawn in a monospace face — the client asked for that one kept as it is
+   in his card, where "Call" fills two thirds of the button in a way no proportional face
+   can at a size that still fits the button's height. */
+.ad-cta-btn.cta-call {
+  width: calc(55.2% * var(--cta-scale));
+  /* Measured on the card: 27px of cap height against the other two's 22 — near enough to
+     read as the same size, which is what the client asked for, but it is his own figure
+     rather than an exact match. A monospace face carries a shorter cap for its size (0.64
+     of it against Roboto's 0.71), so the size is stepped up by that ratio. */
+  font-size: clamp(8px, calc(10.2cqw * var(--cta-scale)), 42px);
+  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono',
+    'DejaVu Sans Mono', 'Courier New', monospace;
+}
+/* Its phone measures 37px on the card, against 27px of cap height beside it — the one
+   mark drawn larger than its own lettering. */
+.ad-cta-btn.cta-call .cta-mark {
+  /* an emoji glyph draws about a quarter wider than its font-size, so 37px of mark is
+     asked for at rather less than that */
+  font-size: 0.65em;
+}
+/* the air between mark and words, measured on each card (415px creative) */
+.ad-cta-btn.cta-call { gap: calc(8cqw * var(--cta-scale)); }        /* 33px */
+.ad-cta-btn.cta-send-card { gap: calc(7cqw * var(--cta-scale)); }   /* 29px */
+.ad-cta-btn.cta-subscribe,
+.ad-cta-btn.cta-follow { gap: calc(4.6cqw * var(--cta-scale)); }    /* 19px */
+.ad-cta-btn.cta-whatsapp { gap: calc(4.6cqw * var(--cta-scale)); }
+/* The client sets this one's words in the regular weight, not the bold the others
+   carry — his card, so his weight. */
+.ad-cta-btn.cta-send-card {
+  width: calc(55.2% * var(--cta-scale));
+  font-size: clamp(7px, calc(7.5cqw * var(--cta-scale)), 38px);
+  font-weight: 400;
+}
+.ad-cta-btn.cta-send-card .cta-mark { font-size: 0.88em; }
+.ad-cta-btn.cta-subscribe    { width: calc(42.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
+.ad-cta-btn.cta-follow       { width: calc(42.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.5cqw * var(--cta-scale)), 38px); }
+.ad-cta-btn.cta-whatsapp     { width: calc(46.7% * var(--cta-scale)); font-size: clamp(7px, calc(6.8cqw * var(--cta-scale)), 34px); }
+
+/* ------------------------------------------ size, as the advertiser chose ---- */
+/* Medium is the size drawn on the client's cards. Small and large step either side of it
+   by a quarter, which is enough to read as a different size without the words having to
+   be re-fitted to the button. */
+.ad-cta-btn.size-small {
+  --cta-scale: 0.76;
+}
+.ad-cta-btn.size-medium {
+  --cta-scale: 1;
+}
+.ad-cta-btn.size-large {
+  --cta-scale: 1.24;
+}
+
+/* -------------------------------------- position, as the advertiser chose ---- */
+/* The same inset from whichever edge it is pinned to, so top and bottom are mirror images
+   and centre sits on the middle line. `left`/`translateX` are unchanged — only the vertical
+   is decided here, and centre has to restate the horizontal because it shares the property. */
+.ad-cta-btn.pos-top {
+  top: 5%;
+  bottom: auto;
+}
+.ad-cta-btn.pos-center {
+  top: 50%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+}
+.ad-cta-btn.pos-bottom {
+  top: auto;
+  bottom: 5%;
+}
+
+.work-item .ad-cta-btn:hover,
+.work-item .ad-cta-btn:focus,
+.ad-cta-btn:hover,
+.ad-cta-btn:focus {
+  filter: brightness(1.08);
+  text-decoration: none;
+}
+
+/* ------------------------------------------------ the six, as measured ------- */
+
+.ad-cta-btn.cta-more-details {
+  background: #5558e0;
+  border-color: #6d0acd;
+  color: #fff;
+}
+
+.ad-cta-btn.cta-call,
+.ad-cta-btn.cta-send-card {
+  background: #73e553;
+  border-color: #36b823;
+  color: #000;
+}
+
+.ad-cta-btn.cta-subscribe,
+.ad-cta-btn.cta-follow {
+  background: #c3ff0d;
+  border-color: #12d146;
+  color: #000;
+}
+
+.ad-cta-btn.cta-whatsapp {
+  background: #b3b3b3;
+  border-color: #4b4c52;
+  color: #000;
+}
+
+/* The mark rides with the lettering: measured on the client's Follow card, the flag and the
+   words start on the very same line (both at y=679) and stand to the same height. Sizing it
+   in `em` keeps that true whatever size a given button's words are set at. */
+.ad-cta-btn .cta-mark {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  font-size: 1em;
+  line-height: 1;
+}
+/* Measured on the Follow card: the flag stands 24 x 28 against 22px of cap height, so it
+   is a little wider than the caps and a quarter taller. */
+.ad-cta-btn .cta-mark svg {
+  width: 0.78em;
+  height: 0.91em;
+}
+
+.ad-cta-btn .cta-mark svg {
+  display: block;
+}
+
+/* An ad with nowhere to lead — a migrated row with no link, most often — still shows its
+   button so every tile reads the same; it just does not pretend to be clickable. */
+.ad-cta-btn[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Nothing is restated for the phone: every size above is a share of the creative, so the
+   button shrinks with the card on its own. */
+
+/* preview page only: which type of ad this tile is */
+.ad-type-tag {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: #000;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: lowercase;
+  vertical-align: middle;
+}
+
+/* Preview page only. The World's grid floats its columns, and floats snag on each other
+   when tiles are of different heights — which ad creatives always are, since they are
+   whatever shape the advertiser uploaded. The tiles keep their own classes, and so their
+   exact appearance; only the container laying them out changes. */
+.ads-preview-grid #post-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+.ads-preview-grid .work-item {
+  float: none;
+}
+
+/* ------------------------------- the choice, on the create form -------------- */
+/* The advertiser picks the button's size and place before paying, and sees it on their own
+   artwork while they do. The preview is a feed tile at a smaller scale — the button inside
+   it is the real one, so nothing here can drift away from what the feed will draw. */
+.ads-cta-choice {
+  margin: 0 auto 18px;
+  width: 75%;
+  text-align: left;
+}
+
+.ads-cta-choice h5 {
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+}
+
+.ads-cta-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ads-cta-row label {
+  flex: 1 1 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.ads-cta-preview {
+  width: 260px;
+  max-width: 100%;
+  margin: 12px auto 0;
+  float: none;
+}
+
+.ads-cta-preview .ad-media {
+  border-radius: 14px;
+  overflow: hidden;
+  background: #efefef;
+}
+
+.ads-cta-preview .ad-media img {
+  display: block;
+  width: 100%;
+  /* a feed tile is taller than it is wide; the artwork is cropped to that so the button
+     lands where it will land on the wall */
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  float: none;
+}
+
+.ads-cta-preview-empty {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  text-align: center;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* the preview's button is for looking at, not for pressing */
+.ads-cta-preview .ad-cta-btn {
+  pointer-events: none;
+}
+
+/* the create form's own error line, above the Empezar campaña button */
+.ads-form-error {
+  margin: 16px auto 0;
+  width: 75%;
+  padding: 10px 14px;
+  border: 2px solid #b00020;
+  border-radius: 8px;
+  background: rgba(176, 0, 32, 0.12);
+  color: #ffd9de;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: left;
+}

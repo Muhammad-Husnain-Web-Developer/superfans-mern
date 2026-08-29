@@ -1,9 +1,11 @@
 import { Router } from 'express';
+import fs from 'node:fs';
+import path from 'node:path';
 import { z } from 'zod';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
-import { saveBase64Image } from '../services/storage.js';
+import { saveBase64Media } from '../services/storage.js';
 import { paymentProvider } from '../services/payments/index.js';
 import { sendMail } from '../services/mailer.js';
 import { adCreatedUser, adCreatedAdmin, adStatusChanged } from '../services/adEmails.js';
@@ -191,6 +193,90 @@ adsRouter.post(
       { upsert: true },
     );
     res.json({ success: true });
+  }),
+);
+
+/** Is an ad's artwork actually present? The same two folders `/assets/images` serves. */
+function mediaOnDisk(media: string | null | undefined): boolean {
+  const file = String(media ?? '').trim();
+  if (!file) return false;
+  /* a filename only — anything with a path separator is not ours to look up */
+  if (/[/\\]/.test(file)) return false;
+  const dirs = [path.resolve(env.UPLOADS_DIR)];
+  if (env.LEGACY_ASSETS_DIR) dirs.push(path.resolve(env.LEGACY_ASSETS_DIR, 'images'));
+  return dirs.some((d) => fs.existsSync(path.join(d, file)));
+}
+
+/* ---------------- every ad in the system, for the preview wall ----------------
+   The World feed deals ads in among the posts a few at a time, so there is no way to see
+   how each type of ad actually looks. This hands back all of them, newest first, in the
+   shape the feed uses — the preview page then draws them with the very same tile.
+
+   Unlike the feed it does not filter on approved/running: the point is to see everything
+   that exists, including the rows migrated without a type. */
+adsRouter.get(
+  '/preview',
+  requireAuth,
+  asyncHandler(async (_req, res) => {
+    const all = await Ad.find(
+      {},
+      {
+        media: 1, link: 1, adType: 1, user: 1, status: 1, approved: 1, createdAt: 1,
+        buttonSize: 1, buttonPosition: 1,
+      },
+    )
+      .sort({ createdAt: -1, mysqlId: -1 })
+      .limit(400)
+      .lean();
+
+    /* An ad whose artwork is not on disk draws an empty frame, which is worse than not
+       drawing it at all — the client asked for those to be left out. Every row in the
+       database carries a filename; a third of them point at files that never came across
+       in the migration, so the check has to be against the disk, not the field.
+       The two folders are the same ones /assets/images is served from, newest first. */
+    const ads = all.filter((a) => mediaOnDisk(a.media));
+    const hidden = all.length - ads.length;
+
+    /* the two profile-bound actions need the advertiser's handle */
+    const ownerIds = ads
+      .map((a) => a.user)
+      .filter((u): u is NonNullable<typeof u> => !!u);
+    const owners = await User.find({ _id: { $in: ownerIds } }, { usernameUrl: 1, name: 1 }).lean();
+    const byId = new Map(owners.map((u) => [String(u._id), u]));
+
+    /* clients-form ads carry the advertiser's own wording for the button */
+    const forms = await AdFormularyForm.find(
+      { ad: { $in: ads.filter((a) => a.adType === 'clients-form').map((a) => a._id) } },
+      { ad: 1, buttonAction: 1 },
+    ).lean();
+    const wording = new Map(forms.map((f) => [String(f.ad), f.buttonAction ?? null]));
+
+    res.json({
+      success: true,
+      /* so the page can say how many it is not showing */
+      hidden,
+      total: all.length,
+      ads: ads.map((a) => {
+        const owner = a.user ? byId.get(String(a.user)) : undefined;
+        return {
+          id: String(a._id),
+          adId: String(a._id),
+          media: a.media ?? '',
+          /* an old messages ad still holds a mailto: to its advertiser — their address is
+             not the page's to publish, and the tile does not follow it anyway */
+          link: /^mailto:/i.test(a.link ?? '') ? '' : a.link ?? '',
+          adType: a.adType ?? null,
+          status: !!a.status,
+          approved: !!a.approved,
+          buttonSize: a.buttonSize ?? 'medium',
+          buttonPosition: a.buttonPosition ?? 'bottom',
+          buttonAction: wording.get(String(a._id)) ?? null,
+          advertiser: owner
+            ? { usernameUrl: owner.usernameUrl ?? null, name: owner.name ?? null }
+            : null,
+        };
+      }),
+    });
   }),
 );
 
@@ -695,8 +781,12 @@ async function buildAd(
       const p = await derivePost();
       title = p.title;
       mediaName = p.media;
-      const me = await User.findById(userId, { email: 1 });
-      link = `mailto:${me?.email ?? ''}`;
+      /* The card promises "message you in your SUPERWORLD inbox", so the button leads back
+         into the app. It used to be `mailto:<the advertiser's own address>`, which did
+         nothing in a browser with no mail client and published their address on a public
+         page; the tile navigates to their profile instead. */
+      const me = await User.findById(userId, { usernameUrl: 1 });
+      link = me?.usernameUrl ? `${APP}/${me.usernameUrl}` : '';
       break;
     }
     case 'instagram':
@@ -754,7 +844,7 @@ async function buildAd(
 
   // Uploaded media (base64 data URL) overrides the type default.
   if (typeof body.media === 'string' && body.media.startsWith('data:')) {
-    mediaName = await saveBase64Image(body.media);
+    mediaName = await saveBase64Media(body.media);
   }
 
   /* The Ads Center's type page sends the advertiser's own title and destination, the way
@@ -794,12 +884,24 @@ async function buildAd(
      run going rather than landing without one. */
   const highestAd = await Ad.findOne({}, { mysqlId: 1 }).sort({ mysqlId: -1 }).lean();
 
+  /* the two the advertiser sets on the form; anything else falls back to the drawn default */
+  const SIZES = ['small', 'medium', 'large'] as const;
+  const POSITIONS = ['top', 'center', 'bottom'] as const;
+  type BtnSize = (typeof SIZES)[number];
+  type BtnPos = (typeof POSITIONS)[number];
+  const rawSize = str(body.button_size) as BtnSize;
+  const rawPos = str(body.button_position) as BtnPos;
+  const buttonSize: BtnSize = SIZES.includes(rawSize) ? rawSize : 'medium';
+  const buttonPosition: BtnPos = POSITIONS.includes(rawPos) ? rawPos : 'bottom';
+
   const ad = await Ad.create({
     mysqlId: (highestAd?.mysqlId ?? 0) + 1,
     user: userId,
     adType: t,
     media: mediaName ?? undefined,
     link: link ?? undefined,
+    buttonSize,
+    buttonPosition,
     status: false,
     approved: false,
     amount,

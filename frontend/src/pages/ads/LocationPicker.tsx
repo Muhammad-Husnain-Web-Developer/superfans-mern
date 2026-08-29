@@ -1,15 +1,13 @@
 import { useEffect, useState } from 'react';
-
-const COUNTRIES = [
-  'Spain', 'United States', 'United Kingdom', 'Mexico', 'Argentina', 'Colombia', 'Chile', 'Peru',
-  'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Canada', 'Netherlands', 'Belgium', 'Ireland',
-  'Switzerland', 'Austria', 'Sweden', 'Norway', 'Denmark', 'Poland', 'Australia',
-];
+import { CountrySelect, CitySelect } from './CountryCityFields';
 
 /**
  * Target-audience location — port of the country/city picker in the ads modal. Kept to a
  * single country + city (the Laravel version supports multiple via a pipe-joined hidden
  * field); the backend stores the resulting country/city on the Ad.
+ *
+ * Both are lists now: the city offered is one of the chosen country's own, and until a
+ * country is chosen there is nothing to choose from, so the city box stays shut.
  */
 export function LocationPicker({ onChange }: { onChange: (country: string, city: string) => void }) {
   const [country, setCountry] = useState('');
@@ -24,15 +22,24 @@ export function LocationPicker({ onChange }: { onChange: (country: string, city:
     <div className="w-75 mx-auto my-3">
       <div className="d-flex" style={{ gap: 12 }}>
         <div style={{ flex: 1 }}>
-          <label className="w-100 text-left" style={{ fontSize: 16 }}>Country</label>
-          <select className="form-control form-control-sm" value={country} onChange={(e) => setCountry(e.target.value)} required>
-            <option value="">Select a country</option>
-            {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <label className="w-100 text-left" style={{ fontSize: 16 }}>
+            Country
+          </label>
+          <CountrySelect
+            value={country}
+            required
+            onChange={(c) => {
+              setCountry(c);
+              /* the old country's city cannot belong to the new one */
+              setCity('');
+            }}
+          />
         </div>
         <div style={{ flex: 1 }}>
-          <label className="w-100 text-left" style={{ fontSize: 16 }}>City</label>
-          <input className="form-control form-control-sm" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)} />
+          <label className="w-100 text-left" style={{ fontSize: 16 }}>
+            City
+          </label>
+          <CitySelect country={country} value={city} onChange={setCity} />
         </div>
       </div>
     </div>

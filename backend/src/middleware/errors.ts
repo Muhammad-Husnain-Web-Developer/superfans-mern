@@ -49,6 +49,21 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
     return;
   }
 
+  /* body-parser's own rejection when the JSON body is over the limit. It arrives here as a
+     plain Error and was being reported as a 500 — which reads to the caller as "the server
+     broke" rather than "your file is too big", and gives the form nothing useful to show. */
+  if (
+    typeof err === 'object' &&
+    err !== null &&
+    (err as { type?: string }).type === 'entity.too.large'
+  ) {
+    res.status(413).json({
+      success: false,
+      message: 'That file is too large to upload. The most an ad can carry is 14 MB.',
+    });
+    return;
+  }
+
   logger.error({ err, path: req.path }, 'Unhandled error');
   res.status(500).json({
     success: false,

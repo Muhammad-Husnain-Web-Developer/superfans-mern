@@ -547,19 +547,56 @@
   z-index: 10000;
   font-size: 0.7rem;
 }
+/* SweetAlert2 11.3.6, which the three register blades all load from a CDN — and all three
+   override it the same way, so the alert is purple rather than SweetAlert's white:
+     register_u.blade.php:64-80, register_i.blade.php:58-74, business_register.blade.php:72-88
+       .swal2-popup   { font-size: 0.7rem }
+       .swal2-modal   { color: white; background: #8a2be2 }
+       .swal2-confirm { color: black; background: white }
+   The cross and the grey edge are the client's own two additions on top of that; the cross
+   is SweetAlert's `showCloseButton` mark, drawn in its own #cccccc. */
 .swal-modal {
+  position: relative;
   color: #fff;
   background: #8a2be2;
+  /* border: 1px solid #d9d9d9; */
   border-radius: 5px;
   width: 32em;
   max-width: 90%;
   padding: 1.25em;
   text-align: center;
 }
+
+.swal-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.2em;
+  height: 1.2em;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #cccccc;
+  font-family: monospace;
+  font-size: 2.5em;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: color 0.1s ease-out;
+}
+/* .swal-close:hover,
+.swal-close:focus {
+  color: #f27474;
+  outline: none;
+} */
+
 .swal-title {
+  color: inherit;
   font-size: 1.875em;
   font-weight: 600;
   margin: 0.5em 0 1em;
+  /* the blade's sentence runs to two lines at this size; it should read as a line of text
+     rather than a heading with its lines apart */
+  line-height: 1.25;
 }
 .swal-confirm {
   color: #000;
@@ -570,6 +607,9 @@
   font-weight: 500;
   padding: 0.625em 1.1em;
   cursor: pointer;
+}
+.swal-confirm:hover {
+  background-image: linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
 }
 
 /* ===== creator confirm page (influencer_r.blade.php) ===== */
@@ -593,17 +633,17 @@
 }
 .confirm-title {
   font-weight: 700;
-  font-size: 2.2rem;
+  font-size: 35px;
   text-align: center;
   margin-bottom: 20px;
   color: #000;
 }
 .confirm-container p {
-  font-size: 1.1rem;
+  font-size: 17px;
   line-height: 1.6;
   text-align: center;
   margin-bottom: 30px;
-  color: #444;
+  color: #000;
 }
 .confirm-container p strong {
   color: #da1212;
@@ -648,24 +688,31 @@
   margin-left: 1px;
   background: #5cb85c;
   color: #fff;
-  font-size: 1.1rem !important;
+  font-size: 17px !important;
   font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono',
     'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
   font-weight: 900 !important;
+ 
 }
 .confirm-btn--yes:hover {
   background-color: #409c40;
   color: #fff;
+   text-decoration: none;
 }
 .confirm-btn--business {
   border: 3px solid #666 !important;
   margin-left: 1px;
   background: #999;
   color: #fff;
+  font-size: 16px !important;
+ 
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+  
 }
 .confirm-btn--business:hover {
   background-color: #666;
   color: #fff;
+   text-decoration: none;
 }
 .confirm-back-text {
   color: #111 !important;

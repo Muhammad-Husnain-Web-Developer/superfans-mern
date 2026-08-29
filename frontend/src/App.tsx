@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { businessMayOpen } from './utils/businessAccess';
 import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { RegisterFan } from './pages/auth/RegisterFan';
@@ -32,6 +33,7 @@ import { AdsInformation } from './pages/ads/AdsInformation';
 import { PotentialClients } from './pages/ads/PotentialClients';
 import { AdsType } from './pages/ads/AdsType';
 import { AllAds } from './pages/ads/AllAds';
+import { AdsPreview } from './pages/ads/AdsPreview';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { AdminUsers } from './pages/admin/AdminUsers';
 import { AdminCoupons } from './pages/admin/AdminCoupons';
@@ -75,6 +77,23 @@ function NewsGuard({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * A business account is only allowed in the Super Ads Center. It already lands there when it
+ * logs in (postLoginPath), and this sends it back if it reaches a World address any other
+ * way — typed, bookmarked, or followed from an old link. A creator's public profile at
+ * /{username} is the exception the client named.
+ *
+ * One watcher on the location rather than a wrapper around thirty routes, so a route added
+ * later is covered without anybody remembering to wrap it.
+ */
+function BusinessScope() {
+  const { user, loading } = useAuth();
+  const { pathname } = useLocation();
+  if (loading || user?.role !== 'business') return null;
+  if (businessMayOpen(pathname)) return null;
+  return <Navigate to="/super-ads" replace />;
+}
+
 /** Super-ads guard — Laravel's restrict_super_ads sends guests to the *business* login. */
 function AdsGuard({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -88,6 +107,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <RegisterModalProvider>
+        <BusinessScope />
         <Routes>
           {/* Standalone auth pages — no app header/footer, exactly like the Blade pages */}
           <Route path="login" element={<Login />} />
@@ -170,6 +190,8 @@ function App() {
           <Route path="super-ads/potential-clients" element={<AdsGuard><PotentialClients /></AdsGuard>} />
           <Route path="super-ads/ad/:type" element={<AdsGuard><AdsType /></AdsGuard>} />
           <Route path="super-ads/all-ads" element={<AdsGuard><AllAds /></AdsGuard>} />
+          {/* every ad in the system on one wall, so each type can be looked at */}
+          <Route path="super-ads/preview" element={<AdsGuard><AdsPreview /></AdsGuard>} />
           <Route path="admin" element={<NewsGuard><AdminDashboard /></NewsGuard>} />
           <Route path="admin/users" element={<NewsGuard><AdminUsers /></NewsGuard>} />
           <Route path="admin/coupons" element={<NewsGuard><AdminCoupons /></NewsGuard>} />

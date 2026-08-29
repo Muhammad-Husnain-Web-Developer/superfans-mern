@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useScrollMemory, rememberScroll } from '../../utils/useScrollMemory';
 import { markFeedReturn, recallFeed, rememberFeed } from '../../utils/feedMemory';
 import { useTranslation } from 'react-i18next';
-import { AdLeadForm } from '../ads/AdLeadForm';
+import { AdCard } from '../../components/AdCard';
 import { api } from '../../api/client';
 import { assetImage, formatNumberRounded, isVideoFile, likePercent, videoMime } from '../../utils/format';
 import { observeNewVideos } from '../../utils/video';
@@ -573,46 +573,6 @@ function WorldPostCard({
   );
 }
 
-function WorldAdCard({ item }: { item: WorldItem }) {
-  const media = item.media ?? '';
-
-  /* The blade gives a clients-form ad its own tile: the creative with the advertiser's
-     button under it, which walks the viewer through the formulary in place. Every other
-     type stays a picture that links out. */
-  if (item.adType === 'clients-form' && item.adId) {
-    return (
-      <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
-        <p className="feed_posts_heading_p" style={{ position: 'relative', fontSize: 14 }}>
-          <span>Super Ads</span>
-        </p>
-        <AdLeadForm adId={item.adId} media={media} />
-      </div>
-    );
-  }
-
-  return (
-    <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
-      <a href={item.link ?? '#'} target="_blank" rel="noreferrer">
-        <p className="feed_posts_heading_p" style={{ position: 'relative', fontSize: 14 }}>
-          <span>Super Ads</span>
-        </p>
-        {isVideoFile(media) ? (
-          <video className="autoplay-video" controlsList="nodownload" style={{ maxWidth: '100%' }} controls loop muted playsInline>
-            <source src={assetImage(media)} type={videoMime(media)} />
-          </video>
-        ) : /* ads keep native controls (blade parity) */ (
-          <img
-            src={assetImage(media)}
-            alt="Advertisement"
-            className="img-responsive posttt-img"
-            style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
-          />
-        )}
-      </a>
-    </div>
-  );
-}
-
 /** World discovery feed — port of world.blade.php (guest /world). */
 export function World() {
   const { t } = useTranslation('content');
@@ -757,7 +717,7 @@ export function World() {
                   const worldIds = items.filter((i) => i.type !== 'ad').map((i) => i.id);
                   return items.map((item) =>
                     item.type === 'ad' ? (
-                      <WorldAdCard key={item.id} item={item} />
+                      <AdCard key={item.id} item={item} />
                     ) : (
                       <WorldPostCard key={item.id} item={item} onReport={reportPost} worldIds={worldIds} />
                     ),

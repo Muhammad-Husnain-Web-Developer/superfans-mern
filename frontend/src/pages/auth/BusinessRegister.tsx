@@ -8,11 +8,20 @@ import { AuthShell, localeLogo } from './AuthShell';
 import { useStandalonePageStyles } from '../../components/StandalonePage';
 import { CropModal } from './CropModal';
 import { CustomFile, readAndValidateImage } from './RegisterForm';
+import { PhoneField } from '../../components/PhoneField';
 
+/**
+ * The blade's `Swal.fire('…')` — SweetAlert2 11.3.6, which the register pages load from a
+ * CDN. Its default popup is white with grey lettering and a single confirm button; the
+ * cross is SweetAlert2's own `showCloseButton`, which the client asked for here.
+ */
 function Swal({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div className="swal-overlay" onClick={onClose}>
       <div className="swal-modal" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="swal-close" onClick={onClose} aria-label="Close">
+          ×
+        </button>
         <div className="swal-title">{message}</div>
         <button type="button" className="swal-confirm" onClick={onClose}>
           OK
@@ -58,7 +67,9 @@ export function BusinessRegister() {
     if (!username) return setSwal('Username is required');
     if (password !== passwordConfirm) return setSwal('Password not matched');
     if (password.length < 8) return setSwal('Password should be greater than 8 characters');
-    if (!terms) return setSwal(t('agree_terms'));
+    /* business_register.blade.php:721 — the blade's own sentence. `agree_terms`
+       is the checkbox's label ("I agree to the"), which read as a cut-off message. */
+    if (!terms) return setSwal('Please accept the Terms and Conditions to proceed.');
 
     setSubmitting(true);
     try {
@@ -209,12 +220,12 @@ export function BusinessRegister() {
         />
       </div>
       <div className="auth-form-group">
-        <input
-          type="tel"
+        <PhoneField
+          id="phoneField"
           placeholder={t('enter_number')}
           className="auth-input"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={setPhone}
           required
         />
       </div>

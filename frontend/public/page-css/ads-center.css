@@ -62,16 +62,17 @@ a { text-decoration: none !important; }
 
 /* modal shell */
 .ads-modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5);
+  position: fixed; inset: 0; background: rgba(0,0,0,0.15);
   z-index: 100000; display: flex; align-items: center; justify-content: center; padding: 12px;
   overflow-y: auto;
 }
+
 .ads-modal-box { position: relative; width: 100%; max-width: 800px; margin: auto; }
 .close-modal-btn {
   position: absolute; top: 12px; right: 16px; font-size: 26px; color: #aaa;
   background: none; border: none; cursor: pointer; z-index: 1000; transition: .2s;
 }
-.close-modal-btn:hover { color: #fff; transform: scale(1.12); }
+/* .close-modal-btn:hover { color: #fff; transform: scale(1.12); } */
 
 .field { display: flex; align-items: center; gap: 16px; justify-content: center; }
 .value { font-size: 22px; }
@@ -176,7 +177,7 @@ input[type="range"]::-webkit-slider-thumb {
 }
 .ads-sidebar .upper-links a:first-child { border-top: 2px solid rgba(0,0,0,0.65); }
 .ads-sidebar .upper-links a:hover, .ads-sidebar .footer-links a:hover { background: #f0f2f5; }
-.ads-sidebar .upper-links a.active { background: #000; color: #fff; }
+.ads-sidebar .upper-links a.active { background: #724bb6; color: #fff; }
 @media (max-width: 900px) { .ads-sidebar { position: relative; width: 100%; } }
 
 /* On a phone the banner's row layout collapses: the button keeps its natural width and

@@ -3,7 +3,54 @@ import { api } from '../../api/client';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
 import { LocationPicker } from './LocationPicker';
+import { CountrySelect, CitySelect } from './CountryCityFields';
 import { PostPicker } from './PostPicker';
+import {
+  AD_ACTION_LABEL,
+  AD_BUTTON_POSITIONS,
+  AD_BUTTON_SIZES,
+  adAction,
+  type AdButtonPosition,
+  type AdButtonSize,
+} from '../../components/AdCard';
+import '../../styles/ad-card.css';
+import { PhoneField } from '../../components/PhoneField';
+
+/**
+ * The advertiser's two choices, drawn on their own artwork before they pay for it. It is the
+ * real button — the same classes the feed renders — inside a box the shape of a feed tile, so
+ * what is shown here is what the ad will look like.
+ */
+function AdButtonPreview({
+  media,
+  adType,
+  size,
+  position,
+  buttonAction,
+}: {
+  media: string;
+  adType: string;
+  size: AdButtonSize;
+  position: AdButtonPosition;
+  buttonAction: string | null;
+}) {
+  const action = adAction(adType);
+  const label = buttonAction || AD_ACTION_LABEL[action];
+  return (
+    <div className="ads-cta-preview work-item">
+      <div className="ad-media">
+        {media ? (
+          <img src={media} alt="" className="img-responsive posttt-img" />
+        ) : (
+          <div className="ads-cta-preview-empty">Upload your media to see it here</div>
+        )}
+        <span className={`ad-cta-btn cta-${action} size-${size} pos-${position}`}>
+          <span>{label}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
 
 /** One dashboard card — mirrors the .ad-card data attributes in ads/index.blade.php. */
 interface AdCard {
@@ -34,10 +81,7 @@ const CARDS: AdCard[] = [
   { id: 14, type: 'website-visits', min: 500, max: 40000, audience: 1380000, emoji: '🪄🎬', title: 'Super Video', desc: 'Reproduce a full screen video. Only for big companies.' },
 ];
 
-const COUNTRIES = [
-  'Spain', 'United States', 'United Kingdom', 'Mexico', 'Argentina', 'Colombia', 'Chile', 'Peru',
-  'France', 'Germany', 'Italy', 'Portugal', 'Brazil', 'Canada', 'Netherlands', 'Belgium',
-];
+/* the country list moved to data/countryCities, where it sits beside each one's cities */
 const BUTTON_ACTIONS = ['More Info', 'Ask Offer', 'Fill Out Survey', 'Check Website'];
 
 interface CenterData {
@@ -241,7 +285,7 @@ function ProfileModal({
   return (
     <div className="ads-modal-overlay" onClick={onClose}>
       <div className="ads-modal-box" style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
-        <div style={{ background: '#8a2be2', color: 'white', borderRadius: 12, padding: 25, maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ background: '#8a2be2', color: 'white', borderRadius: 12, padding: 25, overflowY: 'auto' }}>
           <button className="close-modal-btn" onClick={onClose}>✖</button>
           <h4 className="text-center mb-3">Completa tu Información</h4>
           <form onSubmit={submit}>
@@ -249,15 +293,24 @@ function ProfileModal({
               <div className="form-group col-md-6"><label>Name</label><input className="form-control" value={f.name} onChange={(e) => set('name', e.target.value)} required /></div>
               <div className="form-group col-md-6"><label>Surnames</label><input className="form-control" value={f.surnames} onChange={(e) => set('surnames', e.target.value)} required /></div>
               <div className="form-group col-md-6"><label>Country</label>
-                <select className="form-control" value={f.country} onChange={(e) => set('country', e.target.value)} required>
-                  <option value="">Select Country</option>
-                  {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <CountrySelect
+                  className="form-control"
+                  value={f.country}
+                  required
+                  onChange={(c) => setF((x) => ({ ...x, country: c, city: '' }))}
+                />
               </div>
-              <div className="form-group col-md-6"><label>City</label><input className="form-control" value={f.city} onChange={(e) => set('city', e.target.value)} /></div>
+              <div className="form-group col-md-6"><label>City</label>
+                <CitySelect
+                  className="form-control"
+                  country={f.country}
+                  value={f.city}
+                  onChange={(c) => set('city', c)}
+                />
+              </div>
               <div className="form-group col-md-6"><label>Address</label><input className="form-control" value={f.address} onChange={(e) => set('address', e.target.value)} required /></div>
               <div className="form-group col-md-6"><label>ZIP Code</label><input className="form-control" value={f.zip_code} onChange={(e) => set('zip_code', e.target.value)} required /></div>
-              <div className="form-group col-md-12"><label>Mobile Number</label><input type="tel" className="form-control" value={f.mobile_number} onChange={(e) => set('mobile_number', e.target.value)} required /></div>
+              <div className="form-group col-md-12"><label>Mobile Number</label><PhoneField id="adPhoneField" className="form-control" value={f.mobile_number} onChange={(v) => set('mobile_number', v)} required /></div>
             </div>
 
             <div className="form-check mb-2">
@@ -307,23 +360,46 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
   const [questions, setQuestions] = useState<string[]>(['']);
   const [asks, setAsks] = useState({ ask_phone: true, ask_email: true, ask_name: false, ask_company: false });
   const [buttonAction, setButtonAction] = useState(BUTTON_ACTIONS[0]);
+  /* how the call to action is drawn on the creative — the advertiser's own choice */
+  const [buttonSize, setButtonSize] = useState<AdButtonSize>('medium');
+  const [buttonPosition, setButtonPosition] = useState<AdButtonPosition>('bottom');
   const [busy, setBusy] = useState(false);
+  /* what went wrong, in the modal. Without this the submit failed in silence: the button
+     stopped spinning and nothing else happened, so a rejected video looked like a dead form. */
+  const [error, setError] = useState<string | null>(null);
 
   const estimated = Math.round((amount / 1000) * card.audience);
   const perDay = days > 0 ? Math.round(estimated / days) : 0;
   const setField = (k: string, v: string) => setFields((s) => ({ ...s, [k]: v }));
 
+  /* The creative travels inside the JSON body as base64, which adds about a third to it,
+     and the server refuses a body over 20MB. Catching it here means the advertiser is told
+     at once rather than after filling the rest of the form in. */
+  const MAX_MEDIA_MB = 14;
+
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    setError(null);
+    if (file.size > MAX_MEDIA_MB * 1024 * 1024) {
+      setMedia('');
+      e.target.value = '';
+      setError(
+        `That file is ${(file.size / 1024 / 1024).toFixed(1)} MB. The most an ad can carry is ` +
+          `${MAX_MEDIA_MB} MB — please compress the video or use a shorter clip.`,
+      );
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => setMedia(String(reader.result));
+    reader.onerror = () => setError('That file could not be read. Please try another one.');
     reader.readAsDataURL(file);
   }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!terms) return;
+    setError(null);
     setBusy(true);
     try {
       const body: Record<string, unknown> = {
@@ -337,6 +413,8 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
       };
       if (media) body.media = media;
       if (postId) body.post_id = postId;
+      body.button_size = buttonSize;
+      body.button_position = buttonPosition;
       if (card.type === 'clients-form') {
         body.question1 = questions[0] ?? '';
         body.question2 = questions[1] ?? '';
@@ -350,6 +428,14 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
       }
       const { data } = await api.post<{ url?: string }>(`/ads/initiate-payment/${card.type}`, body);
       if (data.url) window.location.href = data.url;
+      else setError('The payment page could not be opened. Please try again.');
+    } catch (err) {
+      const res = (err as { response?: { status?: number; data?: { message?: string } } }).response;
+      setError(
+        res?.status === 413
+          ? `That file is too large to upload. The most an ad can carry is ${MAX_MEDIA_MB} MB.`
+          : res?.data?.message ?? 'Something went wrong. Please try again.',
+      );
     } finally {
       setBusy(false);
     }
@@ -403,7 +489,16 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
             )}
 
             {isPhone && (
-              <input type="tel" className="form-control my-3 w-75 mx-auto" placeholder={card.id === 12 ? 'WhatsApp Number' : 'Phone Number'} value={fields.phone ?? ''} onChange={(e) => setField('phone', e.target.value)} required />
+              <div className="my-3 w-75 mx-auto">
+                <PhoneField
+                  id="phoneField"
+                  className="form-control"
+                  placeholder={card.id === 12 ? 'WhatsApp Number' : 'Phone Number'}
+                  value={fields.phone ?? ''}
+                  onChange={(v) => setField('phone', v)}
+                  required
+                />
+              </div>
             )}
 
             {isFormulary && (
@@ -431,6 +526,52 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
                 </select>
               </>
             )}
+
+            {/* How the call to action is drawn. It is asked here rather than decided for the
+                advertiser because the right size and place depend on the artwork — a face in
+                the lower third wants the button at the top, and the other way round. */}
+            <div className="ads-cta-choice">
+              <h5 className="mb-2">Button on your ad</h5>
+              <div className="ads-cta-row">
+                <label>
+                  Size
+                  <select
+                    className="ads-input"
+                    value={buttonSize}
+                    onChange={(e) => setButtonSize(e.target.value as AdButtonSize)}
+                  >
+                    {AD_BUTTON_SIZES.map((s2) => (
+                      <option key={s2} value={s2}>
+                        {s2[0].toUpperCase() + s2.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Position
+                  <select
+                    className="ads-input"
+                    value={buttonPosition}
+                    onChange={(e) => setButtonPosition(e.target.value as AdButtonPosition)}
+                  >
+                    {AD_BUTTON_POSITIONS.map((p2) => (
+                      <option key={p2} value={p2}>
+                        {p2[0].toUpperCase() + p2.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {/* the choice, shown on the advertiser's own artwork where there is any */}
+              <AdButtonPreview
+                media={media}
+                adType={card.type}
+                size={buttonSize}
+                position={buttonPosition}
+                buttonAction={card.type === 'clients-form' ? buttonAction : null}
+              />
+            </div>
 
             {/* location (all types) */}
             <LocationPicker onChange={(c, ci) => { setCountry(c); setCity(ci); }} />
@@ -463,6 +604,13 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
             <label style={{ fontSize: 16, display: 'block', marginTop: 20 }}>
               <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} required /> I agree to Terms &amp; Conditions
             </label>
+
+            {/* whatever the server or the file check objected to, said where it will be read */}
+            {error && (
+              <p className="ads-form-error" role="alert">
+                {error}
+              </p>
+            )}
 
             <button className="continue-btn mt-4" disabled={busy}>Empezar campaña 📊</button>
             <button type="button" className="cancel-btn mt-2" onClick={onClose}>CANCEL</button>
