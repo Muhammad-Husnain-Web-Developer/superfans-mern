@@ -1,0 +1,256 @@
+/* The clients-form formulary, drawn to the client's mockups (potential-mockups/7–10.jpeg).
+   Every value here is sampled from those images: the card's violet #525be8, the white fields
+   on it, the pale buttons with their grey shadow, and the green that carries the two actions
+   that finish the job — Send info and Visit website. */
+
+.lead-form-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100000;
+  padding: 16px;
+}
+
+.lead-form-box {
+  position: relative;
+  width: 100%;
+  max-width: 470px;
+  max-height: 92vh;
+  overflow-y: auto;
+  padding: 28px 30px 34px;
+  background: #525be8;
+  border-radius: 26px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  color: #ffffff;
+  font-family: 'Roboto', 'Montserrat', Arial, Helvetica, sans-serif;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge */
+  
+}
+.lead-form-box::-webkit-scrollbar {
+  display: none;                /* Chrome/Safari */
+}
+/* the ✖ the mockups put in the corner: black, bold, no chrome around it */
+.lead-form-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: none;
+  border: 0;
+  padding: 4px;
+  font-size: 24px;
+  line-height: 1;
+  color: lightgray;
+  cursor: pointer;
+}
+
+/* ---- the advertiser, at the head of every step ---- */
+.lead-form-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 10px 0 26px;
+  padding-left: 6px;
+}
+
+.lead-form-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.lead-form-company {
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- a question and the box it is answered in ---- */
+.lead-form-question {
+  margin: 0 0 18px;
+  padding: 0 4px;
+  font-size: 19px;
+  line-height: 1.35;
+  color: #ffffff;
+}
+
+.lead-form-answer {
+  display: block;
+  width: 100%;
+  min-height: 190px;
+  padding: 12px 14px;
+  border: 0;
+  /* border-radius: 4px; */
+  background: #ffffff;
+  color: #000000;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.lead-form-answer:focus {
+  outline: 2px solid #ffffff;
+}
+
+/* ---- the contact step ---- */
+.lead-form-field {
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+
+.lead-form-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 17px;
+  color: #ffffff;
+}
+
+.lead-form-field input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 16px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.lead-form-field input:focus {
+  outline: 2px solid #ffffff;
+}
+
+.lead-form-creative {
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.12);
+  height: 220px;
+  flex-shrink: 0;
+}
+.lead-form-creative img,
+.lead-form-creative video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- the buttons ---- */
+.lead-form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.lead-form-actions.center {
+  justify-content: center;
+}
+
+/* Back and Continue: white, black type, and the soft grey shadow the mockups draw under
+   them rather than a border */
+.lead-form-btn {
+  min-width: 112px;
+  padding: 11px 20px;
+ border: 5px solid lightgray;
+  /* border-radius: 2px; */
+  background: #ffffff;
+  color: #000000;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  /* box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.18); */
+}
+
+.lead-form-btn:hover {
+  background: #f2f2f2;
+}
+
+/* the two that finish the job */
+.lead-form-btn-send {
+  min-width: 132px;
+  padding: 11px 22px;
+  border: 3px solid #30c013;
+  border-radius: 2px;
+  background: #79e157;
+  color: #000000;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.18);
+}
+
+.lead-form-btn-send:hover {
+  background: #6cd94a;
+  color: #000000;
+}
+
+.lead-form-btn-send:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+/* ---- the closing step ---- */
+.lead-form-success p {
+  margin: 0 0 18px;
+  padding: 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #ffffff;
+}
+
+.lead-form-error {
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #c00000;
+  font-size: 14px;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .lead-form-box {
+    padding: 22px 18px 26px;
+    border-radius: 20px;
+  }
+
+  .lead-form-company {
+    font-size: 20px;
+  }
+
+  .lead-form-question,
+  .lead-form-field label {
+    font-size: 16px;
+  }
+
+  .lead-form-answer {
+    min-height: 150px;
+  }
+
+  .lead-form-btn,
+  .lead-form-btn-send {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+  }
+}

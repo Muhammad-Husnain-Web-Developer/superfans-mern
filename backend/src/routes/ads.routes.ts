@@ -530,11 +530,22 @@ adsRouter.get(
   asyncHandler(async (req, res) => {
     const form = await AdFormularyForm.findOne({ ad: req.params.adId }).lean();
     if (!form) throw ApiError.notFound('Form not found');
+
+    /* the mockups head every step of the formulary with the advertiser: their picture in a
+       circle and the company they registered, so the viewer knows who is asking */
+    const ad = await Ad.findById(form.ad, { user: 1, link: 1 }).lean();
+    const advertiser = ad?.user
+      ? await User.findById(ad.user, { name: 1, companyName: 1, profilePicture: 1 }).lean()
+      : null;
+
     res.json({
       success: true,
       form: {
         adId: String(form.ad),
         title: form.title ?? '',
+        company: advertiser?.companyName || advertiser?.name || '',
+        avatar: advertiser?.profilePicture ?? null,
+        website: ad?.link ?? '',
         askName: form.askName === 1,
         askEmail: form.askEmail === 1,
         askPhone: form.askPhone === 1,

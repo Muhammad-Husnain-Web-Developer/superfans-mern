@@ -135,18 +135,18 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
               onClick={() => setFormOpen(true)}
               size={item.buttonSize ?? 'medium'}
               position={item.buttonPosition ?? 'bottom'}
-              isForm={true}  // <-- NEW: tells CSS to auto-size for long labels
+              isForm={true}
             />
           </div>
         </div>
-
-        {formOpen && (
-          <div className="ads-modal-overlay" onClick={() => setFormOpen(false)}>
-            <div className="ads-modal-box" style={{ maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
-              <AdLeadForm adId={item.adId} media={media} onClose={() => setFormOpen(false)} />
-            </div>
-          </div>
-        )}
+      {formOpen && (
+        <AdLeadForm
+          adId={item.adId}
+          media={media}
+          link={item.link}
+          onClose={() => setFormOpen(false)}
+        />
+      )}
       </>
     );
   }
@@ -172,9 +172,6 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
         {showType && <TypeTag adType={item.adType} />}
       </p>
 
-      {/* The creative carries the ad's own link and the call to action rides on top of it.
-          They are siblings inside a positioned box rather than nested: an <a> inside an <a>
-          is not valid, and the browser pulls the two apart when it parses it. */}
       <div className="ad-media">
         <a className="ad-media-link" href={safeLink(item.link) ?? '#'} target="_blank" rel="noreferrer">
           {isVideoFile(media) ? (
@@ -218,8 +215,6 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
     which renders them differently on every machine. */
 function CtaMark({ action }: { action: AdAction }) {
   if (action === 'subscribe' || action === 'follow') {
-    /* Measured off the Follow card: a peach pole 5px wide and 28 tall, carrying a red
-       pennant 20 x 16 at its top — against 22px of cap height beside it. */
     return (
       <span className="cta-mark" aria-hidden="true">
         <svg width="24" height="28" viewBox="0 0 24 28">
@@ -246,7 +241,6 @@ function CtaMark({ action }: { action: AdAction }) {
   );
 }
 
-/** The button on the creative — one shape for all six, each with its own colours. */
 function AdCta({
   action,
   label,
@@ -254,7 +248,7 @@ function AdCta({
   onClick,
   size = 'medium',
   position = 'bottom',
-  isForm = false,  // <-- NEW prop
+  isForm = false,
 }: {
   action: AdAction;
   label: string;
@@ -264,11 +258,9 @@ function AdCta({
   position?: AdButtonPosition;
   isForm?: boolean;
 }) {
-  /* Older ads carry neither choice; both fall back to what the client drew. */
   let className = `ad-cta-btn cta-${action} size-${size} pos-${position}`;
-  if (isForm) className += ' form-cta';  // <-- add extra class for form buttons
+  if (isForm) className += ' form-cta';
 
-  /* Call and Send Card wear their mark on the left, the rest on the right — as drawn */
   const markFirst = action === 'call' || action === 'send-card';
   const inner = markFirst ? (
     <>
@@ -305,7 +297,6 @@ function AdCta({
       rel="noreferrer"
       onClick={(e) => {
         e.stopPropagation();
-        /* nothing to lead to — the button is still drawn so every tile reads the same */
         if (!href) e.preventDefault();
       }}
       aria-disabled={href ? undefined : true}
@@ -315,7 +306,6 @@ function AdCta({
   );
 }
 
-/** Only the preview page asks for this: the tile says which type of ad it is. */
 function TypeTag({ adType }: { adType: string | null | undefined }) {
   return <span className="ad-type-tag">{adType ?? 'no type'}</span>;
 }

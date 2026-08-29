@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import '../../styles/lead-form.css';
 
 interface FormConfig {
   adId: string;
   title: string;
+  /** the advertiser, drawn at the head of every step */
+  company: string;
+  avatar: string | null;
+  /** where "Visit website" goes once the formulary is sent */
+  website: string;
   askName: boolean;
   askEmail: boolean;
   askPhone: boolean;
@@ -14,22 +21,26 @@ interface FormConfig {
 }
 
 /**
- * Public lead-capture form for a clients-form ad — port of the multi-step formulary
- * rendered in the World feed (submitLead()). Loads the form config for `adId`, walks the
- * viewer through contact fields then questions, and POSTs to /ads/formulary/:adId/lead.
+ * The formulary a clients-form ad opens — built to the client's mockups (potential-mockups/
+ * 7 to 10): a violet card that heads every step with the advertiser, asks one question per
+ * step, then the viewer's details, then confirms.
+ *
+ * The name and email of a viewer who is signed in are filled in for them, as the mockup
+ * shows them already carrying "$name user" and "$email of user".
  */
 export function AdLeadForm({
   adId,
   media,
+  link,
   onClose,
 }: {
   adId: string;
-  /** the ad's creative — shown on the opening step, the way the blade's step-0 does */
   media?: string;
+  link?: string;
   onClose?: () => void;
 }) {
+  const { user: authUser } = useAuth();
   const [cfg, setCfg] = useState<FormConfig | null>(null);
-  /* -1 is the blade's step-0: the creative with the advertiser's button under it */
   const [step, setStep] = useState(media ? -1 : 0);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -43,30 +54,38 @@ export function AdLeadForm({
       .catch(() => setErr('Form unavailable.'));
   }, [adId]);
 
-  if (err) return <div className="alert alert-warning">{err}</div>;
+  if (err && !cfg) return <div className="alert alert-warning">{err}</div>;
   if (!cfg) return <p>Loading…</p>;
 
-  // steps: [contact] then question pages (2 per page)
-  const questionPages: string[][] = [];
-  for (let i = 0; i < cfg.questions.length; i += 2) questionPages.push(cfg.questions.slice(i, i + 2));
-  const totalSteps = 1 + questionPages.length;
-  const set = (k: string, val: string) => setV((s) => ({ ...s, [k]: val }));
+  const totalQuestions = cfg.questions.length;
+  const contactStep = totalQuestions;
+  const website = cfg.website || link || '';
+
+  const set = (k: string, value: string) => setV((s) => ({ ...s, [k]: value }));
+
+  /* the account fills the first two fields, as the mockup shows them already carrying the
+     viewer's name and address; state holds only what has actually been typed, so nothing has
+     to be written back when the account arrives */
+  const accountDefaults: Record<string, string> = {
+    name: authUser?.name ?? '',
+    email: authUser?.email ?? '',
+  };
+  const val = (k: string) => v[k] ?? accountDefaults[k] ?? '';
 
   async function submit() {
     setBusy(true);
     setErr(null);
     try {
-      const body: Record<string, string> = {
-        name: v.name ?? '',
-        email: v.email ?? '',
-        phone: v.phone ?? '',
-        company: v.company ?? '',
+      await api.post(`/ads/formulary/${adId}/lead`, {
+        name: val('name'),
+        email: val('email'),
+        phone: val('phone'),
+        company: val('company'),
         answer1: v.answer1 ?? '',
         answer2: v.answer2 ?? '',
         answer3: v.answer3 ?? '',
         answer4: v.answer4 ?? '',
-      };
-      await api.post(`/ads/formulary/${adId}/lead`, body);
+      });
       setDone(true);
     } catch {
       setErr('Please complete all required fields.');
@@ -75,89 +94,155 @@ export function AdLeadForm({
     }
   }
 
-  const box: React.CSSProperties = { background: '#8a2be2', color: '#fff', borderRadius: 14, padding: 24, maxWidth: 460, margin: '0 auto', textAlign: 'center' };
-  const input: React.CSSProperties = { width: '100%', padding: 10, borderRadius: 8, border: 'none', marginTop: 6, color: '#000' };
+  /** the advertiser's row, at the top of every step */
+  const header = (
+    <div className="lead-form-brand">
+      {cfg.avatar ? (
+        <img className="lead-form-avatar" src={assetImage(cfg.avatar)} alt="" />
+      ) : (
+        <span className="lead-form-avatar" />
+      )}
+      <span className="lead-form-company">{cfg.company || cfg.title}</span>
+    </div>
+  );
+
+  const close = onClose ? (
+    <button className="lead-form-close" onClick={onClose} aria-label="Close">
+      ✖
+    </button>
+  ) : null;
 
   if (done) {
     return (
-      <div style={box}>
-        <h4>✔ Thank you!</h4>
-        <p>Your information has been submitted.</p>
-        {onClose && <button className="continue-btn" onClick={onClose}>Close</button>}
+      <div className="lead-form-overlay" onClick={onClose}>
+        <div className="lead-form-box" onClick={(e) => e.stopPropagation()}>
+          {close}
+          {header}
+          <div className="lead-form-success">
+            <p>Formulary filled successfully. Your information has been sent to the business publisher.</p>
+            <p>They will contact you as soon as possible.</p>
+            {website && <p>You can visit the website of the publisher while they contact you.</p>}
+          </div>
+          {website && (
+            <div className="lead-form-actions center">
+              <a
+                className="lead-form-btn-send"
+                href={website}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Visit website
+              </a>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
+  /* the creative itself, with the advertiser's own call to action under it */
   if (step === -1) {
     return (
-      <div className="ad-form-card">
-        {isVideoFile(media ?? '') ? (
-          <video className="autoplay-video" style={{ maxWidth: '100%' }} controls loop muted playsInline>
-            <source src={assetImage(media!)} type={videoMime(media!)} />
-          </video>
-        ) : (
-          <img
-            src={assetImage(media!)}
-            alt="Advertisement"
-            className="img-responsive posttt-img"
-            style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
-          />
-        )}
-        <button
-          className="continue-btn"
-          style={{ marginTop: 10 }}
-          onClick={() => setStep(0)}
-        >
-          {cfg.buttonAction || 'More details'} ➜
-        </button>
+      <div className="lead-form-overlay" onClick={onClose}>
+        <div className="lead-form-box" onClick={(e) => e.stopPropagation()}>
+          {close}
+          {header}
+          <div className="lead-form-creative">
+            {isVideoFile(media ?? '') ? (
+              <video controls loop muted playsInline>
+                <source src={assetImage(media!)} type={videoMime(media!)} />
+              </video>
+            ) : (
+              <img src={assetImage(media!)} alt="Advertisement" />
+            )}
+          </div>
+          <div className="lead-form-actions center">
+            <button className="lead-form-btn" onClick={() => setStep(0)}>
+              {cfg.buttonAction || 'More Info'}
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
 
+  if (step < totalQuestions) {
+    const idx = step + 1;
+    const isLast = step === totalQuestions - 1;
+    const canGoBack = step > 0 || media !== undefined;
+
+    return (
+      <div className="lead-form-overlay" onClick={onClose}>
+        <div className="lead-form-box" onClick={(e) => e.stopPropagation()}>
+          {close}
+          {header}
+
+          <p className="lead-form-question">
+            Question {idx}: {cfg.questions[step]}
+          </p>
+          <textarea
+            className="lead-form-answer"
+            value={v[`answer${idx}`] ?? ''}
+            onChange={(e) => set(`answer${idx}`, e.target.value)}
+          />
+
+          {err && <div className="lead-form-error">{err}</div>}
+
+          <div className={`lead-form-actions${canGoBack ? '' : ' center'}`}>
+            {canGoBack && (
+              <button className="lead-form-btn" onClick={() => setStep(step - 1)}>
+                Back
+              </button>
+            )}
+            <button
+              className="lead-form-btn"
+              onClick={() => setStep(isLast ? contactStep : step + 1)}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const field = (label: string, key: string, type = 'text') => (
+    <div className="lead-form-field">
+      <label htmlFor={`lead-${key}`}>{label}</label>
+      <input
+        id={`lead-${key}`}
+        type={type}
+        value={val(key)}
+        onChange={(e) => set(key, e.target.value)}
+        required
+      />
+    </div>
+  );
+
   return (
-    <div style={box}>
-      {cfg.title && <h4 className="mb-3">{cfg.title}</h4>}
+    <div className="lead-form-overlay" onClick={onClose}>
+      <div className="lead-form-box" onClick={(e) => e.stopPropagation()}>
+        {close}
+        {header}
 
-      {step === 0 && (
-        <div>
-          {cfg.askName && <div className="mb-2 text-left"><label>Name</label><input style={input} value={v.name ?? ''} onChange={(e) => set('name', e.target.value)} /></div>}
-          {cfg.askEmail && <div className="mb-2 text-left"><label>Email</label><input type="email" style={input} value={v.email ?? ''} onChange={(e) => set('email', e.target.value)} /></div>}
-          {cfg.askPhone && <div className="mb-2 text-left"><label>Phone</label><input style={input} value={v.phone ?? ''} onChange={(e) => set('phone', e.target.value)} /></div>}
-          {cfg.askCompany && <div className="mb-2 text-left"><label>Company</label><input style={input} value={v.company ?? ''} onChange={(e) => set('company', e.target.value)} /></div>}
+        {cfg.askName && field('Introduce your name:', 'name')}
+        {cfg.askEmail && field('Introduce your email:', 'email', 'email')}
+        {cfg.askCompany && field('Introduce your Company Name:', 'company')}
+        {cfg.askPhone && field('Introduce your phone number:', 'phone', 'tel')}
+
+        {err && <div className="lead-form-error">{err}</div>}
+
+        <div className="lead-form-actions">
+          <button
+            className="lead-form-btn"
+            onClick={() => setStep(totalQuestions > 0 ? totalQuestions - 1 : -1)}
+          >
+            Back
+          </button>
+          <button className="lead-form-btn-send" disabled={busy} onClick={submit}>
+            {busy ? 'Sending…' : 'Send info'}
+          </button>
         </div>
-      )}
-
-      {step > 0 && questionPages[step - 1] && (
-        <div>
-          <h5 className="mb-3">Questions</h5>
-          {questionPages[step - 1].map((q) => {
-            const idx = cfg.questions.indexOf(q) + 1;
-            return (
-              <div className="mb-2 text-left" key={q}>
-                <label>{q}</label>
-                <textarea style={input} value={v[`answer${idx}`] ?? ''} onChange={(e) => set(`answer${idx}`, e.target.value)} required />
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {err && <p style={{ color: '#ffd0d0' }}>{err}</p>}
-
-      <div className="d-flex justify-content-between mt-3" style={{ gap: 10 }}>
-        {step > 0 ? (
-          <button className="btn btn-light" onClick={() => setStep((s) => s - 1)}>← Back</button>
-        ) : media ? (
-          <button className="btn btn-light" onClick={() => setStep(-1)}>← Back</button>
-        ) : onClose ? (
-          <button className="btn btn-light" onClick={onClose}>Cancel</button>
-        ) : <span />}
-
-        {step < totalSteps - 1 ? (
-          <button className="continue-btn" style={{ width: 'auto' as unknown as number, margin: 0 }} onClick={() => setStep((s) => s + 1)}>Continue ➜</button>
-        ) : (
-          <button className="continue-btn" style={{ width: 'auto' as unknown as number, margin: 0 }} disabled={busy} onClick={submit}>Submit ✔</button>
-        )}
       </div>
     </div>
   );
