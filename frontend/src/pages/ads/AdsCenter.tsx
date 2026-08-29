@@ -5,6 +5,7 @@ import { AdsSidebar } from './AdsSidebar';
 import { LocationPicker } from './LocationPicker';
 import { CountrySelect, CitySelect } from './CountryCityFields';
 import { PostPicker } from './PostPicker';
+import { assetImage, isVideoFile } from '../../utils/format';
 import {
   AD_ACTION_LABEL,
   AD_BUTTON_POSITIONS,
@@ -17,19 +18,27 @@ import {
 import '../../styles/ad-card.css';
 import { PhoneField } from '../../components/PhoneField';
 
+/** The three cards that promote an existing post rather than an upload (Ads Center 1-3). */
+function usesPostPickerType(adType: string): boolean {
+  return adType === 'promote-post' || adType === 'profile-followers' || adType === 'messages';
+}
+
 /**
  * The advertiser's two choices, drawn on their own artwork before they pay for it. It is the
  * real button — the same classes the feed renders — inside a box the shape of a feed tile, so
  * what is shown here is what the ad will look like.
  */
 function AdButtonPreview({
-  media,
+  src,
+  isVideo,
   adType,
   size,
   position,
   buttonAction,
 }: {
-  media: string;
+  /** the uploaded file as a data URL, or the picked post's own media URL */
+  src: string;
+  isVideo: boolean;
   adType: string;
   size: AdButtonSize;
   position: AdButtonPosition;
@@ -40,10 +49,30 @@ function AdButtonPreview({
   return (
     <div className="ads-cta-preview work-item">
       <div className="ad-media">
-        {media ? (
-          <img src={media} alt="" className="img-responsive posttt-img" />
+        {src ? (
+          isVideo ? (
+            /* a clip is previewed as a clip. It played nowhere before: the preview drew
+               every upload in an <img>, so a video came out as a broken picture and the
+               advertiser could not see what they were buying. Muted and looping, because
+               this is a thumbnail rather than something to watch. */
+            <video
+              className="img-responsive posttt-img"
+              src={src}
+              muted
+              loop
+              autoPlay
+              playsInline
+              controls={false}
+            />
+          ) : (
+            <img src={src} alt="" className="img-responsive posttt-img" />
+          )
         ) : (
-          <div className="ads-cta-preview-empty">Upload your media to see it here</div>
+          <div className="ads-cta-preview-empty">
+            {usesPostPickerType(adType)
+              ? 'Pick a post above to see it here'
+              : 'Upload your media to see it here'}
+          </div>
         )}
         {/* the real mark, not a stand-in: the point of the preview is to show the button
             the advertiser will actually get, and the mark is half of what it looks like */}
@@ -361,6 +390,9 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
   const [city, setCity] = useState('');
   const [media, setMedia] = useState<string>(''); // base64
   const [postId, setPostId] = useState('');
+  /* what the picked post looks like, so the preview can show it — the three post-picker
+     cards never upload anything, so without this their preview stayed empty */
+  const [postMedia, setPostMedia] = useState<string | null>(null);
   const [questions, setQuestions] = useState<string[]>(['']);
   const [asks, setAsks] = useState({ ask_phone: true, ask_email: true, ask_name: false, ask_company: false });
   const [buttonAction, setButtonAction] = useState(BUTTON_ACTIONS[0]);
@@ -374,6 +406,13 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
 
   // Ref for the Website URL input – used to scroll into view
   const websiteUrlRef = useRef<HTMLInputElement>(null);
+
+  /* Whatever the ad will actually carry: an upload if there is one, otherwise the post the
+     advertiser picked. A data URL says its own type; a picked post is named by its file. */
+  const previewSrc = media || (postMedia ? assetImage(postMedia) : '');
+  const previewIsVideo = media
+    ? /^data:video\//i.test(media)
+    : !!postMedia && isVideoFile(postMedia);
 
   const estimated = Math.round((amount / 1000) * card.audience);
   const perDay = days > 0 ? Math.round(estimated / days) : 0;
@@ -500,7 +539,13 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
               <>
                 <input className="form-control my-3 w-75 mx-auto" placeholder="Choose name for your Ad" value={fields.ad_name ?? ''} onChange={(e) => setField('ad_name', e.target.value)} required />
                 <h5 className="mt-3 mb-2">Select a Post{card.id !== 1 ? ' Or upload media' : ''}</h5>
-                <PostPicker value={postId} onSelect={setPostId} />
+                <PostPicker
+                  value={postId}
+                  onSelect={(id, m) => {
+                    setPostId(id);
+                    setPostMedia(m);
+                  }}
+                />
               </>
             )}
 
@@ -605,7 +650,8 @@ function CreateAdModal({ card, onClose }: { card: AdCard; onClose: () => void })
 
               {/* the choice, shown on the advertiser's own artwork where there is any */}
               <AdButtonPreview
-                media={media}
+                src={previewSrc}
+                isVideo={previewIsVideo}
                 adType={card.type}
                 size={buttonSize}
                 position={buttonPosition}

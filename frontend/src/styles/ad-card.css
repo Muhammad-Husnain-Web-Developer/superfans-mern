@@ -322,16 +322,21 @@
   background: #efefef;
 }
 
-.ads-cta-preview .ad-media img {
+/* The media is shown whole, at whatever shape it is — the same as the wall, where an ad's
+   picture is `width: 100%` and its clip `max-width: 100%`, neither of them cropped. It was
+   forced into a 3/4 box here and cut off: a landscape clip lost both its sides, which is
+   the one thing a preview must not do. */
+.ads-cta-preview .ad-media img,
+.ads-cta-preview .ad-media video {
   display: block;
   width: 100%;
-  /* a feed tile is taller than it is wide; the artwork is cropped to that so the button
-     lands where it will land on the wall */
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
+  max-width: 100%;
+  height: auto;
   float: none;
 }
 
+/* only the placeholder keeps a shape of its own, so the box is not a sliver before a
+   file is chosen */
 .ads-cta-preview-empty {
   aspect-ratio: 3 / 4;
   display: flex;

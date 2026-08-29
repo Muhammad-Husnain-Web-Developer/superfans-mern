@@ -9,7 +9,14 @@ interface AdPost {
 }
 
 /** Post thumbnails for promote-post/messages/followers ads — port of loadUserPosts()/renderMorePosts(). */
-export function PostPicker({ value, onSelect }: { value: string; onSelect: (id: string) => void }) {
+export function PostPicker({
+  value,
+  onSelect,
+}: {
+  value: string;
+  /** the media comes back with the id: the create form previews what was picked */
+  onSelect: (id: string, media: string | null) => void;
+}) {
   const [posts, setPosts] = useState<AdPost[]>([]);
   const [shown, setShown] = useState(4);
   const [loading, setLoading] = useState(true);
@@ -34,7 +41,7 @@ export function PostPicker({ value, onSelect }: { value: string; onSelect: (id: 
             src={p.imageVideo ? assetImage(p.imageVideo) : LOCKED_POST_IMAGE}
             alt=""
             className={`selectPost${value === p.id ? ' selected' : ''}`}
-            onClick={() => onSelect(p.id)}
+            onClick={() => onSelect(p.id, p.imageVideo)}
           />
         ))}
       </div>
