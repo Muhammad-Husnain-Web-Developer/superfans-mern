@@ -65,7 +65,10 @@
   /* Set per action below. The client leaves a different amount of air between the words
      and the mark on each card — none to speak of on More details, a third of the button on
      Call — so one figure for all six would be wrong on five of them. */
-  /* gap: calc(1cqw * var(--cta-scale)); */
+  /* One measure of air between the mark and the words on all six. The client's cards left
+     a third of the button on Call and nearly nothing on More details; he asked for that
+     spread to go, so the tighter figure is used throughout. */
+  gap: calc(1.6cqw * var(--cta-scale));
   /* Measured on all six cards: 29.4, 29.3, 29.3, 30.3, 30.3 and 28.9 per cent of the
      button's own width. A quarter was too short by a fifth. */
   aspect-ratio: 1 / 0.295;
@@ -135,14 +138,8 @@
      asked for at rather less than that */
   font-size: 0.65em;
 }
-/* the air between mark and words, measured on each card (415px creative) */
-.ad-cta-btn.cta-call { gap: calc(8cqw * var(--cta-scale)); }        /* 33px */
-.ad-cta-btn.cta-send-card { gap: calc(7cqw * var(--cta-scale)); }   /* 29px */
-.ad-cta-btn.cta-subscribe,
-.ad-cta-btn.cta-follow { 
-  /* gap: calc(4.6cqw * var(--cta-scale));  */
-}    /* 19px */
-.ad-cta-btn.cta-whatsapp { gap: calc(4.6cqw * var(--cta-scale)); }
+/* The per-card gaps the mockups carried (Call 33px, Send Card 29px, the rest 19px) are
+   gone: the client asked for the same, tighter space on all six, which the base rule sets. */
 /* The client sets this one's words in the regular weight, not the bold the others
    carry — his card, so his weight. */
 .ad-cta-btn.cta-send-card {

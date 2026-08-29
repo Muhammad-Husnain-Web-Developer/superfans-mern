@@ -213,7 +213,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
     a red flag on Subscribe and Follow, a green disc on Whatsapp, and an emoji on the
     other three. The flag and the disc are drawn rather than borrowed from an emoji font,
     which renders them differently on every machine. */
-function CtaMark({ action }: { action: AdAction }) {
+export function CtaMark({ action }: { action: AdAction }) {
   if (action === 'subscribe' || action === 'follow') {
     return (
       <span className="cta-mark" aria-hidden="true">
@@ -261,16 +261,13 @@ function AdCta({
   let className = `ad-cta-btn cta-${action} size-${size} pos-${position}`;
   if (isForm) className += ' form-cta';
 
-  const markFirst = action === 'call' || action === 'send-card';
-  const inner = markFirst ? (
+  /* The mark leads on every one of them. The client's cards put it on the right for four
+     of the six and on the left for the other two; he asked for one side throughout, and
+     chose the left — so a row of tiles reads down a single column of marks. */
+  const inner = (
     <>
       <CtaMark action={action} />
       <span>{label}</span>
-    </>
-  ) : (
-    <>
-      <span>{label}</span>
-      <CtaMark action={action} />
     </>
   );
 

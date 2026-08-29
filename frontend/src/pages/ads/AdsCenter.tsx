@@ -9,6 +9,7 @@ import {
   AD_ACTION_LABEL,
   AD_BUTTON_POSITIONS,
   AD_BUTTON_SIZES,
+  CtaMark,
   adAction,
   type AdButtonPosition,
   type AdButtonSize,
@@ -44,7 +45,10 @@ function AdButtonPreview({
         ) : (
           <div className="ads-cta-preview-empty">Upload your media to see it here</div>
         )}
+        {/* the real mark, not a stand-in: the point of the preview is to show the button
+            the advertiser will actually get, and the mark is half of what it looks like */}
         <span className={`ad-cta-btn cta-${action} size-${size} pos-${position}`}>
+          <CtaMark action={action} />
           <span>{label}</span>
         </span>
       </div>
