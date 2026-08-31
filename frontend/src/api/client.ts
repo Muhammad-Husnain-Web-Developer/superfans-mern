@@ -76,14 +76,12 @@ api.interceptors.response.use(
       // Retry the original request
       return api(originalRequest);
     } catch (refreshError) {
-      // Refresh failed → clear session and redirect to login
+      // Refresh failed – reject the error and let the calling code handle it.
+      // The route guards in App.tsx will redirect to login if needed.
       processQueue(refreshError);
 
-      // Clear any client-side auth state
-      // Your AuthContext will detect the 401 and handle it
-
-      // Redirect to login
-      window.location.href = '/login';
+      // Optional: you can clear any client-side auth state here (e.g., setUser(null))
+      // But that should be done in the AuthContext based on the 401 response.
 
       return Promise.reject(refreshError);
     } finally {
