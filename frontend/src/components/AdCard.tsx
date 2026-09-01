@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdLeadForm } from '../pages/ads/AdLeadForm';
+import { SendCardModal } from './SendCardModal';
+import { PremiumFanModal } from './PremiumFanModal';
 import { assetImage, isVideoFile, videoMime } from '../utils/format';
 
 /**
@@ -21,8 +23,17 @@ export interface AdCardItem {
   link?: string;
   adId?: string;
   adType?: string | null;
-  /** the advertiser, for the actions that lead back to a profile */
-  advertiser?: { usernameUrl: string | null; name?: string | null } | null;
+  /** the advertiser: the profile Follow/Subscribe lead to, and who a Send Card writes to */
+  advertiser?: {
+    id?: string;
+    usernameUrl: string | null;
+    name?: string | null;
+    profilePicture?: string | null;
+    /** false when they have set themselves Busy — a card then costs the $10 first */
+    chatToggle?: boolean;
+    /** this viewer has already bought priority access to them */
+    viewerPremium?: boolean;
+  } | null;
   /** clients-form ads carry the advertiser's own choice of wording */
   buttonAction?: string | null;
   /** how big the advertiser asked for the button, and where on the creative */
@@ -87,6 +98,10 @@ function safeLink(link: string | undefined): string | null {
 export function AdCard({ item, showType = false }: { item: AdCardItem; showType?: boolean }) {
   const navigate = useNavigate();
   const [formOpen, setFormOpen] = useState(false);
+  /* the Send Card dialog, for `messages` ads — and the $10 that stands in front of it when
+     the advertiser is Busy */
+  const [cardOpen, setCardOpen] = useState(false);
+  const [premiumOpen, setPremiumOpen] = useState(false);
   const media = item.media ?? '';
   const action = adAction(item.adType);
   const handle = item.advertiser?.usernameUrl ?? null;
@@ -158,11 +173,22 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
      Follow, Subscribe, and Send Card. Send Card used to be a `mailto:` to the advertiser,
      which did nothing at all in a browser with no mail client set, and put their address
      in the page for anyone to scrape. */
-  const inApp = action === 'follow' || action === 'subscribe' || action === 'send-card';
+  /* Send Card is the client's own answer for this one: "We open Modal for send direct
+     message to the user/influencer." So it opens that dialog here rather than leading
+     anywhere. Follow and Subscribe still go to the advertiser's profile. */
+  const advertiserId = item.advertiser?.id ?? null;
+  const goesToProfile = action === 'follow' || action === 'subscribe';
   let href: string | null = null;
   let onClick: (() => void) | null = null;
 
-  if (inApp && handle) onClick = () => navigate(`/${handle}`);
+  /* A card writes to the advertiser's inbox, so it answers to the same rule the profile's
+     ✉️ does: Busy means the $10 first, and someone who has already paid writes anyway. */
+  const advertiserBusy =
+    item.advertiser?.chatToggle === false && !item.advertiser?.viewerPremium;
+
+  if (action === 'send-card' && advertiserId)
+    onClick = () => (advertiserBusy ? setPremiumOpen(true) : setCardOpen(true));
+  else if (goesToProfile && handle) onClick = () => navigate(`/${handle}`);
   else href = safeLink(item.link);
 
   return (
@@ -205,6 +231,25 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
           position={item.buttonPosition ?? 'bottom'}
         />
       </div>
+
+      {cardOpen && advertiserId && (
+        <SendCardModal
+          receiverId={advertiserId}
+          usernameUrl={item.advertiser?.usernameUrl ?? null}
+          name={item.advertiser?.name ?? null}
+          profilePicture={item.advertiser?.profilePicture ?? null}
+          onClose={() => setCardOpen(false)}
+        />
+      )}
+
+      {premiumOpen && advertiserId && (
+        <PremiumFanModal
+          influencerId={advertiserId}
+          usernameUrl={item.advertiser?.usernameUrl ?? null}
+          profilePicture={item.advertiser?.profilePicture ?? null}
+          onClose={() => setPremiumOpen(false)}
+        />
+      )}
     </div>
   );
 }

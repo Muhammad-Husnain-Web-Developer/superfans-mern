@@ -1,0 +1,136 @@
+/* The blade's premium-fan pair, drawn as the app's own dialog rather than SweetAlert.
+   The register pages override SweetAlert to the purple the whole app uses
+   (register_u.blade.php:64-80), so the ground and lettering here match that; the two
+   buttons keep the exact colours the blade sets inline on them:
+     BE PREMIUM FAN — background #FFEB3B, 2px #e1be24, text #6A1B9A
+     PAY $10        — btn-success with 2px #409c40 and the monospace stack, bold  */
+
+.premium-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 123123;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.premium-box {
+  position: relative;
+  margin: auto 0;
+  width: 460px;
+  max-width: 100%;
+  padding: 26px 24px 24px;
+  border-radius: 20px;
+  background: #8a2be2;
+  color: #fff;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+.premium-close {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
+  opacity: 0.85;
+  cursor: pointer;
+}
+.premium-close:hover {
+  opacity: 1;
+}
+
+/* iconHtml in the blade: 92px, border-radius 74px, 4px solid white */
+.premium-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 74px;
+  border: 4px solid #fff;
+  object-fit: cover;
+  margin-bottom: 12px;
+}
+
+.premium-title {
+  margin: 0 0 14px;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.premium-text {
+  margin: 0 0 20px;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* the blade sets this line at 11px */
+.premium-fineprint {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.premium-be-fan {
+  padding: 10px 20px;
+  border: 2px solid #e1be24;
+  border-radius: 0.25em;
+  background-color: #ffeb3b;
+  color: #6a1b9a;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.premium-be-fan:hover {
+  filter: brightness(1.06);
+}
+
+.premium-pay {
+  padding: 11px 22px;
+  border: 2px solid #409c40;
+  border-radius: 0.25em;
+  background: #28a745;
+  color: #fff;
+  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono',
+    'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.premium-pay:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.premium-pay:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.premium-error {
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .premium-box {
+    padding: 20px 16px 20px;
+  }
+  .premium-avatar {
+    width: 76px;
+    height: 76px;
+  }
+  .premium-title {
+    font-size: 20px;
+  }
+}

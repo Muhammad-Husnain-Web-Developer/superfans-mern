@@ -1,0 +1,173 @@
+/* "Send Card" — the app's purple dialog, since the blade never had one to copy.
+   It borrows the register modal's ground (#8a2be2), the subscribe modal's white confirm and
+   the same 20px corners the rest of the app's dialogs use, so it reads as one of them.
+   `.sf-modal-scrim` / `.sf-modal-pop` carry the drop-in animation every modal shares. */
+
+.send-card-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 123123;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.send-card-box {
+  position: relative;
+  /* `auto 0` rather than centring: a tall dialog on a short phone must be reachable from
+     the top, which `align-items: center` would cut off */
+  margin: auto 0;
+  width: 460px;
+  max-width: 100%;
+  padding: 22px 24px 24px;
+  border-radius: 20px;
+  background: #8a2be2;
+  color: #fff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+.send-card-close {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 34px;
+  line-height: 1;
+  opacity: 0.85;
+  cursor: pointer;
+}
+.send-card-close:hover {
+  opacity: 1;
+}
+
+.send-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.send-card-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  flex-shrink: 0;
+}
+.send-card-avatar-blank {
+  display: block;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.send-card-who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.send-card-title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.send-card-handle {
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.95;
+}
+
+.send-card-name {
+  font-size: 12px;
+  opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.send-card-text {
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 12px;
+  background: #fff;
+  color: #222;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.send-card-text:focus {
+  outline: 3px solid rgba(255, 255, 255, 0.55);
+}
+
+.send-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+  font-size: 11px;
+  opacity: 0.8;
+}
+.send-card-count.low {
+  font-weight: 800;
+  opacity: 1;
+}
+
+.send-card-error {
+  margin: 12px 0 0;
+  padding: 9px 12px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.28);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.send-card-done {
+  margin: 8px 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.send-card-send {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px;
+  border: 2px solid #409c40;
+  border-radius: 10px;
+  background: #28a745;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.send-card-send:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.send-card-send:disabled {
+  /* the button stays at full strength and simply refuses — the client asked for that on the
+     subscribe modal, so it is the same here */
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .send-card-box {
+    padding: 18px 16px 20px;
+  }
+  .send-card-avatar {
+    width: 44px;
+    height: 44px;
+  }
+}

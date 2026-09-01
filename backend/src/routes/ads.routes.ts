@@ -12,6 +12,7 @@ import { adCreatedUser, adCreatedAdmin, adStatusChanged } from '../services/adEm
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Post } from '../models/Post.js';
+import { PremiumAccess } from '../models/PremiumAccess.js';
 import {
   AD_TYPES,
   Ad,
@@ -217,7 +218,7 @@ function mediaOnDisk(media: string | null | undefined): boolean {
 adsRouter.get(
   '/preview',
   requireAuth,
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
     const all = await Ad.find(
       {},
       {
@@ -241,7 +242,22 @@ adsRouter.get(
     const ownerIds = ads
       .map((a) => a.user)
       .filter((u): u is NonNullable<typeof u> => !!u);
-    const owners = await User.find({ _id: { $in: ownerIds } }, { usernameUrl: 1, name: 1 }).lean();
+    const owners = await User.find(
+      { _id: { $in: ownerIds } },
+      { usernameUrl: 1, name: 1, profilePicture: 1, chatToggle: 1 },
+    ).lean();
+
+    /* A Send Card writes to the advertiser's inbox, so it answers to the same rule the
+       profile's ✉️ does: an advertiser who has set themselves Busy is behind the $10.
+       Which of them this viewer has already paid is looked up once for the whole wall. */
+    const paidTo = new Set(
+      (
+        await PremiumAccess.find(
+          { user: req.auth!.userId, influencer: { $in: ownerIds } },
+          { influencer: 1 },
+        ).lean()
+      ).map((r) => String(r.influencer)),
+    );
     const byId = new Map(owners.map((u) => [String(u._id), u]));
 
     /* clients-form ads carry the advertiser's own wording for the button */
@@ -272,7 +288,16 @@ adsRouter.get(
           buttonPosition: a.buttonPosition ?? 'bottom',
           buttonAction: wording.get(String(a._id)) ?? null,
           advertiser: owner
-            ? { usernameUrl: owner.usernameUrl ?? null, name: owner.name ?? null }
+            ? {
+                /* the id is what a Send Card writes to */
+                id: String(owner._id),
+                usernameUrl: owner.usernameUrl ?? null,
+                name: owner.name ?? null,
+                profilePicture: owner.profilePicture ?? null,
+                /* the two the tile needs to decide between writing and paying */
+                chatToggle: owner.chatToggle !== false,
+                viewerPremium: paidTo.has(String(owner._id)),
+              }
             : null,
         };
       }),

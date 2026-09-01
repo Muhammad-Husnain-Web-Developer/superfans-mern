@@ -6,6 +6,7 @@ import { ApiError } from '../middleware/errors.js';
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Subscription } from '../models/Subscription.js';
+import { PremiumAccess } from '../models/PremiumAccess.js';
 import { Ad, AdCampaign, AdPayment } from '../models/ads.js';
 import { Cart } from '../models/adminEntities.js';
 import { merchProducts } from '../data/merchProducts.js';
@@ -21,6 +22,50 @@ export const paymentsRouter = Router();
 
 const APP = env.PUBLIC_APP_URL;
 const CURRENCY = 'eur'; // Spanish market — Laravel used EUR throughout
+
+/**
+ * The blade's "premium fan" — a one-off payment that buys priority access to one creator's
+ * inbox when they have their chat switched off (user_profile.blade.php:1310-1345, where it
+ * posts amount=10, payment_type=one_time to Redsys; the same charge goes through Stripe
+ * here). Ten of whatever the site charges in, which is euros.
+ */
+export const PREMIUM_ACCESS_AMOUNT = 10;
+
+paymentsRouter.post(
+  '/premium/:influencerId',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const influencer = await User.findById(req.params.influencerId);
+    if (!influencer) throw ApiError.notFound('Creator not found');
+    const me = await User.findById(req.auth!.userId);
+    if (!me) throw ApiError.unauthorized();
+    if (String(me._id) === String(influencer._id)) {
+      throw ApiError.badRequest('You cannot buy priority access to your own inbox');
+    }
+
+    /* it is bought once and kept — the blade says as much: "only for 1 use" and never
+       renewed. Paying again would take the money and change nothing. */
+    const already = await PremiumAccess.exists({ user: me._id, influencer: influencer._id });
+    if (already) throw ApiError.badRequest('You already have priority access to this creator');
+
+    const { url } = await paymentProvider.createCheckout({
+      mode: 'payment',
+      amount: PREMIUM_ACCESS_AMOUNT,
+      currency: CURRENCY,
+      description: `Priority access to @${influencer.usernameUrl}`,
+      customerEmail: me.email,
+      metadata: {
+        purpose: 'premium',
+        userId: String(me._id),
+        influencerId: String(influencer._id),
+        amount: String(PREMIUM_ACCESS_AMOUNT),
+      },
+      successUrl: `${APP}/${influencer.usernameUrl}?premium=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${APP}/${influencer.usernameUrl}?premium=cancelled`,
+    });
+    res.json({ success: true, url });
+  }),
+);
 
 /** publishable key + which provider is live, for the frontend. */
 paymentsRouter.get('/config', (_req, res) => {
@@ -251,6 +296,22 @@ async function applyPayment(
           provider: paymentProvider.name,
           status: 'active',
           ...(externalId ? { externalId } : {}),
+        },
+      },
+      { upsert: true },
+    );
+  } else if (metadata.purpose === 'premium' && metadata.userId && metadata.influencerId) {
+    /* One row per fan/creator pair, and the session id carries the idempotency: a webhook
+       Stripe sends twice must not write twice, and the unique pair means a second payment
+       for the same creator cannot either. */
+    await PremiumAccess.updateOne(
+      { user: metadata.userId, influencer: metadata.influencerId },
+      {
+        $setOnInsert: {
+          user: metadata.userId,
+          influencer: metadata.influencerId,
+          amount: Number(metadata.amount) || PREMIUM_ACCESS_AMOUNT,
+          ...(externalId ? { sessionId: externalId } : {}),
         },
       },
       { upsert: true },

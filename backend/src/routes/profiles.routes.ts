@@ -8,6 +8,7 @@ import { Like } from '../models/Like.js';
 import { Hate } from '../models/Hate.js';
 import { Followership } from '../models/Followership.js';
 import { Subscription } from '../models/Subscription.js';
+import { PremiumAccess } from '../models/PremiumAccess.js';
 import { SocialNetwork } from '../models/SocialNetwork.js';
 import { UserBlock } from '../models/UserBlock.js';
 import { optionalAuth } from '../middleware/auth.js';
@@ -31,13 +32,18 @@ profilesRouter.get(
     let viewerIsBlockedBy = false;
     let viewerFollowing = false;
     let viewerSubscribed = false;
+    /* the blade's `hasPaidInfluencer` — this viewer has bought priority access to this
+       creator's inbox, so the ✉️ writes to them even with their chat switched off */
+    let viewerPremium = false;
     if (req.auth) {
-      [viewerHasBlocked, viewerIsBlockedBy, viewerFollowing, viewerSubscribed] = await Promise.all([
-        UserBlock.exists({ blocker: req.auth.userId, blocked: user._id }).then(Boolean),
-        UserBlock.exists({ blocker: user._id, blocked: req.auth.userId }).then(Boolean),
-        Followership.exists({ followedUser: user._id, followerUser: req.auth.userId }).then(Boolean),
-        Subscription.exists({ influencer: user._id, user: req.auth.userId }).then(Boolean),
-      ]);
+      [viewerHasBlocked, viewerIsBlockedBy, viewerFollowing, viewerSubscribed, viewerPremium] =
+        await Promise.all([
+          UserBlock.exists({ blocker: req.auth.userId, blocked: user._id }).then(Boolean),
+          UserBlock.exists({ blocker: user._id, blocked: req.auth.userId }).then(Boolean),
+          Followership.exists({ followedUser: user._id, followerUser: req.auth.userId }).then(Boolean),
+          Subscription.exists({ influencer: user._id, user: req.auth.userId }).then(Boolean),
+          PremiumAccess.exists({ influencer: user._id, user: req.auth.userId }).then(Boolean),
+        ]);
     }
     if (user.status === 'suspended') {
       res.status(403).json({ success: false, message: 'suspended', data: { status: user.status } });
@@ -105,6 +111,7 @@ profilesRouter.get(
         viewerIsBlockedBy,
         viewerFollowing,
         viewerSubscribed,
+        viewerPremium,
         /* payout details are the owner's own business — never expose them to other viewers */
         ...(req.auth && String(user._id) === req.auth.userId
           ? {

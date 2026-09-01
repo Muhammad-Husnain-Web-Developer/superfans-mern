@@ -32,6 +32,8 @@ export interface ProfileData {
   viewerIsBlockedBy: boolean;
   viewerFollowing: boolean;
   viewerSubscribed: boolean;
+  /** the blade's `hasPaidInfluencer` — this viewer bought priority access to the inbox */
+  viewerPremium?: boolean;
   /** owner-only payout fields (absent for other viewers) */
   earnings?: number;
   bankAccount?: string | null;

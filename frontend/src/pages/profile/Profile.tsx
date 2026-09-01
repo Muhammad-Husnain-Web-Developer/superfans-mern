@@ -36,6 +36,8 @@ import '../../styles/profile-page.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { SubscriberListModal } from './SubscriberListModal';
 import { SubscribeModal } from './SubscribeModal';
+import { SendCardModal } from '../../components/SendCardModal';
+import { PremiumFanModal } from '../../components/PremiumFanModal';
 
 /** Bio with newlines → line breaks (nl2br) and @mentions linked, as the Blade page does. */
 export function Bio({ bio }: { bio: string }) {
@@ -1248,6 +1250,9 @@ export function FollowButtons({
   const [subscribed, setSubscribed] = useState(profile.viewerSubscribed);
   const [busy, setBusy] = useState(false);
   const [subModalOpen, setSubModalOpen] = useState(false);
+  /* the two dialogs behind the ✉️ — writing to them, and the $10 that buys the right to */
+  const [sendCardOpen, setSendCardOpen] = useState(false);
+  const [premiumOpen, setPremiumOpen] = useState(false);
 
   /* keep the button in sync when the parent refetches the profile (e.g. after a
      payment reconciles the subscription). */
@@ -1304,21 +1309,37 @@ export function FollowButtons({
     />
   );
 
-  /* user_profile.blade.php:1047-1066 — the blade branches on whose page it is:
-       own page  → window.location = '…/influencer/messages'
-       otherwise → data-target="#paymentModalCenter", the purple subscribe modal
+  /* The blade's ✉️ button, branch for branch (user_profile.blade.php:1172-1215):
+       own page                       → the inbox
+       not subscribed                 → #paymentModalCenter, the subscribe modal
+       blocked either way             → no button at all
+       chat_toggle on, or already paid → #uchatmodal, the write-to-them dialog
+       otherwise (the creator is busy) → the premium-fan pair, ending at $10
      Only the first of those was wired here, so on anybody else's profile the button did
-     nothing at all. (The blade also drops the button entirely when either party has blocked
-     the other; the profile payload does not carry that yet, so it is not branched on here.) */
-  const chatBtn = (
+     nothing. `#uchatmodal` is not in the Laravel source at all — both blades name it and
+     nothing defines it — so the dialog itself is this app's own (SendCardModal). */
+  const blocked = profile.viewerHasBlocked || profile.viewerIsBlockedBy;
+  const canWrite = profile.chatToggle || !!profile.viewerPremium;
+
+  function onChatClick() {
+    if (isOwner) {
+      window.location.href = '/user/messages';
+      return;
+    }
+    if (!subscribed) {
+      setSubModalOpen(true);
+      return;
+    }
+    if (canWrite) setSendCardOpen(true);
+    else setPremiumOpen(true);
+  }
+
+  const chatBtn = blocked ? null : (
     <button
       id="chat_with_me_btn"
       type="button"
       className="btn btn-success"
-      onClick={() => {
-        if (isOwner) window.location.href = '/user/messages';
-        else setSubModalOpen(true);
-      }}
+      onClick={onChatClick}
       style={{ border: '2px solid #409c40', width: 65, height: 59, display: 'inline-block', marginLeft: 1 }}
     >
       {' '}
@@ -1385,6 +1406,25 @@ export function FollowButtons({
         onClose={() => setSubModalOpen(false)}
         onConfirm={subscribe}
       />
+
+      {sendCardOpen && (
+        <SendCardModal
+          receiverId={profile.id}
+          usernameUrl={profile.usernameUrl}
+          name={profile.name}
+          profilePicture={profile.profilePicture}
+          onClose={() => setSendCardOpen(false)}
+        />
+      )}
+
+      {premiumOpen && (
+        <PremiumFanModal
+          influencerId={profile.id}
+          usernameUrl={profile.usernameUrl}
+          profilePicture={profile.profilePicture}
+          onClose={() => setPremiumOpen(false)}
+        />
+      )}
     </div>
   );
 }

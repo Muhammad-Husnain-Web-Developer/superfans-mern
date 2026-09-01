@@ -5,6 +5,7 @@ import { optionalAuth } from '../middleware/auth.js';
 import { Post } from '../models/Post.js';
 import { resolveTaggedAvatars } from '../utils/tagged-avatars.js';
 import { User } from '../models/User.js';
+import { PremiumAccess } from '../models/PremiumAccess.js';
 import { Like } from '../models/Like.js';
 import { Hate } from '../models/Hate.js';
 import { Followership } from '../models/Followership.js';
@@ -162,11 +163,45 @@ worldRouter.get(
       adType?: string;
       buttonSize?: string;
       buttonPosition?: string;
+      user?: Types.ObjectId;
     }>([
       { $match: { status: true } },
       { $sample: { size: 3 } },
-      { $project: { media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1 } },
+      { $project: { media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1, user: 1 } },
     ]);
+
+    /* the advertisers behind those ads, for the tiles that lead back into the app */
+    const adOwnerIds = ads.map((a) => a.user).filter(Boolean) as Types.ObjectId[];
+    const adOwnerDocs = adOwnerIds.length
+      ? await User.find(
+          { _id: { $in: adOwnerIds } },
+          { usernameUrl: 1, name: 1, profilePicture: 1, chatToggle: 1 },
+        ).lean()
+      : [];
+    /* which of these advertisers this viewer has already bought priority access to */
+    const adPaidTo = new Set(
+      req.auth && adOwnerIds.length
+        ? (
+            await PremiumAccess.find(
+              { user: req.auth.userId, influencer: { $in: adOwnerIds } },
+              { influencer: 1 },
+            ).lean()
+          ).map((r) => String(r.influencer))
+        : [],
+    );
+    const adOwners = new Map(
+      adOwnerDocs.map((u) => [
+        String(u._id),
+        {
+          id: String(u._id),
+          usernameUrl: u.usernameUrl ?? null,
+          name: u.name ?? null,
+          profilePicture: u.profilePicture ?? null,
+          chatToggle: u.chatToggle !== false,
+          viewerPremium: adPaidTo.has(String(u._id)),
+        },
+      ]),
+    );
 
     const taggedAvatars = await resolveTaggedAvatars(pagePosts);
 
@@ -217,6 +252,9 @@ worldRouter.get(
             /* how big the advertiser asked for the button, and where on the creative */
             buttonSize: ads[adIndex].buttonSize ?? 'medium',
             buttonPosition: ads[adIndex].buttonPosition ?? 'bottom',
+            /* who the ad belongs to — a Send Card writes to them, and Follow/Subscribe
+               lead to their profile */
+            advertiser: adOwners.get(String(ads[adIndex].user ?? '')) ?? null,
           });
         }
       }
