@@ -489,7 +489,7 @@ function doHate() {
         /* The bar itself is see-through now, at the client's request; the grey
            it used to carry moved onto the report control alone. */
         .post-fs-topbar{position:absolute;top:0;left:0;right:0;height:52px;background:transparent;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
-        .post-fs-report-wrap{background:#888}
+        .post-fs-report-wrap{background:none}
         /* the client's own arrow, 31x30 — drawn at its natural size */
         .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:8px;font-size:22px}
         .post-fs-back:hover,.post-fs-back:focus{color:#fff;text-decoration:none}
@@ -501,7 +501,7 @@ function doHate() {
         /* dressed as the @nickname tag that sits above every post
            (.feed_posts_heading_p): darkgray ground, black text, the same
            lightgray edge that is thinner along the bottom, and Consolas */
-        .post-fs-follow-btn{background:#a9a9a9;color:#000;border:7px solid #d3d3d3;border-radius:0;padding:10px;font:700 14px Consolas,Menlo,Monaco,monospace;white-space:nowrap;flex-shrink:0;cursor:pointer}
+      .post-fs-follow-btn{background:#c3c3c3 !important;color:#000;border:5px solid #585858 !important;border-radius:0;padding:5px 10px;font:900 14px Consolas,Menlo,Monaco,monospace;white-space:nowrap;flex-shrink:0;cursor:pointer;}
         /* flex:0 1 auto, not flex:1 -- growing would take all the free width and
            shove FOLLOW against the far edge, half a bar away from the name it
            belongs to. It still shrinks, so a long nickname ellipsises. */
