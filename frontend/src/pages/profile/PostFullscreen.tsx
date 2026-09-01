@@ -491,7 +491,7 @@ function doHate() {
         .post-fs-topbar{position:absolute;top:0;left:0;right:0;height:52px;background:transparent;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
         .post-fs-report-wrap{background:none}
         /* the client's own arrow, 31x30 — drawn at its natural size */
-        .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:8px;font-size:22px}
+        .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:4px;font-size:14px}
         .post-fs-back:hover,.post-fs-back:focus{color:#fff;text-decoration:none}
         .post-fs-bottombar{position:absolute;bottom:0;left:0;right:0;min-height:72px;display:flex;align-items:center;padding:12px 16px;gap:12px;z-index:10}
         .post-fs-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#555;flex-shrink:0}
