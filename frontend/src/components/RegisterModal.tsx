@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type CSSProperties, typ
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { login as apiLogin, register as apiRegister, type RegisterInput } from '../api/auth';
+import '../pages/auth/auth.css';
 import { useAuth } from '../context/AuthContext';
 import { Select2Multi } from './Select2Multi';
 import { assetImage } from '../utils/format';
@@ -545,14 +546,15 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
         )}
         {/* the terms checkbox is gone from sign-in at the client's request;
             registration still asks for it */}
-        <button
-          type="submit"
-          id="sendlogin"
-          className="btn btn-outline-primary new_button3"
-          disabled={submitting}
-          style={{ marginLeft: 'auto', display: 'block', fontSize: 20, color: '#000' }}
-        >
-          Login
+        {/* The blade's own modal button is `new_button3` in black on white — but that whole
+            form sits inside a {{-- --}} comment there, so it is a design nobody ever saw.
+            The client asked for the green one instead: the same button the Login page
+            submits with (auth/login.blade.php:301), dot and all. */}
+        <button type="submit" id="sendlogin" className="btn-login-green" disabled={submitting}>
+          <b>
+            Login
+            <span className="dot">..</span>
+          </b>
         </button>
       </form>
       <div className="text-center mt-4">

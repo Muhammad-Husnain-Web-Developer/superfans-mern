@@ -152,7 +152,10 @@
 
 /* limegreen login button (exact inline styles from blade) */
 .btn-login-green {
-  padding: 0.375rem 11px !important;
+  /* 6px, not 0.375rem: the World page's root is 10px and the auth pages' is 16px, so a
+     rem here made the same button two different heights. 6px is what it has always
+     rendered on the auth pages, and what Bootstrap's .btn gave it in the blade. */
+  padding: 6px 11px !important;
   background-color: limegreen;
   border: 3px solid green;
   color: #fff;
@@ -179,6 +182,15 @@
   outline: none !important;
   box-shadow: none !important;
 }
+/* The World page loads layouts_direct_user's stylesheet, and it carries
+   `#sendlogin { color: red }` — a rule that in Laravel only ever met a button sitting
+   inside a {{-- --}} comment, so nobody saw it. In the login modal that id would beat
+   this class and print the label red, so the green button states its colour with the
+   same weight and one more. */
+#sendlogin.btn-login-green {
+  color: #fff;
+}
+
 .btn-login-green .dot {
   width: 11px;
   height: 11px;
