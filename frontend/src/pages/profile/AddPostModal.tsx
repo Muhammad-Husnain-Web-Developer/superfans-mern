@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
+import { useAuth } from '../../context/AuthContext';
+import { SwalResult } from '../../components/SwalResult';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import type { ProfilePost } from '../../api/profiles';
@@ -24,6 +27,13 @@ interface AddPostModalProps {
  * suggestions, purple ✎ Post button, "My posts" management strip.
  */
 export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps) {
+  const navigate = useNavigate();
+  const { user: authUser } = useAuth();
+  /* The blade redirects back with a `post_added` flash and re-opens this modal, so the new
+     post shows in its own list. Here the modal closed the moment the upload finished and
+     the page underneath never changed, so nothing at all happened on screen. It confirms
+     the post now and then goes to the posts page, where the post itself is. */
+  const [posted, setPosted] = useState(false);
   const { t } = useTranslation('content');
   const { t: tNav } = useTranslation('nav');
 
@@ -59,7 +69,8 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
       if (tags.length > 0) form.append('tags', tags.join(','));
       await api.post('/posts', form, { headers: { 'Content-Type': 'multipart/form-data' } });
       onChanged();
-      onClose();
+      setSubmitting(false);
+      setPosted(true);
     } catch {
       setSubmitting(false);
     }
@@ -78,6 +89,26 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
   async function toggleAll() {
     await api.post('/posts/toggle-all-visibility').catch(() => undefined);
     onChanged();
+  }
+
+  /* The confirmation stands on its own — the upload is finished and there is nothing left
+     to do in the form. "Post Added" is the blade's own flash text (InfluencerController
+     add_post). Its OK leads to the posts page, carrying a stamp so that page refetches
+     even when it is the page already underneath. */
+  if (posted) {
+    return (
+      <SwalResult
+        icon="success"
+        title="Post Added"
+        onClose={() => {
+          setPosted(false);
+          onClose();
+          navigate(authUser?.role === 'influencer' ? '/influencer/posts' : '/user/posts', {
+            state: { postAdded: Date.now() },
+          });
+        }}
+      />
+    );
   }
 
   return (

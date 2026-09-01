@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import { useScrollMemory } from '../../utils/useScrollMemory';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
@@ -67,6 +67,11 @@ export function Posts() {
   /* /user/posts and /influencer/posts show the viewer's own posts and carry no
      param, exactly as Laravel serves those URLs. */
   const { usernameUrl: routeUsername } = useParams();
+  /* AddPostModal sends the poster here with a fresh stamp. Without it, adding a post while
+     already on this page would navigate to the route it is already on, and nothing would
+     refetch — the new post would need a manual reload, which is the complaint. */
+  const { state: navState } = useLocation();
+  const postAdded = (navState as { postAdded?: number } | null)?.postAdded;
   const { t } = useTranslation('content');
   const { user: authUser } = useAuth();
   const usernameUrl = routeUsername ?? authUser?.usernameUrl ?? '';
@@ -106,7 +111,7 @@ export function Posts() {
     return () => {
       cancelled = true;
     };
-  }, [usernameUrl]);
+  }, [usernameUrl, postAdded]);
 
   /* observer-driven playback for grid videos (blade parity) */
   useEffect(() => {

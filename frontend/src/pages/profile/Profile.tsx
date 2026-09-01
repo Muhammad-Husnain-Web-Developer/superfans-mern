@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
 import { AddPostModal } from './AddPostModal';
+import { SwalResult } from '../../components/SwalResult';
 import { AddPostHost } from './AddPostHost';
 import { ControlPanelHost } from './ControlPanelHost';
 import { AddStoryModal } from '../../components/stories/AddStoryModal';
@@ -65,91 +66,10 @@ export function Bio({ bio }: { bio: string }) {
 
 /* report.reasons.* keys — the dropdown shows the full descriptive label from report.json
    (matching Laravel's user-report options), and reports the same descriptive text. */
-const REPORT_REASONS = ['sensuality', 'impersonation', 'violence', 'racism', 'other'] as const;
+/* still exported from here: four pages import it by this path. */
+export { SwalResult };
 
-/** sweetalert2-default-style result popup (white, icon, OK button). */
-export function SwalResult({
-  icon,
-  title,
-  text,
-  onClose,
-}: {
-  icon?: 'success' | 'error';
-  title: string;
-  text?: string;
-  onClose: () => void;
-}) {
-  return (
-    <div
-      className="sf-modal-scrim"
-      onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.4)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10000,
-      }}
-    >
-      <div
-        className="sf-modal-pop"
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          /* Laravel's global .swal2-modal theme: purple background, white text, 1.2rem. */
-          background: '#8a2be2',
-          color: '#fff',
-          borderRadius: 5,
-          width: '32em',
-          maxWidth: '90%',
-          padding: '2em 1.6em',
-          textAlign: 'center',
-          /* SweetAlert2 fonts as rendered on the Laravel layout: Roboto body, ~12px base. */
-          fontFamily: 'Roboto, Arial, sans-serif',
-          fontSize: '12px',
-        }}
-      >
-        {icon && (
-          <div
-            style={{
-              width: 80,
-              height: 80,
-              margin: '0 auto 1em',
-              borderRadius: '50%',
-              border: `4px solid ${icon === 'success' ? '#a5dc86' : '#f27474'}`,
-              color: icon === 'success' ? '#a5dc86' : '#f27474',
-              fontSize: 46,
-              lineHeight: '72px',
-            }}
-          >
-            {icon === 'success' ? '✓' : '✕'}
-          </div>
-        )}
-        <h2 style={{ fontFamily: 'Montserrat, Arial, sans-serif', fontSize: '22.5px', fontWeight: 600, margin: '0 0 0.4em', color: '#fff' }}>{title}</h2>
-        {text && <div style={{ fontSize: '13.5px', fontWeight: 400, color: '#fff', marginBottom: '1.2em' }}>{text}</div>}
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            /* .swal2-confirm: white button, black text, no radius. */
-            /* .swal2-confirm as rendered: 3px radius, Roboto 12px/700, ~7.5px 13.2px pad. */
-            background: '#fff',
-            color: '#000',
-            border: 0,
-            borderRadius: '3px',
-            fontSize: '12px',
-            fontWeight: 700,
-            padding: '7.5px 13.2px',
-            cursor: 'pointer',
-          }}
-        >
-          OK
-        </button>
-      </div>
-    </div>
-  );
-}
+const REPORT_REASONS = ['sensuality', 'impersonation', 'violence', 'racism', 'other'] as const;
 
 export function PostItem({
   post,
