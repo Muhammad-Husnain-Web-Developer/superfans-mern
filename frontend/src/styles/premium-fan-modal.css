@@ -1,136 +1,79 @@
-/* The blade's premium-fan pair, drawn as the app's own dialog rather than SweetAlert.
-   The register pages override SweetAlert to the purple the whole app uses
-   (register_u.blade.php:64-80), so the ground and lettering here match that; the two
-   buttons keep the exact colours the blade sets inline on them:
-     BE PREMIUM FAN — background #FFEB3B, 2px #e1be24, text #6A1B9A
-     PAY $10        — btn-success with 2px #409c40 and the monospace stack, bold  */
-
-.premium-scrim {
-  position: fixed;
-  inset: 0;
-  z-index: 123123;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 20px;
-  overflow-y: auto;
-  background: rgba(0, 0, 0, 0.5);
-}
+/* The premium fan dialogs. The popup shell comes from send-card-modal.css — both are
+   SweetAlerts on the same page and share the layout's purple. What is here is only what
+   the blade sets on this dialog's own two buttons and its body copy
+   (user_profile.blade.php:1311-1345, strings from lang/en/content.php:141-149). */
 
 .premium-box {
-  position: relative;
-  margin: auto 0;
-  width: 460px;
-  max-width: 100%;
-  padding: 26px 24px 24px;
-  border-radius: 20px;
-  background: #8a2be2;
-  color: #fff;
-  text-align: center;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  /* neither dialog passes a width, so both sit at swal2's default 32em */
+  width: 32em;
 }
 
-.premium-close {
-  position: absolute;
-  top: 6px;
-  right: 14px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #fff;
-  font-size: 34px;
-  line-height: 1;
-  opacity: 0.85;
-  cursor: pointer;
-}
-.premium-close:hover {
-  opacity: 1;
-}
-
-/* iconHtml in the blade: 92px, border-radius 74px, 4px solid white */
-.premium-avatar {
-  width: 92px;
-  height: 92px;
-  border-radius: 74px;
-  border: 4px solid #fff;
-  object-fit: cover;
-  margin-bottom: 12px;
-}
-
-.premium-title {
-  margin: 0 0 14px;
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.25;
-}
-
+/* swal's html slot: 1.125em, its own line-height, centred like the rest of the popup */
 .premium-text {
-  margin: 0 0 20px;
-  font-size: 14px;
-  line-height: 1.55;
+  margin: 0;
+  color: #fff;
+  font-size: 1.125em;
+  font-weight: 400;
+  line-height: normal;
+  text-align: center;
+  word-wrap: break-word;
 }
 
-/* the blade sets this line at 11px */
+/* the small print inside descriptionpay_premium_fan: <font style="font-size: 11px"> */
 .premium-fineprint {
   font-size: 11px;
-  opacity: 0.9;
 }
 
+/* class="swal2-styled btnswa-hover" — swal's button geometry, the blade's yellow.
+   `margin-right: 10px` is the blade's own, from a row that once held a second button. */
 .premium-be-fan {
-  padding: 10px 20px;
-  border: 2px solid #e1be24;
+  display: inline-block;
+  margin: 0.3125em 10px 0.3125em 0.3125em;
+  padding: 0.625em 1.1em;
   border-radius: 0.25em;
   background-color: #ffeb3b;
+  border: 2px solid #e1be24;
   color: #6a1b9a;
-  font-size: 15px;
-  font-weight: 800;
+  font-size: 1.0625em;
+  font-weight: 500;
   cursor: pointer;
-  transition: filter 0.15s ease;
-}
-.premium-be-fan:hover {
-  filter: brightness(1.06);
+  transition: 0.3s;
 }
 
-.premium-pay {
-  padding: 11px 22px;
-  border: 2px solid #409c40;
-  border-radius: 0.25em;
-  background: #28a745;
-  color: #fff;
-  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono',
-    'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
-  font-size: 15px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: filter 0.15s ease;
+/* .btnswa-hover:hover (user_profile.blade.php:36-41) */
+.premium-be-fan:hover {
+  background: #fdd835 !important;
+  border: 2px solid #fdd835 !important;
+  transition: 0.3s;
+  text-decoration: none;
 }
-.premium-pay:hover:not(:disabled) {
-  filter: brightness(1.08);
+
+.premium-pay-row {
+  margin-top: 1em;
+}
+
+/* class="btn btn-success" with the blade's border and its monospace face */
+.premium-pay {
+  padding: 6px 12px;
+  border: 2px solid #409c40 !important;
+  border-radius: 4px;
+  background-color: #5cb85c;
+  color: #fff;
+  font-family:
+    Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif !important;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 1.42857143;
+  cursor: pointer;
 }
 .premium-pay:disabled {
-  opacity: 0.75;
-  cursor: not-allowed;
+  opacity: 0.65;
+  cursor: default;
 }
 
 .premium-error {
-  margin: 0 0 14px;
-  padding: 9px 12px;
-  border-radius: 8px;
-  background: rgba(0, 0, 0, 0.28);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-@media (max-width: 480px) {
-  .premium-box {
-    padding: 20px 16px 20px;
-  }
-  .premium-avatar {
-    width: 76px;
-    height: 76px;
-  }
-  .premium-title {
-    font-size: 20px;
-  }
+  margin: 12px 0 0;
+  color: #ffd7d7;
+  font-size: 0.75em;
 }

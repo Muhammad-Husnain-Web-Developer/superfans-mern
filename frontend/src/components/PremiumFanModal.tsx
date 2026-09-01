@@ -1,21 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { assetImage } from '../utils/format';
+import '../styles/send-card-modal.css';
 import '../styles/premium-fan-modal.css';
 
 /**
- * "Premium fan" — the two dialogs the blade raises when a creator has their chat switched
- * off and the fan writes anyway (user_profile.blade.php:1310-1345).
+ * "Premium fan" — the two SweetAlerts the blade raises when a creator has their chat switched
+ * off and a fan writes anyway (user_profile.blade.php:1311-1345).
  *
- * Step one is `Swal.fire` with the creator's own picture as the icon, the "Super Busy!"
- * title and the queue message; its only button is the yellow BE PREMIUM FAN. Step two is
- * the price: "Priority Access – $10", the explanation, and PAY $10, which in the blade posts
- * amount=10 / payment_type=one_time to Redsys. This app is on Stripe, so the same charge
- * goes through `/payments/premium/:influencerId`.
+ * Step one is the creator's own picture as the icon, `@name Super Busy!`, the queue message
+ * and one yellow BE PREMIUM FAN. Step two is the price: "Priority Access – $10", the
+ * explanation, and PAY $10, which in the blade posts amount=10 / payment_type=one_time to
+ * Redsys. This app is on Stripe, so the same charge goes through /payments/premium/:id.
  *
- * Every word and colour below is the blade's own — the copy from lang/en/content.php:138-149,
- * the yellow #FFEB3B / #e1be24 / #6A1B9A off the button, and the green PAY button's border
- * and monospace face off its own style attribute.
+ * Every word and colour is the blade's own — the copy from lang/en/content.php:141-149, the
+ * yellow #FFEB3B / #e1be24 / #6A1B9A off the button's style attribute, and the green PAY
+ * button's #409c40 border and monospace face off its own. The purple ground and the popup
+ * geometry are shared with the chat dialog, both being SweetAlerts on the same page.
  */
 export function PremiumFanModal({
   influencerId,
@@ -31,6 +32,15 @@ export function PremiumFanModal({
   const [step, setStep] = useState<'busy' | 'pay'>('busy');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /* both dialogs pass showCloseButton: true, and swal closes on Escape */
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
 
   async function pay() {
     if (busy) return;
@@ -51,10 +61,9 @@ export function PremiumFanModal({
   }
 
   return (
-    <div className="sf-modal-scrim premium-scrim" onClick={onClose}>
-      <div className="sf-modal-pop premium-box" onClick={(e) => e.stopPropagation()}>
-        {/* the blade passes showCloseButton: true on the first dialog */}
-        <button type="button" className="premium-close" onClick={onClose} aria-label="Close">
+    <div className="swal-scrim" onClick={onClose}>
+      <div className="swal-pop premium-box" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="swal-close" onClick={onClose} aria-label="Close">
           ×
         </button>
 
@@ -62,23 +71,25 @@ export function PremiumFanModal({
           <>
             {/* iconHtml: the creator's picture, 92px, round, 4px white ring */}
             {profilePicture && (
-              <img className="premium-avatar" src={assetImage(profilePicture)} alt="" />
+              <img className="swal-icon-img" src={assetImage(profilePicture)} alt="" />
             )}
-            <h2 className="premium-title">
+            <h2 className="swal-title">
               {usernameUrl ? `@${usernameUrl} ` : ''}Super Busy!
             </h2>
-            <p className="premium-text">
+            <div className="premium-text">
               🇺🇸 This influencer is responding to a lot of messages right now, you’re in the
               queue.
-            </p>
-            <button type="button" className="premium-be-fan" onClick={() => setStep('pay')}>
-              🎖 BE ️PREMIUM FAN
-            </button>
+              <br />
+              <br />
+              <button type="button" className="premium-be-fan" onClick={() => setStep('pay')}>
+                🎖 BE ️PREMIUM FAN
+              </button>
+            </div>
           </>
         ) : (
           <>
-            <h2 className="premium-title">🏅 Priority Access – $10</h2>
-            <p className="premium-text">
+            <h2 className="swal-title">🏅 Priority Access – $10</h2>
+            <div className="premium-text">
               Want to skip the queue and get a faster reply?
               <br />
               <br />
@@ -89,18 +100,20 @@ export function PremiumFanModal({
                 This premium subscription won’t be renewed next month, don’t worry! It’s only
                 for 1 use.
               </span>
-            </p>
 
-            {error && <p className="premium-error">{error}</p>}
+              {error && <p className="premium-error">{error}</p>}
 
-            <button
-              type="button"
-              className="premium-pay"
-              onClick={() => void pay()}
-              disabled={busy}
-            >
-              {busy ? 'Opening…' : '✨ PAY $10'}
-            </button>
+              <div className="premium-pay-row">
+                <button
+                  type="button"
+                  className="premium-pay"
+                  onClick={() => void pay()}
+                  disabled={busy}
+                >
+                  {busy ? 'Opening…' : '✨ PAY $10'}
+                </button>
+              </div>
+            </div>
           </>
         )}
       </div>

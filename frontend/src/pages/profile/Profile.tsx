@@ -1316,8 +1316,9 @@ export function FollowButtons({
        chat_toggle on, or already paid → #uchatmodal, the write-to-them dialog
        otherwise (the creator is busy) → the premium-fan pair, ending at $10
      Only the first of those was wired here, so on anybody else's profile the button did
-     nothing. `#uchatmodal` is not in the Laravel source at all — both blades name it and
-     nothing defines it — so the dialog itself is this app's own (SendCardModal). */
+     nothing. `#uchatmodal` is a dead target — no blade defines it — but the click is not
+     dead: a Swal bound to the same button further down the file is the real dialog
+     (user_profile.blade.php:1461-1494), and SendCardModal is that one rebuilt. */
   const blocked = profile.viewerHasBlocked || profile.viewerIsBlockedBy;
   const canWrite = profile.chatToggle || !!profile.viewerPremium;
 
