@@ -7,6 +7,7 @@ import { playHateSound, playLikeSound } from '../../utils/postSounds';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from './Profile';
+import { SubscribeModal } from './SubscribeModal';
 import '../../styles/report-menu.css';
 
 interface FsPost {
@@ -77,6 +78,10 @@ export function PostFullscreen() {
   const [likes, setLikes] = useState(0);
   const [hates, setHates] = useState(0);
   const [following, setFollowing] = useState(false);
+  /* a paid creator is subscribed to, not followed — same button, different word and a
+     different road behind it */
+  const [subOpen, setSubOpen] = useState(false);
+  const [subBusy, setSubBusy] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [swal, setSwal] = useState<{ icon?: 'success' | 'error'; title: string; text?: string } | null>(null);
   /* Expanded: the media alone, every control out of the way. Tied to the
@@ -333,6 +338,23 @@ function doHate() {
       }
     });
 }
+  /* Straight to the same Stripe checkout the profile's own Follow opens
+     (Profile.tsx:1199); the modal in front of it is the same one too. */
+  function subscribe() {
+    if (!post?.influencer || subBusy) return;
+    setSubBusy(true);
+    api
+      .post<{ url?: string }>(`/payments/subscribe/${post.influencer.id}`)
+      .then(({ data }) => {
+        if (data.url) window.location.href = data.url;
+        else setSubBusy(false);
+      })
+      .catch(() => {
+        setSubBusy(false);
+        setSwal({ icon: 'error', title: 'Something went wrong' });
+      });
+  }
+
   function follow() {
     if (!post?.influencer) return;
     api
@@ -467,6 +489,9 @@ function doHate() {
 
   const media = post.imageVideo;
   const author = post.influencer;
+  /* the same test the profile makes (Profile.tsx:1183): a creator with a price is
+     subscribed to; everyone else — free creators and normal users — is followed */
+  const isPaidCreator = author?.role === 'influencer' && (author?.priceOfSubscription ?? 0) > 0;
   const isOwner = !!authUser && author?.id === authUser.id;
   const worldBack = authUser?.role === 'influencer' ? '/influencer/world' : '/user/world';
   const pct = likePercent(likes, hates, post?.likePercent);
@@ -493,7 +518,7 @@ function doHate() {
         /* the client's own arrow, 31x30 — drawn at its natural size */
         .post-fs-back{color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;padding:4px;font-size:14px}
         .post-fs-back:hover,.post-fs-back:focus{color:#fff;text-decoration:none}
-        .post-fs-bottombar{position:absolute;bottom:0;left:0;right:0;min-height:72px;display:flex;align-items:center;padding:12px 16px;gap:12px;z-index:10}
+        .post-fs-bottombar{position:absolute;bottom:0;left:0;right:0;min-height:72px;display:flex;align-items:center;padding:12px 16px;gap:4px;z-index:10}
         .post-fs-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;background:#555;flex-shrink:0}
         .post-fs-author{display:flex;flex-direction:column;justify-content:center;min-width:0;flex:1;gap:2px}
         .post-fs-nickname{color:#fff;font-weight:700;font-size:17px;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -506,6 +531,8 @@ function doHate() {
            shove FOLLOW against the far edge, half a bar away from the name it
            belongs to. It still shrinks, so a long nickname ellipsises. */
         .post-fs-authorlink{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;min-width:0;flex:0 1 auto}
+        /* the page's own a:hover underlines every link; the handle is not one to underline */
+        .post-fs-authorlink:hover,.post-fs-authorlink:focus{text-decoration:none;color:inherit}
         /* the expand control sits in the bottom-right corner, clear of the
            bottom bar; while expanded it is the only thing left on screen so
            there is a way back */
@@ -719,12 +746,23 @@ function doHate() {
           <button
             type="button"
             className="post-fs-follow-btn"
-            onClick={follow}
+            onClick={isPaidCreator ? () => setSubOpen(true) : follow}
           >
-            FOLLOW +
+            {isPaidCreator ? 'SUBSCRIBE +' : 'FOLLOW +'}
           </button>
         )}
       </div>}
+
+      {/* the profile's own subscribe dialog, which is what leads to the payment */}
+      {author?.usernameUrl && (
+        <SubscribeModal
+          usernameUrl={author.usernameUrl}
+          open={subOpen}
+          busy={subBusy}
+          onClose={() => setSubOpen(false)}
+          onConfirm={subscribe}
+        />
+      )}
 
       {/* Right rail: heart / %Liked pill / poop — hidden on a locked (blocked) post */}
       {!locked && !expanded && (
