@@ -8,6 +8,7 @@ import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from './Profile';
 import { SubscribeModal } from './SubscribeModal';
+import { RatingPill } from '../../components/RatingPill';
 import '../../styles/report-menu.css';
 
 interface FsPost {
@@ -526,7 +527,8 @@ function doHate() {
         /* dressed as the @nickname tag that sits above every post
            (.feed_posts_heading_p): darkgray ground, black text, the same
            lightgray edge that is thinner along the bottom, and Consolas */
-      .post-fs-follow-btn{background:#c3c3c3 !important;color:#000;border:5px solid #585858 !important;border-radius:0;padding:5px 10px;font:900 14px Consolas,Menlo,Monaco,monospace;white-space:nowrap;flex-shrink:0;cursor:pointer;}
+      .post-fs-follow-btn{background:#c3c3c3 !important;color:#000;border:5px solid #585858 !important;border-radius:0;padding:5px 10px;font:900 14px Consolas,Menlo,Monaco,monospace;white-space:nowrap;flex-shrink:0;cursor:pointer;
+      margin-left:5px;}
         /* flex:0 1 auto, not flex:1 -- growing would take all the free width and
            shove FOLLOW against the far edge, half a bar away from the name it
            belongs to. It still shrinks, so a long nickname ellipsises. */
@@ -552,16 +554,6 @@ function doHate() {
         @media (max-width:768px){
           .post-fs-bottombar{padding-right:60px}
         }
-        .post-fs-heart{cursor:pointer;display:inline-flex;align-items:center;justify-content:center;min-width:36px;min-height:36px}
-        .post-fs-heart svg{width:32px;height:32px;display:block}
-        .post-fs-heart.empty{color:#fff}
-        .post-fs-heart:not(.empty){color:#e32626}
-        .post-fs-pill{display:flex;flex-direction:column;width:40px;height:110px;border-radius:28px;overflow:hidden;background:#333}
-        .post-fs-pill-liked{background:#8c001b;color:#fff;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
-        .post-fs-pill-liked .pct{font-size:14px}
-        .post-fs-pill-hated{background:#333;color:#fff;min-height:35px;font-size:12px;display:flex;align-items:center;justify-content:center}
-        .post-fs-poop{cursor:pointer;line-height:0;display:inline-flex}
-        .post-fs-poop img{width:28px;height:28px;object-fit:contain;display:block}
         .post-fs-media-wrap{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:6;touch-action:none}
         .post-fullscreen-media,.post-fullscreen-media video,.post-fullscreen-media img{width:100%;height:100%;object-fit:contain}
         /* The locked tile is a square graphic. Left to the rule above it stretched
@@ -764,26 +756,18 @@ function doHate() {
         />
       )}
 
-      {/* Right rail: heart / %Liked pill / poop — hidden on a locked (blocked) post */}
+      {/* Right rail — hidden on a locked (blocked) post. The group itself is the walls' own
+          (RatingPill), stood up: the client asked for one design in both places. */}
       {!locked && !expanded && (
         <div className="post-fs-rightbar">
-          <span className={`post-fs-heart${liked ? '' : ' empty'}`} title="Like" onClick={(e) => { e.stopPropagation(); doLike(); }}>
-            <HeartIcon />
-          </span>
-          <div className="post-fs-pill">
-            <div className="post-fs-pill-liked">
-              {pct !== null && <span className="pct">{pct}%</span>}
-              <span>Liked</span>
-            </div>
-            <div className="post-fs-pill-hated">{hated ? 'Hated' : 'Hate'}</div>
-          </div>
-          <span
-            className={`post-fs-poop${hated ? ' hated' : ''}`}
-            title={hated ? 'Hated' : 'Hate'}
-            onClick={(e) => { e.stopPropagation(); doHate(); }}
-          >
-            <img src="/brand/caca.webp" alt="Hate" draggable={false} />
-          </span>
+          <RatingPill
+            orientation="vertical"
+            pct={pct}
+            liked={liked}
+            hated={hated}
+            onLike={doLike}
+            onHate={doHate}
+          />
         </div>
       )}
 

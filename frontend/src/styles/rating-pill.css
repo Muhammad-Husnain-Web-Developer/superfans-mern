@@ -319,3 +319,119 @@
     animation: poopBounce 0.6s ease-in-out;
     display: inline-block;
 }
+
+/* ---- standing up, for the full-screen viewer's rail -------------------------
+   The same pill as the walls carry, turned through a quarter: the #555758 track, the
+   #8c001b fill sized by --sf-fill, the 2px black edge and 20px corners, both thumbs, and
+   the same 11px bold labels. Only the axis changes — min-height where the row uses
+   min-width, and the divider's slant cut across the pill instead of down it.
+
+   Not scoped under .stats-wrapper: the viewer has no stats row to hang it from, which is
+   also why none of the rules above reach it and every value it needs is restated here. */
+
+.actions-group.rating-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.actions-group.rating-vertical .heart {
+    color: #e32626;
+    /* the row's own 20px, not a bigger one for the dark viewer: the client asked for the
+       same group, and a rail that sizes its icons differently is not the same group */
+    font-size: 20px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.actions-group.rating-vertical .rating-pill {
+    display: flex;
+    flex-direction: column;
+    /* 144 is the row's own length; 44 across is the least that holds "100%" at 11px bold
+       with the thumb above it */
+    width: 44px;
+    height: 144px;
+    border: 2px solid #000;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    background-color: #555758;
+    user-select: none;
+    cursor: default;
+}
+
+.actions-group.rating-vertical .rating-fill {
+    display: none;
+}
+
+.actions-group.rating-vertical .liked-segment {
+    position: relative;
+    z-index: 1;
+    flex: 0 1 auto;
+    min-height: var(--sf-fill, 68%);
+    background-color: #8c001b;
+    /* the row slants its divider down the pill; standing up it runs across */
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), 0 100%);
+    margin-bottom: -12px;
+    transition: min-height 0.3s ease;
+    height: auto;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 4px 18px;
+    gap: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.actions-group.rating-vertical .hated-segment {
+    position: relative;
+    z-index: 0;
+    flex: 1 1 auto;
+    background: none;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 4px 6px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.actions-group.rating-vertical .thumb-up,
+.actions-group.rating-vertical .thumb-down {
+    font-size: 13px;
+    line-height: 1;
+}
+
+.actions-group.rating-vertical .liked-text,
+.actions-group.rating-vertical .hated-text {
+    font-size: 11px;
+    text-transform: capitalize;
+    line-height: 1.15;
+    /* "100% Liked" does not fit across 44px, so it takes the two lines it needs */
+    white-space: normal;
+}
+
+.actions-group.rating-vertical .poop {
+    opacity: 1;
+    display: inline-flex;
+    align-items: center;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.actions-group.rating-vertical .poop-img {
+    width: 22px;
+    height: 22px;
+    display: block;
+    object-fit: contain;
+    user-select: none;
+}

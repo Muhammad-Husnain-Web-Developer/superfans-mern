@@ -15,6 +15,7 @@ export function RatingPill({
   hated,
   beat = false,
   bounce = false,
+  orientation = 'horizontal',
   onLike,
   onHate,
 }: {
@@ -24,6 +25,8 @@ export function RatingPill({
   /** the 0.6s heart-beat / poop-bounce that rides with the sound */
   beat?: boolean;
   bounce?: boolean;
+  /** the walls lay it along the card; the full-screen viewer stands it up the rail */
+  orientation?: 'horizontal' | 'vertical';
   onLike: () => void;
   onHate: () => void;
 }) {
@@ -34,7 +37,10 @@ export function RatingPill({
   };
 
   return (
-    <div className="actions-group" onClick={(e) => e.stopPropagation()}>
+    <div
+      className={orientation === 'vertical' ? 'actions-group rating-vertical' : 'actions-group'}
+      onClick={(e) => e.stopPropagation()}
+    >
       <span
         className={beat ? 'heart heart-animate' : 'heart'}
         style={{ cursor: 'pointer' }}
