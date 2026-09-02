@@ -80,7 +80,11 @@ export function InfluencerSearch({
   }
 
   return (
-    <div className="wrapper" ref={boxRef} style={{ position: 'relative' }}>
+    <div
+      className={variant === 'field' ? 'wrapper influencer-search-field' : 'wrapper'}
+      ref={boxRef}
+      style={{ position: 'relative' }}
+    >
       <input
         type="text"
         className={variant === 'field' ? 'auth-input' : 'influencer_search'}

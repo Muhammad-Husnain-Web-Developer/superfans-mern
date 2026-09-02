@@ -74,3 +74,13 @@
   color: #fff;
   text-decoration: none;
 }
+
+/* On a form field the list has the width of a form field, and 12px in it reads small
+   against the inputs around it. Only the field variant is touched — the sidebar's rows are
+   12px by the page stylesheet's own `!important` and stay there. Desktop only: on a phone
+   the field is narrow enough that 12px is still the right size. */
+@media (min-width: 769px) {
+  .influencer-search-field .typeahead .dropdown-item {
+    font-size: 18px;
+  }
+}
