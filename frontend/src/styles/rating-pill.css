@@ -333,7 +333,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 4px;
 }
 
 .actions-group.rating-vertical .heart {
@@ -376,6 +376,11 @@
     /* the row slants its divider down the pill; standing up it runs across */
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), 0 100%);
     margin-bottom: -12px;
+    /* world-page.css carries an unscoped `.liked-segment { margin-right: -15px }` — the
+       overlap the row needs, and it loads on every page. Standing up, a negative side
+       margin makes the segment 15px wider than the pill holding it, which pushed the
+       label 7.5px off centre. */
+    margin-right: 0;
     transition: min-height 0.3s ease;
     height: auto;
     color: white;
@@ -408,7 +413,12 @@
 .actions-group.rating-vertical .thumb-up,
 .actions-group.rating-vertical .thumb-down {
     font-size: 13px;
-    line-height: 1;
+    line-height: 1.5;
+}
+
+/* the row lifts it by 1px; world-page.css drops it by 2 unscoped, so it is said here too */
+.actions-group.rating-vertical .thumb-down {
+    margin-bottom: 1px;
 }
 
 .actions-group.rating-vertical .liked-text,
