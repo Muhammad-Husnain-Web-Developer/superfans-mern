@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { InfluencerSearch } from '../profile/ProfileSidebar';
 import { useTranslation } from 'react-i18next';
 import { isAxiosError } from 'axios';
 import { api } from '../../api/client';
@@ -458,12 +459,15 @@ export function RegisterForm({ role }: { role: 'user' | 'influencer' }) {
         group(
           <>
             <label className="auth-label">{t('invited_by')}</label>
-            <input
-              type="text"
+            {/* the sidebar's own influencer search, as a form field: same suggestion list,
+                same rows and the same #6622e5 hover. Picking one fills the field rather
+                than opening the profile, which is what a referral asks for. */}
+            <InfluencerSearch
+              variant="field"
               placeholder={t('influencer_username_placeholder')}
-              className="auth-input"
               value={referred}
-              onChange={(e) => setReferred(e.target.value)}
+              onChange={setReferred}
+              onPick={setReferred}
             />
           </>,
         )}

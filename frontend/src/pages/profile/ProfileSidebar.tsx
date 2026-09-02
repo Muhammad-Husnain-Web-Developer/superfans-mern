@@ -7,6 +7,7 @@ import { closeOffcanvas } from '../../components/NavToggle';
 import { api } from '../../api/client';
 import { NetworkSlider } from '../../components/NetworkSlider';
 import { networkLogo } from '../../utils/networkLogo';
+import '../../styles/influencer-search.css';
 import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
 
@@ -19,9 +20,26 @@ interface SearchHit {
  * Influencer search with suggestions — mirrors the blade's bootstrap-typeahead
  * on `.influencer_search` (verified first, badge in the list, navigate on pick).
  */
-export function InfluencerSearch({ placeholder }: { placeholder: string }) {
+export function InfluencerSearch({
+  placeholder,
+  variant = 'sidebar',
+  value,
+  onChange,
+  onPick,
+}: {
+  placeholder: string;
+  /** `sidebar` is the menu's own search — its input, its 🔎, and a pick navigates.
+      `field` is a form field: the form's input, no icon, and a pick fills it in. */
+  variant?: 'sidebar' | 'field';
+  /** controlled text, for the form field that keeps the value */
+  value?: string;
+  onChange?: (value: string) => void;
+  /** given, a pick reports the name instead of opening the profile */
+  onPick?: (name: string) => void;
+}) {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const text = value ?? query;
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -35,8 +53,9 @@ export function InfluencerSearch({ placeholder }: { placeholder: string }) {
     return () => document.removeEventListener('mousedown', close);
   }, []);
 
-  function onChange(value: string) {
+  function type(value: string) {
     setQuery(value);
+    onChange?.(value);
     if (timer.current) clearTimeout(timer.current);
     if (!value.trim()) {
       setHits([]);
@@ -64,13 +83,13 @@ export function InfluencerSearch({ placeholder }: { placeholder: string }) {
     <div className="wrapper" ref={boxRef} style={{ position: 'relative' }}>
       <input
         type="text"
-        className="influencer_search"
+        className={variant === 'field' ? 'auth-input' : 'influencer_search'}
         placeholder={placeholder}
-        value={query}
-        onChange={(e) => onChange(e.target.value)}
+        value={text}
+        onChange={(e) => type(e.target.value)}
         onFocus={() => hits.length > 0 && setOpen(true)}
       />
-      <div className="wrapper_span">🔎</div>
+      {variant === 'sidebar' && <div className="wrapper_span">🔎</div>}
       {open && hits.length > 0 && (
         <ul
           className="typeahead dropdown-menu"
@@ -89,7 +108,8 @@ export function InfluencerSearch({ placeholder }: { placeholder: string }) {
                   e.preventDefault();
                   setOpen(false);
                   setQuery(hit.name);
-                  navigate(`/${hit.name}`);
+                  if (onPick) onPick(hit.name);
+                  else navigate(`/${hit.name}`);
                 }}
               >
                 <span className="dropdown-item-name">{hit.name}</span>
