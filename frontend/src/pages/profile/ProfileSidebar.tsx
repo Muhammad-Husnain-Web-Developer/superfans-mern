@@ -144,6 +144,8 @@ const LOCALE_FLAGS: Record<string, string> = {
   pt: 'pt.png',
   ca: 'ca.png',
   cn: 'cn.png',
+  nl: 'nl.png',
+  ru: 'ru.png',
 };
 
 /**

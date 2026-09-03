@@ -2,7 +2,7 @@ import i18n, { type Resource, type ResourceKey } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
-export const SUPPORTED_LOCALES = ['en', 'es', 'ca', 'fr', 'de', 'it', 'pt', 'cn'] as const;
+export const SUPPORTED_LOCALES = ['en', 'es', 'ca', 'fr', 'de', 'it', 'pt', 'cn', 'nl', 'ru'] as const;
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
 // Eagerly bundle every locale JSON converted from the Laravel app

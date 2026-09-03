@@ -24,9 +24,11 @@ const FLAGS: Record<string, string> = {
   pt: 'pt.png',
   ca: 'ca.png',
   cn: 'cn.png',
+  nl: 'nl.png',
+  ru: 'ru.png',
 };
 
-const LOCALE_ORDER = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ca', 'cn'];
+const LOCALE_ORDER = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ca', 'cn', 'nl', 'ru'];
 
 export function localeLogo(locale: string): string {
   return `/brand/logos/${LOGOS[locale] ?? LOGOS.en}`;

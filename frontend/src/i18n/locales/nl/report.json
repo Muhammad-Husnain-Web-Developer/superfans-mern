@@ -1,0 +1,20 @@
+{
+    "title": "BERICHT MELDEN",
+    "reasons": {
+        "sensuality": "Melden wegens overmatige sensualiteit of expliciete inhoud",
+        "impersonation": "Deze persoon gebruikt mijn identiteit of die van iemand anders.",
+        "violence": "Deze inhoud bevat geweld en hoort niet openbaar getoond te worden.",
+        "racism": "Dit bericht bevat racistische boodschappen die belasteren en haat aanwakkeren.",
+        "other": "Overig"
+    },
+    "share": {
+        "post": "Link van bericht delen/kopiëren",
+        "profile": "Profiel delen",
+        "copied": "Link gekopieerd",
+        "failed": "De link kon niet worden gekopieerd"
+    },
+    "sent_title": "Melding verzonden",
+    "thank_you": "Je melding is verzonden. Bedankt dat je dit sociale netwerk beter maakt.",
+    "failed_title": "Oeps!",
+    "failed_message": "Er is iets misgegaan. Probeer het later opnieuw."
+}
