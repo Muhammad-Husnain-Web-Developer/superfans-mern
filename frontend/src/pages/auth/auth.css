@@ -126,8 +126,8 @@
 }
 /* register page focus differs (blue) */
 .auth-page--register .auth-input:focus {
-  border: 1px solid rgb(0, 162, 255) !important;
-  color: rgb(0, 162, 255);
+  border: 1px solid #8a2be2 !important;
+  color: #000000;
 }
 
 .auth-input.is-invalid {
@@ -227,6 +227,7 @@
   color: #fff !important;
   background-color: #4712a6 !important;
   transition: 0.5s !important;
+  text-decoration: none !important;
 }
 .btn-choose--fan {
   background-color: #333;
@@ -238,6 +239,7 @@
   color: #fff !important;
   background-color: #111 !important;
   transition: 0.5s !important;
+  text-decoration: none !important;
 }
 .btn-choose:active,
 .btn-choose:focus {

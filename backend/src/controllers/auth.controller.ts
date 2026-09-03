@@ -61,16 +61,29 @@ export async function register(req: Request, res: Response): Promise<void> {
   res.status(201).json({ success: true, data: publicUser(user) });
 }
 
+/* The two lines LoginController.php:43,49 puts on the login form, verbatim — trailing space
+   and all. They are written into the controller there, not into a lang file, so they stay
+   English in every language. */
+const SUSPENDED_MESSAGE =
+  '⚠️ Your account has been suspended for violation of the rules of Superfans World. Contact our Support Team. ';
+const DELETED_MESSAGE = 'Your account has been deleted permanently.';
+
 export async function login(req: Request, res: Response): Promise<void> {
   const { email, password } = loginSchema.parse(req.body);
 
   const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+
+  /* LoginController::validateLogin weighs the account's standing before the password, so a
+     suspended or deleted account is told which it is even when the password is wrong. */
+  if (user?.status === 'suspended') {
+    throw ApiError.forbidden(SUSPENDED_MESSAGE);
+  }
+  if (user?.status === 'deleted') {
+    throw ApiError.forbidden(DELETED_MESSAGE);
+  }
+
   if (!user || !(await user.comparePassword(password))) {
     throw ApiError.unauthorized('Invalid credentials');
-  }
-  // Mirrors Laravel LoginController: suspended accounts cannot log in
-  if (user.status === 'suspended') {
-    throw ApiError.forbidden('Your account is suspended');
   }
 
   issueSession(res, user);

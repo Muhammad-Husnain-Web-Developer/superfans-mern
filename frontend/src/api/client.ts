@@ -41,6 +41,23 @@ const processQueue = (error: any | null) => {
 
 // ─── Response Interceptor ─────────────────────────────────────────────
 
+/**
+ * Endpoints whose own 401 is the answer, not an expired session.
+ *
+ * A wrong password on /auth/login answers 401; refreshing after it asks for a new token with
+ * no session to refresh, that answers 401 "No refresh token", and the caller was handed *that*
+ * message — so the login form said the refresh token was missing instead of saying the
+ * password was wrong. These reject with what the server actually said.
+ */
+const NO_REFRESH_ON = [
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/register',
+  '/auth/logout',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -48,6 +65,12 @@ api.interceptors.response.use(
 
     // If not 401 or already retried → reject
     if (error.response?.status !== 401 || originalRequest._retry) {
+      return Promise.reject(error);
+    }
+
+    // An authentication call's own 401 is final — there is no session to refresh
+    const url = String(originalRequest?.url ?? '');
+    if (NO_REFRESH_ON.some((path) => url.includes(path))) {
       return Promise.reject(error);
     }
 

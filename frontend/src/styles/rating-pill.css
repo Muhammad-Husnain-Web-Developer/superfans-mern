@@ -340,7 +340,7 @@
     color: #e32626;
     /* the row's own 20px, not a bigger one for the dark viewer: the client asked for the
        same group, and a rail that sizes its icons differently is not the same group */
-    font-size: 20px;
+    font-size: 25px;
     line-height: 1;
     display: inline-flex;
     align-items: center;
@@ -439,8 +439,8 @@
 }
 
 .actions-group.rating-vertical .poop-img {
-    width: 22px;
-    height: 22px;
+    width: 25px;
+    height: 25px;
     display: block;
     object-fit: contain;
     user-select: none;

@@ -16,6 +16,7 @@ import { newsRouter } from './news.routes.js';
 import { chatRouter } from './chat.routes.js';
 import { adsRouter } from './ads.routes.js';
 import { adminRouter } from './admin.routes.js';
+import { geoRouter } from './geo.routes.js';
 import { SocialNetwork } from '../models/SocialNetwork.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 
@@ -36,6 +37,7 @@ apiRouter.use('/news', newsRouter);
 apiRouter.use('/chatbox', chatRouter);
 apiRouter.use('/ads', adsRouter);
 apiRouter.use('/admin', adminRouter);
+apiRouter.use('/geo', geoRouter);
 apiRouter.use('/', streamRouter);
 
 // Random active ads for feed injection (mirrors Laravel: ads where status=1, inRandomOrder, take N)

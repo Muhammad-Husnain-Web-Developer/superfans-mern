@@ -30,11 +30,15 @@ export function Login() {
       if (user.usernameUrl) sessionStorage.setItem('referralUsername', user.usernameUrl);
       navigate(postLoginPath(user.role), { replace: true });
     } catch (err) {
-      const message = isAxiosError(err)
-        ? ((err.response?.data as { message?: string } | undefined)?.message ??
-          'These credentials do not match our records.')
-        : 'These credentials do not match our records.';
-      setError(message);
+      /* Laravel answers a bad login with the localised auth.failed line from its lang files;
+         our API says "Invalid credentials" in English whatever the language, so the wording
+         comes from the locale file here. Any other refusal — a suspended account, say —
+         keeps whatever the server said, since only this one has a translation. */
+      const status = isAxiosError(err) ? err.response?.status : undefined;
+      const serverMessage = isAxiosError(err)
+        ? (err.response?.data as { message?: string } | undefined)?.message
+        : undefined;
+      setError(status === 401 || !serverMessage ? t('failed') : serverMessage);
     } finally {
       setSubmitting(false);
     }

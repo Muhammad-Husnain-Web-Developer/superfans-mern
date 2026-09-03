@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { localeLogo } from '../auth/AuthShell';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
-import { COUNTRIES } from './countries';
+import { ALL_COUNTRIES as COUNTRIES } from '../../data/countries';
 import type { MerchProduct } from './Merchandising';
 
 const MONO =

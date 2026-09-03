@@ -1,12 +1,14 @@
-import { COUNTRIES, citiesFor } from '../../data/countryCities';
+import { useMemo } from 'react';
+import { useCities, useCountries } from '../../data/geo';
 
 /**
  * The country and city dropdowns, wherever Super Ads asks for a place.
  *
  * The city was a free-text box, so an advertiser could aim at a city that is not in the
- * country they picked, or spell one two different ways. It is a list now, and the list is
- * whatever the chosen country holds — which also means the city box has nothing to offer
- * until a country is chosen, so until then it is disabled and says so.
+ * country they picked, or spell one two different ways ("Malaga" / "Málaga"). Both are lists
+ * now: every country in the world on the first, and on the second whatever cities that
+ * country holds, fetched from /api/geo when it is chosen — which also means the city box has
+ * nothing to offer until a country is chosen, so until then it is disabled and says so.
  *
  * They are two separate controls rather than one block because the two forms that use them
  * lay their fields out differently — the ad modal side by side, the profile in a Bootstrap
@@ -25,6 +27,20 @@ export function CountrySelect({
   className?: string;
   required?: boolean;
 }) {
+  const countries = useCountries();
+
+  /* the options are built once per list, not once per keystroke elsewhere in the form:
+     React sees the same elements back and leaves the whole subtree alone */
+  const options = useMemo(
+    () =>
+      countries.map((c) => (
+        <option key={c} value={c}>
+          {c}
+        </option>
+      )),
+    [countries],
+  );
+
   return (
     <select
       className={className}
@@ -34,11 +50,10 @@ export function CountrySelect({
       data-field="country"
     >
       <option value="">Select a country</option>
-      {COUNTRIES.map((c) => (
-        <option key={c} value={c}>
-          {c}
-        </option>
-      ))}
+      {/* a country saved before this list existed is kept, so reopening the form does not
+          quietly blank what the advertiser had chosen */}
+      {value && !countries.includes(value) && <option value={value}>{value}</option>}
+      {options}
     </select>
   );
 }
@@ -54,9 +69,21 @@ export function CitySelect({
   onChange: (city: string) => void;
   className?: string;
 }) {
+  const { cities, loading } = useCities(country);
+
   /* a city saved before this dropdown existed is kept on the list, so opening the form
      again does not quietly change what the advertiser had chosen */
-  const cities = citiesFor(country, value);
+  const kept = value && !cities.includes(value) ? value : '';
+
+  const options = useMemo(
+    () =>
+      cities.map((c) => (
+        <option key={c} value={c}>
+          {c}
+        </option>
+      )),
+    [cities],
+  );
 
   return (
     <select
@@ -67,12 +94,11 @@ export function CitySelect({
       title={country ? undefined : 'Choose a country first'}
       data-field="city"
     >
-      <option value="">{country ? 'Select a city' : 'Select a country first'}</option>
-      {cities.map((c) => (
-        <option key={c} value={c}>
-          {c}
-        </option>
-      ))}
+      <option value="">
+        {!country ? 'Select a country first' : loading ? 'Loading cities…' : 'Select a city'}
+      </option>
+      {kept && <option value={kept}>{kept}</option>}
+      {options}
     </select>
   );
 }
