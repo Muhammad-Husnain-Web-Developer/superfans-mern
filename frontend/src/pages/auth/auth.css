@@ -820,7 +820,9 @@
   box-shadow: none !important;
 }
 .btn-business--register {
-  border: 3px solid #111 !important;
+  /* the grey the full-screen viewer's FOLLOW button is edged with, at the client's
+     request — #111 read as a black outline against the button's own grey */
+  border: 3px solid #585858 !important;
   margin-top: 0;
 }
 
