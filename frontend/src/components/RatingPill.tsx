@@ -38,6 +38,21 @@ export function RatingPill({
     run();
   };
 
+  /**
+   * One number at a time, and it belongs to the half the viewer pressed: "If we click LIKE ->
+   * we show the Liked %. If we click HATE -> we show the Hated %" — and only that half changes
+   * its word: "if we click Like -> Liked (Hate stills Hate, not Hated)".
+   *
+   * So a viewer who has not voted reads a plain Like / Hate with no figure, and the hated
+   * share is simply the rest of the liked one.
+   *
+   * A deliberate deviation from the blade, which writes `like_percent + '% Liked'` on both
+   * paths (user/world.blade.php:3578 and :3600) and never prints the hate_percent its own
+   * controller works out — the client asked for this after seeing that.
+   */
+  const likedLabel = liked ? (pct === null ? 'Liked' : `${pct}% Liked`) : 'Like';
+  const hatedLabel = hated ? (pct === null ? 'Hated' : `${100 - pct}% Hated`) : 'Hate';
+
   return (
     <div
       className={orientation === 'vertical' ? 'actions-group rating-vertical' : 'actions-group'}
@@ -65,15 +80,11 @@ export function RatingPill({
         <span className="rating-fill" aria-hidden="true" />
         <div className="liked-segment">
           <span className="thumb-up">👍🏻</span>
-          {/* With a percentage the half speaks for everyone — "83% Liked" — and the viewer's
-              own vote shows in the heart beside it. With nothing to report it speaks to the
-              viewer instead: "Like" until they cast one, "Liked" after. ("83% Like" would be
-              the two readings colliding, and the client's reference reads "83% Liked".) */}
-          <span className="liked-text">{pct === null ? (liked ? 'Liked' : 'Like') : `${pct}% Liked`}</span>
+          <span className="liked-text">{likedLabel}</span>
         </div>
         <div className="hated-segment">
           <span className="thumb-down">👎🏻</span>
-          <span className="hated-text">{hated ? 'Hated' : 'Hate'}</span>
+          <span className="hated-text">{hatedLabel}</span>
         </div>
       </div>
 

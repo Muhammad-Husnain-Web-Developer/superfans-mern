@@ -137,6 +137,13 @@
     white-space: nowrap;
 }
 
+/* 👎🏻 sits beside its label, not over it — the client asked for the grey half to read the
+   same way the red one does. The blade stacks them (world.blade.php, kept verbatim in
+   world-page.css:113); this rule is scoped tighter, so it wins.
+
+   Measured: side by side, "👎 Hate" needs 66px of the 144px pill and nothing is clipped. A
+   percentage on this half is another matter — "100% Hated" wants 102px, which the pill has
+   no room for beside the red. The client is taking that on himself in his own CSS. */
 .stats-wrapper.has-actions .hated-segment {
     position: relative;
     z-index: 0;
@@ -144,25 +151,20 @@
     background: none;
     color: white;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     padding: 0 6px 0 14px;
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
 }
 
-/* the black half stacks 👎🏻 over its label, so both lines are held to their own height —
-   the pill shrinks on narrow cards and default leading pushes the word out of it */
 .stats-wrapper.has-actions .thumb-up,
 .stats-wrapper.has-actions .thumb-down {
     font-size: 13px;
     line-height: 1;
-}
-
-.stats-wrapper.has-actions .thumb-down {
-    margin-bottom: 1px;
 }
 
 .stats-wrapper.has-actions .liked-text,

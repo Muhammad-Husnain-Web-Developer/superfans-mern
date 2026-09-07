@@ -11,6 +11,47 @@ import { SubscribeModal } from './SubscribeModal';
 import { RatingPill } from '../../components/RatingPill';
 import '../../styles/report-menu.css';
 
+/**
+ * The viewer's own click, kept in the browser beside the server's record of it — the client's
+ * "mini-cookies for FULL SCREEN saving the clicked animation (not hard restart bar)".
+ *
+ * The server is still what a vote *is*; this only holds the answer steady in the moment
+ * before it replies, and across a reload, so the bar is never handed back at rest after the
+ * viewer has already moved it.
+ *
+ * Only the two flags are kept — the counts belong to everyone, and this is one viewer's
+ * browser. Two hundred posts is far more than a session walks through, and the oldest fall
+ * off the end so the entry can never grow without limit.
+ */
+const VOTE_STORE = 'sf_post_votes';
+const VOTES_KEPT = 200;
+type Vote = { liked: boolean; hated: boolean };
+
+function readVotes(): Record<string, Vote> {
+  try {
+    const raw = localStorage.getItem(VOTE_STORE);
+    const parsed: unknown = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? (parsed as Record<string, Vote>) : {};
+  } catch {
+    /* a private window, a full quota, storage switched off: the server still remembers */
+    return {};
+  }
+}
+
+function writeVote(id: string, vote: Vote) {
+  try {
+    const all = readVotes();
+    /* deleted first so a re-vote moves to the end: insertion order is the age used below */
+    delete all[id];
+    if (vote.liked || vote.hated) all[id] = vote;
+    const ids = Object.keys(all);
+    for (const oldest of ids.slice(0, Math.max(0, ids.length - VOTES_KEPT))) delete all[oldest];
+    localStorage.setItem(VOTE_STORE, JSON.stringify(all));
+  } catch {
+    /* as above — losing the note costs nothing, the vote itself is already sent */
+  }
+}
+
 interface FsPost {
   id: string;
   imageVideo: string | null;
@@ -79,8 +120,11 @@ export function PostFullscreen() {
 
   const [post, setPost] = useState<FsPost | null>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'notfound'>('loading');
-  const [liked, setLiked] = useState(false);
-  const [hated, setHated] = useState(false);
+  /* opened straight from what this browser remembers, so the bar is already where the viewer
+     left it on the very first paint rather than at rest — the server's answer, a moment
+     later, is still the one that stands */
+  const [liked, setLiked] = useState(() => readVotes()[id]?.liked ?? false);
+  const [hated, setHated] = useState(() => readVotes()[id]?.hated ?? false);
   const [likes, setLikes] = useState(0);
   const [hates, setHates] = useState(0);
   const [following, setFollowing] = useState(false);
@@ -118,6 +162,25 @@ export function PostFullscreen() {
     setState('ok');
   }
 
+  /**
+   * Both places the viewer's click has to land, or swiping away and back undoes it on screen.
+   *
+   * The warmed copy in `cache` is the one the viewer is handed when they come back to a post,
+   * and it was fetched before they voted — left alone, it reports them as never having
+   * touched it. The browser store is the other half, for a reload or the next day.
+   */
+  function keepVote(vote: Vote, counts?: { likes: number; hates: number }) {
+    writeVote(id, vote);
+    const cached = cache.current.get(id);
+    if (!cached) return;
+    cache.current.set(id, {
+      ...cached,
+      viewerLiked: vote.liked,
+      viewerHated: vote.hated,
+      ...(counts ? { likesCount: counts.likes, hatesCount: counts.hates } : {}),
+    });
+  }
+
   useEffect(() => {
     let cancelled = false;
     const cached = cache.current.get(id);
@@ -134,6 +197,9 @@ export function PostFullscreen() {
         const d = r.data.data;
         cache.current.set(d.id, d);
         applyPost(d);
+        /* the server has the last word: a vote cast on another device, or taken back there,
+           corrects the note this browser was keeping */
+        writeVote(d.id, { liked: d.viewerLiked, hated: d.viewerHated });
         void api.post(`/posts/${id}/visit`).catch(() => undefined);
       })
       .catch(() => {
@@ -277,6 +343,7 @@ function doLike(skipSound?: boolean) {
   } else {
     setLikes((prev) => prev - 1);
   }
+  keepVote({ liked: willBeLiked, hated: willBeLiked ? false : hated });
 
   api
     .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
@@ -288,6 +355,10 @@ function doLike(skipSound?: boolean) {
       if (nowLiked) setHated(false);
       setLikes(r.data.data.likesCount);
       setHates(r.data.data.hatesCount);
+      keepVote(
+        { liked: nowLiked, hated: nowLiked ? false : hated },
+        { likes: r.data.data.likesCount, hates: r.data.data.hatesCount },
+      );
     })
     .catch((err) => {
         // If 401, keep the optimistic state – interceptor will retry
@@ -302,6 +373,7 @@ function doLike(skipSound?: boolean) {
       } else {
         setLikes((prev) => prev + 1);
       }
+      keepVote({ liked: !willBeLiked, hated });
     });
 }
 function doHate() {
@@ -317,6 +389,7 @@ function doHate() {
   } else {
     setHates((prev) => prev - 1);
   }
+  keepVote({ liked: willBeHated ? false : liked, hated: willBeHated });
 
   api
     .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
@@ -328,6 +401,10 @@ function doHate() {
       if (nowHated) setLiked(false);
       setLikes(r.data.data.likesCount);
       setHates(r.data.data.hatesCount);
+      keepVote(
+        { liked: nowHated ? false : liked, hated: nowHated },
+        { likes: r.data.data.likesCount, hates: r.data.data.hatesCount },
+      );
     })
     .catch((err) => {
         // If 401, keep the optimistic state – interceptor will retry
@@ -342,6 +419,7 @@ function doHate() {
       } else {
         setHates((prev) => prev + 1);
       }
+      keepVote({ liked, hated: !willBeHated });
     });
 }
   /* Straight to the same Stripe checkout the profile's own Follow opens
