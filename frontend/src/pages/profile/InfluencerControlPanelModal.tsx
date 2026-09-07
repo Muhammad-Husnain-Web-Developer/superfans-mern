@@ -697,7 +697,7 @@ export function InfluencerControlPanelModal({
 
             <hr style={HR} />
             <h3 style={{ ...H3, textAlign: 'center' }}>{t('supercalls_request')}</h3>
-            {linkButton('https://superfanss.app/superfanscalls/', t('solicitar'))}
+            {linkButton('https://app.superfans.world/superfanscalls/', t('solicitar'))}
 
             <hr style={HR} />
             <h3 style={{ ...H3, textAlign: 'center' }}>{t('instagram_growth')}</h3>
