@@ -22,8 +22,13 @@
  * width, so the numbers below are the mockup's own measurements divided by 415.
  */
 
-/* the creative is the button's frame of reference */
-.work-item .ad-media {
+/* the creative is the button's frame of reference.
+   `.ad-fullscreen` is the same tile standing in the reel: the button is positioned against
+   the creative and measured in its width there too, so both live on the same selector.
+   Without it the button escaped to the black screen behind and was sized by the whole
+   viewport, which is how it came to cover the picture. */
+.work-item .ad-media,
+.ad-fullscreen .ad-media {
   position: relative;
   display: block;
   line-height: 0;
@@ -33,15 +38,57 @@
    { float: left }`), so the anchor collapsed to nothing and the box the button hangs off
    had no height. A block formatting context makes it contain its float again. */
 .work-item .ad-media-link,
+.ad-fullscreen .ad-media-link,
 .work-item > a:has(> img.posttt-img),
 .work-item > a:has(> video) {
   display: flow-root;
   line-height: 0;
 }
 
-.work-item .ad-media {
+.work-item .ad-media,
+.ad-fullscreen .ad-media {
   /* the yardstick for every size below */
   container-type: inline-size;
+}
+
+/* ------------------------------------------------ the tile standing in the reel ----
+ * Only the frame differs from the wall: the creative is given the screen, held to a card's
+ * width so the button keeps the proportions it was drawn at, and capped in height so a tall
+ * picture is fitted rather than cut off at the fold.
+ */
+.ad-fullscreen {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* "Super Ads" over the creative, in the reel too. On the wall the label is drawn by the page
+   stylesheet the wall itself loads (layout-direct-user.css:235) — the viewer never loads it,
+   so the word arrived black on black. The values are that rule's own, restated. */
+.ad-fullscreen .ad-card-heading {
+  width: fit-content;
+  margin: 0 auto;
+  padding: 5px 10px;
+  color: black;
+  background: darkgray;
+  border: 7px solid lightgray;
+  border-bottom: 3px solid lightgray;
+  border-radius: 5px 5px 0 0;
+  font-family:
+    Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
+  font-weight: bold;
+  line-height: 1.2;
+}
+
+.ad-fullscreen .ad-media img,
+.ad-fullscreen .ad-media video {
+  /* the top bar and a margin at the foot; a percentage would be ignored here, the height
+     above it being auto */
+  max-height: calc(100vh - 140px);
+  object-fit: contain;
 }
 
 .work-item .ad-cta-btn,

@@ -23,6 +23,7 @@ import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { SwalResult } from '../profile/Profile';
 import '../../styles/profile-page.css';
 import '../../styles/world-page.css';
+import { toSteps, type WorldStep } from '../../utils/worldSequence';
 import '../../styles/report-menu.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { ControlPanelHost } from '../profile/ControlPanelHost';
@@ -316,11 +317,17 @@ const REPORT_REASONS: [string, string][] = [
 function WorldPostCard({
   item,
   onReport,
-  worldIds,
+  worldRun,
+  worldPage,
+  worldLastPage,
 }: {
   item: WorldItem;
   onReport: (postId: string, reason: string) => void;
-  worldIds: string[];
+  /* the feed's own run, ads and all, so the viewer scrolls what the wall shows */
+  worldRun: WorldStep[];
+  /* and where it reached, so the viewer can ask for the next page rather than stopping */
+  worldPage: number;
+  worldLastPage: number;
 }) {
   const { user: authUser } = useAuth();
   const { t: tReport } = useTranslation('report');
@@ -512,7 +519,9 @@ function toggleHate() {
           .finally(() => {
             /* World context: full-screen scroll navigates the WORLD feed sequence
                (David) — passed via router state, not the profile's own posts. */
-            navigate(`/user/post_detail/${item.id}`, { state: { world: worldIds } });
+            navigate(`/user/post_detail/${item.id}`, {
+              state: { world: worldRun, worldPage, worldLastPage },
+            });
           });
       }, 350);
     }
@@ -805,12 +814,21 @@ export function World() {
             {items.length > 0 ? (
               <div id="post-container">
                 {(() => {
-                  const worldIds = items.filter((i) => i.type !== 'ad').map((i) => i.id);
+                  /* ads included, and in the feed's order: the viewer shows them where the
+                     wall does rather than skipping to the next post */
+                  const worldRun = toSteps(items);
                   return items.map((item) =>
                     item.type === 'ad' ? (
                       <AdCard key={item.id} item={item} />
                     ) : (
-                      <WorldPostCard key={item.id} item={item} onReport={reportPost} worldIds={worldIds} />
+                      <WorldPostCard
+                        key={item.id}
+                        item={item}
+                        onReport={reportPost}
+                        worldRun={worldRun}
+                        worldPage={page}
+                        worldLastPage={lastPage}
+                      />
                     ),
                   );
                 })()}

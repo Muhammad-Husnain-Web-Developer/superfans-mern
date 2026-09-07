@@ -122,7 +122,26 @@ function safeLink(link: string | undefined): string | null {
   return /^mailto:/i.test(link.trim()) ? null : link;
 }
 
-export function AdCard({ item, showType = false }: { item: AdCardItem; showType?: boolean }) {
+/**
+ * Where the tile is standing. `wall` is the grid column it was drawn for; `fullscreen` is the
+ * reel, where the creative has the screen to itself and the card carries no column classes.
+ *
+ * The client asked for the ads to appear in the full-screen scroll "same" as they do on the
+ * wall — so only the frame changes here. The heading, the button, its size and position, and
+ * every action behind it are the ones already agreed.
+ */
+export type AdCardVariant = 'wall' | 'fullscreen';
+
+export function AdCard({
+  item,
+  showType = false,
+  variant = 'wall',
+}: {
+  item: AdCardItem;
+  showType?: boolean;
+  variant?: AdCardVariant;
+}) {
+  const isFullscreen = variant === 'fullscreen';
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
@@ -281,7 +300,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   else href = safeLink(item.link);
 
   return (
-    <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
+    <div className={isFullscreen ? 'ad-fullscreen' : 'col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item'}>
       <p className="feed_posts_heading_p ad-card-heading" style={{ position: 'relative', fontSize: 14 }}>
         <span>Super Ads</span>
         {showType && <TypeTag adType={item.adType} />}

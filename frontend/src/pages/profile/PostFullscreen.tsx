@@ -10,6 +10,15 @@ import { SwalResult } from './Profile';
 import { SubscribeModal } from './SubscribeModal';
 import { RatingPill } from '../../components/RatingPill';
 import '../../styles/report-menu.css';
+import { AdCard } from '../../components/AdCard';
+import {
+  appendSteps,
+  isAdId,
+  isAdStep,
+  readSteps,
+  toSteps,
+  type WorldStep,
+} from '../../utils/worldSequence';
 
 /**
  * The viewer's own click, kept in the browser beside the server's record of it — the client's
@@ -79,6 +88,9 @@ interface FsPost {
 
 const REPORT_REASONS = ['Excessive sensuality', 'Impersonation', 'Violence', 'Racism', 'Other'];
 
+/** how close to the end of the run the viewer gets before the next page is asked for */
+const PREFETCH_WITHIN = 3;
+
 /** Report-reasons key lookup so the dropdown shows the localized label (report.json). */
 const REASON_KEY: Record<string, string> = {
   'Excessive sensuality': 'sensuality',
@@ -109,7 +121,20 @@ export function PostFullscreen() {
   const location = useLocation();
   // World context: full-screen scroll follows the WORLD feed order (passed via router state),
   // not the influencer's own posts. Absent → fall back to the backend's sibling prev/next.
-  const worldSeq = (location.state as { world?: string[] } | null)?.world ?? null;
+  /* Held rather than read straight off the router state, because the viewer grows it: the
+     wall hands over only the pages it had loaded, and running off the end of those was where
+     the scroll used to stop dead. */
+  const navState = location.state as
+    | { world?: unknown; worldPage?: number; worldLastPage?: number }
+    | null;
+  const [worldRun, setWorldRun] = useState<WorldStep[] | null>(() => readSteps(navState?.world));
+  const worldPage = useRef(navState?.worldPage ?? 1);
+  const worldLastPage = useRef(navState?.worldLastPage ?? 1);
+  const fetchingPage = useRef(false);
+  /* the current step, when the wall is what is being walked */
+  const stepIndex = worldRun ? worldRun.findIndex((x) => x.id === id) : -1;
+  const currentStep = stepIndex >= 0 ? worldRun![stepIndex] : null;
+  const adStep = currentStep && isAdStep(currentStep) ? currentStep : null;
   /* an ad for a paid creator sends the viewer here with the payment dialog already asked
      for: "Full Screen + Modal Payment. But they can close the modal to see the post and
      they have the Subscribe button beside Nickname." */
@@ -183,6 +208,8 @@ export function PostFullscreen() {
 
   useEffect(() => {
     let cancelled = false;
+    /* an ad travels inside the run itself — there is no post behind its id to ask for */
+    if (isAdId(id)) return;
     const cached = cache.current.get(id);
     if (cached) {
       applyPost(cached);
@@ -210,13 +237,42 @@ export function PostFullscreen() {
     };
   }, [id]);
 
+  /**
+   * The wall hands over only the pages it had loaded — fifteen posts if the viewer opened a
+   * post without scrolling first — and running off the end of those was where the scroll
+   * stopped dead. Three steps from the end the next page is fetched and joined on, so the
+   * reel keeps going to the feed's own last page.
+   */
+  useEffect(() => {
+    if (!worldRun || stepIndex < 0) return;
+    if (stepIndex < worldRun.length - PREFETCH_WITHIN) return;
+    if (fetchingPage.current || worldPage.current >= worldLastPage.current) return;
+    fetchingPage.current = true;
+    const next = worldPage.current + 1;
+    api
+      .get<{ success: boolean; data: { items: ({ type?: string; id: string })[]; lastPage: number } }>(
+        `/world?page=${next}`,
+      )
+      .then((r) => {
+        worldPage.current = next;
+        worldLastPage.current = r.data.data.lastPage ?? worldLastPage.current;
+        setWorldRun((run) => (run ? appendSteps(run, toSteps(r.data.data.items)) : run));
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        fetchingPage.current = false;
+      });
+  }, [worldRun, stepIndex]);
+
   /* Warm both neighbours: their JSON, and the first frame / image itself. */
   useEffect(() => {
     if (!post) return;
     const ids = [post.prevId, post.nextId];
-    if (worldSeq) {
-      const i = worldSeq.indexOf(id);
-      if (i >= 0) ids.push(worldSeq[i - 1] ?? null, worldSeq[i + 1] ?? null);
+    if (worldRun && stepIndex >= 0) {
+      /* only posts are fetched ahead — an ad is already in hand */
+      for (const n of [worldRun[stepIndex - 1], worldRun[stepIndex + 1]]) {
+        if (n && !isAdStep(n)) ids.push(n.id);
+      }
     }
     for (const nid of ids) {
       if (!nid || cache.current.has(nid)) continue;
@@ -237,7 +293,7 @@ export function PostFullscreen() {
         })
         .catch(() => undefined);
     }
-  }, [post, id, worldSeq]);
+  }, [post, id, worldRun, stepIndex]);
 
   /**
    * Start every clip with its sound on — the client does not want to tap for it.
@@ -510,9 +566,9 @@ function doHate() {
 
   // Effective prev/next id — world sequence when in world context, else backend siblings.
   const targetId = (dir: 'next' | 'prev'): string | null => {
-    if (worldSeq) {
-      const i = worldSeq.indexOf(id);
-      if (i >= 0) return dir === 'next' ? worldSeq[i + 1] ?? null : worldSeq[i - 1] ?? null;
+    if (worldRun && stepIndex >= 0) {
+      const step = dir === 'next' ? worldRun[stepIndex + 1] : worldRun[stepIndex - 1];
+      return step?.id ?? null;
     }
     return dir === 'next' ? post?.nextId ?? null : post?.prevId ?? null;
   };
@@ -522,7 +578,15 @@ function doHate() {
     slideDir.current = dir;
     navigate(`/user/post_detail/${t}`, {
       replace: true, // a reel is one screen, not a history trail
-      ...(worldSeq ? { state: { world: worldSeq } } : {}),
+      ...(worldRun
+        ? {
+            state: {
+              world: worldRun,
+              worldPage: worldPage.current,
+              worldLastPage: worldLastPage.current,
+            },
+          }
+        : {}),
     });
   };
   const goNext = () => go('next');
@@ -558,8 +622,51 @@ function doHate() {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
+    /* `id` and the run belong here as well as the siblings: on an ad slide there is no post
+       to change, so without them the handler stayed bound to the step before it and the
+       arrow keys walked back onto the same slide. */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [post?.nextId, post?.prevId]);
+  }, [post?.nextId, post?.prevId, id, worldRun, stepIndex]);
+
+  /* where "back" leads from either slide — declared once, above both returns */
+  const worldBack = authUser?.role === 'influencer' ? '/influencer/world' : '/user/world';
+
+  /**
+   * An ad, standing where the wall stands it — the client asked for the ads to show in the
+   * full-screen scroll too, "same" as on the wall, so the tile itself is the wall's own with
+   * only its frame changed. It is not a post: no rating pill, no follow, nothing to report.
+   * Swipe, wheel and the arrow keys carry on through it.
+   */
+  if (adStep) {
+    return (
+      <div
+        className="post-fullscreen-wrap ad-slide-wrap"
+        onWheel={onWheel}
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+        <style>{`
+          .ad-slide-wrap{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:56px 12px 24px}
+          .ad-slide-back{position:absolute;top:0;left:0;height:52px;display:flex;align-items:center;padding:0 16px;color:#fff;font-size:14px;text-decoration:none;z-index:10}
+          .ad-slide-back:hover,.ad-slide-back:focus{color:#fff;text-decoration:none}
+        `}</style>
+        <a
+          href={worldBack}
+          className="ad-slide-back"
+          title={tUi('back')}
+          onClick={(e) => {
+            e.preventDefault();
+            const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+            if (idx > 0) navigate(-1);
+            else navigate(worldBack);
+          }}
+        >
+          <i className="fas fa-chevron-left" aria-hidden="true"></i>
+        </a>
+        <AdCard item={adStep} variant="fullscreen" />
+      </div>
+    );
+  }
 
   if (state === 'loading') return null;
   if (state === 'notfound' || !post) {
@@ -577,7 +684,6 @@ function doHate() {
      subscribed to; everyone else — free creators and normal users — is followed */
   const isPaidCreator = author?.role === 'influencer' && (author?.priceOfSubscription ?? 0) > 0;
   const isOwner = !!authUser && author?.id === authUser.id;
-  const worldBack = authUser?.role === 'influencer' ? '/influencer/world' : '/user/world';
   const pct = likePercent(likes, hates, post?.likePercent, {
     id: post?.id,
     views: post?.likesTotal,
