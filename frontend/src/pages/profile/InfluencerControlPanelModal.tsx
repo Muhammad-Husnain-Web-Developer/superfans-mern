@@ -836,7 +836,7 @@ function PartnershipModal({ onClose }: { onClose: () => void }) {
 
   const emailSubject = encodeURIComponent('Partnership for generate incomes Ads in Video');
   const emailBody = encodeURIComponent(
-    `Hello, my name is ${user?.name || '......'} and I request a Partnership for activate the Tool of EARNINGS VIDEO ADS.`
+    `Hello,👋 my name is ${user?.name || '......'} and  I request a Partnership for activate the Tool of EARNINGS WITH ADS.`
   );
   const mailtoLink = `mailto:superfansworldapp@gmail.com?subject=${emailSubject}&body=${emailBody}`;
 
