@@ -29,6 +29,7 @@ export function StartStream() {
   useStandalonePageStyles(['/page-css/start-stream.css']);
   const { room: roomName = '' } = useParams();
   const { t } = useTranslation('content');
+  const { t: tUi } = useTranslation('ui');
 
   const [data, setData] = useState<RoomData | null>(null);
   const [viewers, setViewers] = useState(0);
@@ -156,12 +157,12 @@ export function StartStream() {
               </div>
 
               <div className="donos">
-                <h4>💰 DONACIONES</h4>
+                <h4>{tUi('stream_donations_heading')}</h4>
                 <div className="btns">
                   <button className="chip-btn" type="button" onClick={() => donate(5)}>5€</button>
                   <button className="chip-btn" type="button" onClick={() => donate(10)}>10€</button>
                   <button className="chip-btn" type="button" onClick={() => donate(20)}>20€</button>
-                  <button className="chip-btn" type="button" onClick={donatePrompt}>Persnlz</button>
+                  <button className="chip-btn" type="button" onClick={donatePrompt}>{tUi('donate_custom')}</button>
                 </div>
               </div>
             </aside>
@@ -184,7 +185,7 @@ export function StartStream() {
 
               <div className="lists">
                 <div className="list">
-                  <h5>SUPER DONANTES</h5>
+                  <h5>{tUi('stream_top_donors')}</h5>
                   <ul />
                 </div>
                 <div className="list">
@@ -198,11 +199,11 @@ export function StartStream() {
 
         {/* RIGHT: join requests rail (placeholders, matching the blade) */}
         <aside className="rail">
-          <h4>Join Requests</h4>
+          <h4>{tUi('stream_join_requests')}</h4>
           <div className="tiles" id="requests">
             {Array.from({ length: 6 }).map((_, i) => (
               <div className="tile" key={i}>
-                <span>Waiting…</span>
+                <span>{tUi('stream_waiting')}</span>
                 <div className="speaker">🔇</div>
               </div>
             ))}

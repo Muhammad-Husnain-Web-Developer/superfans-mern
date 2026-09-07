@@ -85,6 +85,7 @@ export function PostItem({
   /** whose wall this is — its handle heads every post, as in the world feed */
   author?: { usernameUrl: string; profilePicture: string | null; verified?: boolean };
 }) {
+  const { t: tUi } = useTranslation('ui');
   const media = post.imageVideo;
   const navigate = useNavigate();
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -265,7 +266,7 @@ function doHate() {
           below are not the post, and clicking those used to open it too */}
       <div style={{ position: 'relative', width: '100%', cursor: 'pointer' }} onClick={onMediaClick}>
       {locked || !media ? (
-        <img src={LOCKED_POST_IMAGE} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
+        <img src={LOCKED_POST_IMAGE} alt={tUi('alt_portfolio')} className="img-responsive" style={frame} />
       ) : isVideoFile(media) ? (
         <div className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
           <video
@@ -282,7 +283,7 @@ function doHate() {
           <VolumeButton videoId={`video-${post.id}`} />
         </div>
       ) : (
-        <img src={assetImage(media)} alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!" className="img-responsive" style={frame} />
+        <img src={assetImage(media)} alt={tUi('alt_portfolio')} className="img-responsive" style={frame} />
       )}
       </div>
       {/* views on the left, the rating group on the right — the horizontal wall row
@@ -322,6 +323,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
      Those pages also use layouts.main, whose control panel is the fuller #userModalCenter
      (wallVariant), while the canonical /{username} profile uses the layouts_direct_user one. */
   const { t: tReport } = useTranslation('report');
+  const { t: tUi } = useTranslation('ui');
   const { usernameUrl: routeUsername } = useParams();
   const { t } = useTranslation('content');
   const { user: authUser } = useAuth();
@@ -505,7 +507,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   if (state === 'suspended' || !profile) {
     return (
       <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
-        <h1 style={{ color: '#da1212' }}>This account is suspended</h1>
+        <h1 style={{ color: '#da1212' }}>{tUi('account_suspended_short')}</h1>
       </div>
     );
   }
@@ -576,14 +578,14 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                 ) : (
                   <img
                     src={assetImage(posts[0].imageVideo)}
-                    alt="Post Media"
+                    alt={tUi('alt_post_media')}
                     style={{ width: 200, borderRadius: 14, border: '4px solid rgba(255,255,255,0.4)', boxShadow: '0 0 20px rgba(255,255,255,0.25)', marginBottom: 15 }}
                   />
                 ))}
               <p style={{ fontSize: 16, marginTop: 8, lineHeight: 1.4 }}>
-                Your post is gaining attention!
+                {tUi('post_gaining_attention')}
                 <br />
-                <b>Boost it now and reach more people instantly!</b>
+                <b>{tUi('boost_now')}</b>
               </p>
               <a
                 href={`/super-ads/buy/${posts[0].id}`}
@@ -622,7 +624,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
               onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.color = '#000'; }}
               onClick={() => {
                 void navigator.clipboard?.writeText(referralUsername);
-                window.alert('Username copied!');
+                window.alert(tUi('username_copied'));
               }}
             >
               {t('modal_invite_button_copy')}
@@ -758,7 +760,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                 <i
                   className="fa fa-plus story-add-badge"
                   onClick={() => setAddStoryOpen(true)}
-                  title="Add Storie"
+                  title={tUi('add_story')}
                   aria-hidden="true"
                 ></i>
               )}
@@ -779,7 +781,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                 {profile.verified && (
                   <img
                     src={assetImage('verified.png')}
-                    alt="Verified"
+                    alt={tUi('alt_verified')}
                     width={18}
                     height={18}
                     style={{ position: 'relative', bottom: 1, display: 'inline-block' }}
@@ -902,7 +904,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                             color: profile.viewerHasBlocked ? '#856404' : 'red',
                           }}
                         >
-                          {profile.viewerHasBlocked ? 'Unblock User' : 'Block User'}
+                          {profile.viewerHasBlocked ? tUi('unblock_user') : tUi('block_user')}
                         </button>
                       </li>
                     )}
@@ -1035,19 +1037,19 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
               className="alert-warning d-flex justify-content-between align-items-center"
             >
               <div>
-                <strong>You have blocked this user.</strong>
+                <strong>{tUi('you_blocked_user')}</strong>
                 <br />
-                They cannot view your profile or interact with you until you unblock them.
+                {tUi('you_blocked_note')}
               </div>
               <center>
                 <button type="button" className="btn btn-sm btn-secondary" onClick={toggleBlock}>
-                  Unblock
+                  {tUi('unblock')}
                 </button>
               </center>
             </div>
           ) : profile.viewerIsBlockedBy ? (
             <div style={{ padding: 15, width: '90%', margin: 'auto' }} className="alert-danger">
-              <strong>This user has blocked you.</strong>
+              <strong>{tUi('user_blocked_you')}</strong>
               <br />
               You can&apos;t access their profile or content.
             </div>
@@ -1168,6 +1170,7 @@ export function FollowButtons({
   onControlPanel?: () => void;
 }) {
   const { t } = useTranslation('content');
+  const { t: tUi } = useTranslation('ui');
   const navigate = useNavigate();
   const [following, setFollowing] = useState(profile.viewerFollowing);
   const [subscribed, setSubscribed] = useState(profile.viewerSubscribed);
@@ -1294,7 +1297,7 @@ export function FollowButtons({
             style={{ width: 226, cursor: 'pointer' }}
           >
             {superheroina}
-            {t('subscribed', { defaultValue: 'Subscribed' })}{' '}
+            {tUi('subscribed')}{' '}
             | <b><i className="fa fa-check" style={{ fontSize: 17 }} aria-hidden="true"></i></b>
           </span>
         ) : (

@@ -60,7 +60,7 @@ export function BusinessLogin() {
           {/* no letterSpacing: the blade's `letter-spacing: -0.3` has no unit and
               is invalid, so Laravel renders this at the default spacing */}
           <h6 style={{ fontFamily: '"Anton", sans-serif', fontWeight: 550, fontSize: 19, color: '#333', marginBottom: 21 }}>
-            SUPER ADS CENTER
+            {t('superadscenter', { ns: 'content' })}
           </h6>
         </div>
 

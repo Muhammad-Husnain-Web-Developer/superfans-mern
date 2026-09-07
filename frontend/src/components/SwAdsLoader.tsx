@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './sw-ads-loader.css';
 
 /**
@@ -13,6 +14,7 @@ import './sw-ads-loader.css';
 export function SwAdsLoader() {
   const [faded, setFaded] = useState(false);
   const [gone, setGone] = useState(false);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     let fade: ReturnType<typeof setTimeout>;
@@ -36,7 +38,7 @@ export function SwAdsLoader() {
 
   return (
     <div className={`sw-ads-loader${faded ? ' is-faded' : ''}`}>
-      <img src="/assets/images/logo-sw-ads.png" alt="Loading..." />
+      <img src="/assets/images/logo-sw-ads.png" alt={tUi('loading')} />
     </div>
   );
 }

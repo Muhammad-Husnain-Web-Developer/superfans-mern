@@ -56,6 +56,7 @@ export function StoryEditor({
   const [pop, setPop] = useState<Pop>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
+  const { t: tUi } = useTranslation('ui');
 
   /* tag popup */
   const [query, setQuery] = useState('');
@@ -271,7 +272,7 @@ export function StoryEditor({
                       )}
                       <span className="handle">@{h.name}</span>
                       {h.verified && (
-                        <img className="tick" src={assetImage('verified.png')} alt="Verified" />
+                        <img className="tick" src={assetImage('verified.png')} alt={tUi('alt_verified')} />
                       )}
                     </li>
                   ))}

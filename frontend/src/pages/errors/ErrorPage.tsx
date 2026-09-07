@@ -23,6 +23,7 @@ export function ErrorPage({
   documentTitle: string;
 }) {
   const { i18n } = useTranslation();
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     const previous = document.title;
@@ -42,7 +43,7 @@ export function ErrorPage({
       <h3 className="error-page-message">{message}</h3>
 
       <button type="button" className="error-page-back" onClick={() => window.history.go(-1)}>
-        Volver
+        {tUi('go_back_label')}
       </button>
 
       <hr className="error-page-rule" />
@@ -65,16 +66,17 @@ export function NotFoundPage() {
 
 /** errors/419.blade.php — the session the blade calls "caducada" */
 export function PageExpiredPage() {
+  const { t: tUi } = useTranslation('ui');
   return (
     <ErrorPage
       documentTitle="Superfans | Page Expired"
-      title="¡Ups! La página Caducó"
+      title={tUi('page_expired_title')}
       message={
         <>
           Superworld es una red social protegida, por seguridad las páginas caducan muy rápido.
           <br />
           <br />
-          Inicia sesión de nuevo porfavor!
+          {tUi('login_again')}
         </>
       }
     />
@@ -83,10 +85,11 @@ export function PageExpiredPage() {
 
 /** errors/403.blade.php — the business-only ad screen */
 export function AdNotAvailablePage() {
+  const { t: tUi } = useTranslation('ui');
   return (
     <ErrorPage
       documentTitle="Superfans | Ad not available"
-      title="Ad not available"
+      title={tUi('ad_not_available')}
       message="🏢 This ad is only available to businesses."
     />
   );

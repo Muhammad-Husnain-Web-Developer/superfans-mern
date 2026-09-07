@@ -137,6 +137,7 @@ export function ControlPanelModal({
   const { t } = useTranslation('content');
   const { t: tNav } = useTranslation('nav');
   const { setUser } = useAuth();
+  const { t: tUi } = useTranslation('ui');
 
   const [bio, setBio] = useState(profile.bio ?? '');
   const [username, setUsername] = useState(profile.usernameUrl ?? '');
@@ -206,12 +207,12 @@ export function ControlPanelModal({
     if (!newNetworkId) return;
     try {
       await api.post('/me/networks', { networkId: Number(newNetworkId), url: networkUrl });
-      setFlash({ ok: true, text: 'Network added successfully' });
+      setFlash({ ok: true, text: tUi('network_added') });
       onSaved();
     } catch (e) {
       const msg =
         (e as { response?: { data?: { message?: string } } }).response?.data?.message ??
-        'Could not add network';
+        tUi('network_add_failed');
       setFlash({ ok: false, text: msg });
     }
   }
@@ -234,7 +235,7 @@ export function ControlPanelModal({
 
   function validateBioLength(): boolean {
     if (bio.length > 290) {
-      alert('Bio must not exceed 290 characters.');
+      alert(tUi('bio_too_long'));
       return false;
     }
     return true;
@@ -301,7 +302,7 @@ export function ControlPanelModal({
             <button
               type="button"
               className="close d-block"
-              aria-label="Close"
+              aria-label={tUi('close')}
               onClick={onClose}
               style={{
                 fontSize: 45,
@@ -483,7 +484,7 @@ export function ControlPanelModal({
 
             {/* ---------- footer credits ---------- */}
             <div className="custom-file" style={{ display: 'flex' }}>
-              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>Footer Credits</label>
+              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>{t('footer_credits')}</label>
               <select
                 className="form-control"
                 style={{ color: 'white', border: '1px solid white', marginRight: 50 }}
@@ -491,17 +492,17 @@ export function ControlPanelModal({
                 onChange={(e) => setFooterCredits(e.target.value)}
               >
                 <option style={{ color: 'black' }} value="name">
-                  Name
+                  {tUi('name_plain')}
                 </option>
                 <option style={{ color: 'black' }} value="username">
-                  Username
+                  {tUi('username')}
                 </option>
               </select>
               <button
                 type="button"
                 className="save_btn"
                 style={{ ...SAVE_BTN, position: 'relative', height: 'fit-content', marginRight: 21 }}
-                onClick={() => void save({ footerNameUsername: footerCredits }, 'Footer content editted successfully')}
+                onClick={() => void save({ footerNameUsername: footerCredits }, tUi('footer_content_saved'))}
               >
                 {t('save_button_cpanel', { defaultValue: 'Save' })}
               </button>
@@ -510,11 +511,11 @@ export function ControlPanelModal({
             <hr style={HR} />
 
             {/* ---------- networks (blade L2878-3106) ---------- */}
-            <h3 style={H3}>NETWORKS:</h3>
+            <h3 style={H3}>{tUi('networks_heading')}</h3>
 
             {/* update_first_network — options are the user's OWN networks */}
             <div className="custom-file" style={{ display: 'flex' }}>
-              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>First Network</label>
+              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>{t('first_network')}</label>
               <select
                 className="form-control"
                 name="first_network"
@@ -536,10 +537,10 @@ export function ControlPanelModal({
                   void api
                     .patch('/me/first-network', { firstNetwork })
                     .then(() => {
-                      setFlash({ ok: true, text: 'Network successfully' });
+                      setFlash({ ok: true, text: tUi('network_reordered') });
                       onSaved();
                     })
-                    .catch(() => setFlash({ ok: false, text: 'Could not reorder networks' }))
+                    .catch(() => setFlash({ ok: false, text: tUi('network_reorder_failed') }))
                 }
               >
                 {t('save_button_cpanel')}
@@ -585,7 +586,7 @@ export function ControlPanelModal({
                 invisible in the blade (visibility: hidden) while still reserving space. */}
             <h3 style={H3}>{t('add_network')}</h3>
             <div className="custom-file" style={{ display: 'flex' }}>
-              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>Choose Network: </label>
+              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>{t('choose_network')} </label>
               <select
                 className="form-control"
                 id="network_id"
@@ -599,7 +600,7 @@ export function ControlPanelModal({
                 }}
               >
                 {atNetworkLimit ? (
-                  <option>Una cuenta standard esta limitada a 3 redes sociales</option>
+                  <option>{tUi('networks_limit_standard')}</option>
                 ) : (
                   availableNetworks.map((n) => (
                     <option
@@ -648,7 +649,7 @@ export function ControlPanelModal({
                   </div>
                   <div className="col-md-3" style={{ textAlign: 'end', paddingRight: 22 }}>
                     <button type="button" className="save_btn" style={SAVE_BTN} onClick={addNetwork}>
-                      Add
+                      {t('add_button_cpanel')}
                     </button>
                   </div>
                 </div>
@@ -656,10 +657,16 @@ export function ControlPanelModal({
             )}
 
             <hr style={HR} />
+            {/* ---- PAYMENTS — TAKEN OUT, NOT DELETED ------------------------------------
+                A fan is on the paying side of this platform: they never earn, which is why
+                the blade gives them no earnings figure either, only the video-views
+                placeholder that is hard-coded to $0.00 for everyone and says "Not available
+                until 10K Subscribers" whatever the account. Both halves of the section said
+                nothing, so the section goes. The admin refuses to set earnings on a
+                non-creator now, so there is nothing here left to show.
+
             <h3 style={H3}>{t('payments')}</h3>
 
-            {/* earnings from video views — a fixed $0.00 line + a disabled "not
-                available until 10k" button (bank/paypal forms are commented out in the blade). */}
             <div className="container-fluid" style={{ paddingLeft: 0 }}>
               <div className="row pb-3">
                 <div className="col-xs-6">
@@ -676,6 +683,7 @@ export function ControlPanelModal({
                 </div>
               </div>
             </div>
+            -------------------------------------------------------------------------- */}
 
             <hr style={HR} />
             <h3 style={H3}>{t('account_info')}</h3>
@@ -716,7 +724,7 @@ export function ControlPanelModal({
             <hr style={HR} />
             <h3 style={H3}>{t('my_subscriptions')}</h3>
             {subscriptions.length === 0 ? (
-              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>No Subscriptions</p>
+              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>{tUi('no_subscriptions')}</p>
             ) : (
               subscriptions.map((s) => (
                 <Fragment key={s.id}>
@@ -729,7 +737,7 @@ export function ControlPanelModal({
             <hr style={HR} />
             <h3 style={H3}>{t('my_followerships')}</h3>
             {followerships.length === 0 ? (
-              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>No Followerships</p>
+              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>{tUi('no_followerships')}</p>
             ) : (
               followerships.map((f) => (
                 <Fragment key={f.id}>
@@ -764,10 +772,10 @@ export function ControlPanelModal({
                       void api
                         .post('/me/request-creator-account')
                         .then(() => {
-                          setFlash({ ok: true, text: 'Congrats, You are creator now.' });
+                          setFlash({ ok: true, text: tUi('creator_granted') });
                           onSaved();
                         })
-                        .catch(() => setFlash({ ok: false, text: 'Request failed' }))
+                        .catch(() => setFlash({ ok: false, text: tUi('request_failed') }))
                     }
                   >
                     {t('request_creator', { defaultValue: 'Request creator account' })}
@@ -836,11 +844,11 @@ export function ControlPanelModal({
                         void api
                           .patch(`/me/networks/${editNetwork.id}`, { url: editNetworkUrl })
                           .then(() => {
-                            setFlash({ ok: true, text: 'Network url editted successfully' });
+                            setFlash({ ok: true, text: tUi('network_url_updated') });
                             setEditNetwork(null);
                             onSaved();
                           })
-                          .catch(() => setFlash({ ok: false, text: 'Could not update network' }))
+                          .catch(() => setFlash({ ok: false, text: tUi('network_update_failed') }))
                       }
                     >
                       {t('save_button_cpanel')}
@@ -852,7 +860,7 @@ export function ControlPanelModal({
                 className="delete save_btn"
                 onClick={() =>
                   void api.delete(`/me/networks/${editNetwork.id}`).then(() => {
-                    setFlash({ ok: true, text: 'Network deleted successfully' });
+                    setFlash({ ok: true, text: tUi('network_deleted') });
                     setEditNetwork(null);
                     onSaved();
                   })
@@ -873,7 +881,7 @@ export function ControlPanelModal({
                   cursor: 'pointer',
                 }}
               >
-                Delete it
+                {t('delete_button_cpanel')}
               </span>
             </div>
           </div>

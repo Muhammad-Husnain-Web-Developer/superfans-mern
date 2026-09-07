@@ -31,7 +31,12 @@ const MAX_FEED_POSTS = 300;
 const TIER_NEEDED = 60;
 const PER_USER_CAP = 2;
 const MIN_POST_LIKES = 1000;
-const RECENT_DAYS = 290;
+/* Laravel's own window is 290 days (WorldController@world:57, `Carbon::now()->subDays(290)`).
+   Widened to 500 at the client's request: the migrated content is nearly all from June 2025,
+   so as real time passed the 290-day cutoff walked past it and the wall emptied out — four
+   posts on 7 Sep 2026, and one within the month. This is a deliberate deviation from the
+   Laravel original, and the only one in this feed. */
+const RECENT_DAYS = 500;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -46,7 +51,7 @@ function shuffle<T>(arr: T[]): T[] {
  * World discovery feed — exact port of WorldController@world:
  * users bucketed into 5 mutually-exclusive tiers by lifetime post likes
  * (50k/5k/1k/500/1), per tier up to 60 posts, max 2 per creator, posts must be
- * visible, ≥1000 likes, younger than 290 days; pool capped at 300, shuffled,
+ * visible, ≥1000 likes, younger than RECENT_DAYS days; pool capped at 300, shuffled,
  * 15 per page, 3 random ads injected after every 6th post.
  * (Laravel regenerates the pool on every request — same here.)
  */

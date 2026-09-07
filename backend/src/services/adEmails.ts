@@ -95,6 +95,48 @@ Best regards,<br>
   };
 }
 
+/**
+ * The Super Video card's VERIFICATE button.
+ *
+ * No blade for this one: the button is a `mailto:` in Laravel — and a broken one, written
+ * `mailto:martinherrada` with no domain, so it opened nothing anywhere. Even repaired, a
+ * mailto only works on a machine with a mail client set up, and it leaves the client
+ * trusting that the advertiser actually pressed Send. This carries the request itself.
+ */
+export function vipAccessRequestAdmin(a: {
+  userName: string;
+  userEmail: string;
+  role: string;
+}): Mail {
+  return {
+    subject: 'VIP Business Account Request – Super Video Ads',
+    html: renderEmailHtml(`<p>Hello Admin,</p>
+
+<p>
+An advertiser has asked to become a <strong>VIP Business Account</strong> so they can
+activate Super Video Ads and the other special tools.
+</p>
+
+<p>
+<strong>Requested By:</strong> ${a.userName} (${a.userEmail}) <br>
+<strong>Account Type:</strong> ${ucfirst(a.role)}
+</p>
+
+<p>
+They are waiting on you to enable it:<br>
+<a href="${origin()}/admin/users"
+   style="color:#3366cc; text-decoration:underline;">
+    Open the users panel
+</a>
+</p>
+
+<p>
+Best regards,<br>
+<strong>Superfans Team</strong>
+</p>`),
+  };
+}
+
 /** emails/ad_payment_success_user.blade.php */
 export function adPaymentSuccessUser(a: {
   name: string;

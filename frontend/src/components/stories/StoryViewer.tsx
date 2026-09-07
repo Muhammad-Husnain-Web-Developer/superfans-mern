@@ -62,6 +62,7 @@ export function StoryViewer({
   const [stories, setStories] = useState<Story[] | null>(null);
   const [index, setIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { t: tUi } = useTranslation('ui');
   /* Reporting and sharing answer with the same dialog a post does, rather than a toast
      of their own — SwalResult is the app's confirmation everywhere else. */
   const [swal, setSwal] = useState<{ icon?: 'success' | 'error'; title: string; text?: string } | null>(null);
@@ -248,7 +249,7 @@ export function StoryViewer({
           <button
             type="button"
             className="story-viewer-caret"
-            title="Options"
+            title={tUi('options')}
             onClick={() => {
               setConfirmDelete(false);
               setMenuOpen((v) => !v);
@@ -325,7 +326,7 @@ export function StoryViewer({
           type="button"
           className="story-viewer-close"
           onClick={onClose}
-          title="Close"
+          title={tUi('close')}
           style={{ marginLeft: 10 }}
         >
           ✕

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { api } from '../../api/client';
@@ -20,19 +21,22 @@ interface PanelUser {
   noOfFollowers: number;
   growthStatus: string;
   growthGearLevel: number;
+  earnings: number;
+  videoAdsEarnings: number;
 }
 
 type Flash = { kind: 'success' | 'danger'; text: string } | null;
 
 /** The blade's dismissible alert strip (all_users.blade.php:33). */
 function Alert({ flash, onClose }: { flash: Flash; onClose: () => void }) {
+  const { t: tUi } = useTranslation('ui');
   if (!flash) return null;
   return (
     <div className={`alert alert-${flash.kind} alert-dismissible fade show`} role="alert">
       <h5>
         <b>{flash.text}</b>
       </h5>
-      <button type="button" className="close" aria-label="Close" onClick={onClose}>
+      <button type="button" className="close" aria-label={tUi('close')} onClick={onClose}>
         <span aria-hidden="true">&times;</span>
       </button>
     </div>
@@ -53,6 +57,8 @@ function UserRow({
   const [amount, setAmount] = useState('');
   const [gear, setGear] = useState(user.growthGearLevel || 1);
   const [busy, setBusy] = useState(false);
+  const [earn, setEarn] = useState(String(user.earnings ?? 0));
+  const [video, setVideo] = useState(String(user.videoAdsEarnings ?? 0));
 
   /** Every control reports the way the blade does: a flash at the top of the page. */
   const call = useCallback(
@@ -73,6 +79,20 @@ function UserRow({
     },
     [onFlash],
   );
+
+  /** One writer for both money columns — the same PUT the admin edit dialog uses. */
+  function saveMoney(field: 'earnings' | 'videoAdsEarnings', raw: string) {
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value < 0) {
+      onFlash({ kind: 'danger', text: 'Enter an amount of 0 or more.' });
+      return;
+    }
+    void call(async () => {
+      await api.put(`/admin/users/${user.id}`, { [field]: value });
+      onChanged({ id: user.id, [field]: value });
+      return { message: field === 'earnings' ? 'Earnings updated.' : 'Video Ads earnings updated.' };
+    });
+  }
 
   const suspended = user.status === 'suspended';
   const deleted = user.status === 'deleted';
@@ -268,6 +288,64 @@ function UserRow({
         </div>
         </form>
       </td>
+
+      {/* The two figures the client sets by hand. They are typed, not computed: no video
+          ad has ever paid anybody, because the Super Video card only ever opens the VIP
+          notice and there is no code in either app that plays one.
+
+          Only a creator gets the boxes. A fan is on the paying side and a business buys
+          ads rather than being paid for them; neither has a payments block to show a
+          figure in, so setting one would write a number nobody could see. The endpoint
+          refuses it too — this only keeps the admin from trying. */}
+      <td>
+        {user.role !== 'influencer' ? (
+          <span className="text-muted">—</span>
+        ) : (
+        <form onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            className="form-control form-control-sm my-1"
+            value={earn}
+            disabled={busy}
+            onChange={(e) => setEarn(e.target.value)}
+          />
+          <input
+            type="submit"
+            className="btn btn-success btn-sm my-1"
+            value="Save"
+            disabled={busy}
+            onClick={() => saveMoney('earnings', earn)}
+          />
+        </form>
+        )}
+      </td>
+
+      <td>
+        {user.role !== 'influencer' ? (
+          <span className="text-muted">—</span>
+        ) : (
+        <form onSubmit={(e) => e.preventDefault()}>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            className="form-control form-control-sm my-1"
+            value={video}
+            disabled={busy}
+            onChange={(e) => setVideo(e.target.value)}
+          />
+          <input
+            type="submit"
+            className="btn btn-success btn-sm my-1"
+            value="Save"
+            disabled={busy}
+            onClick={() => saveMoney('videoAdsEarnings', video)}
+          />
+        </form>
+        )}
+      </td>
     </tr>
   );
 }
@@ -282,6 +360,11 @@ const COLUMNS = [
   'Posts',
   'Growth Gear',
   'Verified',
+  /* The client asked for the earnings manipulation to sit in this table rather than a page
+     of its own — this is the one he knows from Laravel, and the one that already lets an
+     admin move a user's followers by hand. */
+  'Earnings',
+  'Video Ads',
 ];
 
 /**
@@ -295,7 +378,9 @@ const COLUMNS = [
  * narrow to seat both, and left to itself the browser hands it enough room to
  * sit them side by side.
  */
-const COLUMN_WIDTHS = ['18.962%', '28.078%', '6.933%', '5.957%', '16.895%', '6.933%', '4.707%', '5.414%', '6.121%'];
+/* The blade's nine widths are kept as they were and the two new columns take their
+   own share, so the columns Laravel drew stay in the same proportion to each other. */
+const COLUMN_WIDTHS = ['16.5%', '24.4%', '6.0%', '5.2%', '14.7%', '6.0%', '4.1%', '4.7%', '5.3%', '6.6%', '6.5%'];
 
 /**
  * DataTables makes every column sortable and orders by what the cell reads, so
@@ -315,6 +400,10 @@ const SORT_KEYS: ((u: PanelUser) => string)[] = [
       ? `Growth is active at Gear ${u.growthGearLevel} Stop VIP`
       : `Gear: ${u.growthGearLevel} Start VIP`,
   (u) => (u.verified ? 'Verified' : 'Not Verified'),
+  /* both columns sort on the figure as it reads on screen, padded so 9 does not come
+     after 80 the way a plain string compare would put it */
+  (u) => (u.earnings ?? 0).toFixed(2).padStart(14, '0'),
+  (u) => (u.videoAdsEarnings ?? 0).toFixed(2).padStart(14, '0'),
 ];
 
 /** DataTables' own string ordering: lowercase, then a plain comparison. That is

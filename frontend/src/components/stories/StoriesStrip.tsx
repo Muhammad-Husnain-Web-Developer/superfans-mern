@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fetchStoryStrip, type StripEntry } from '../../api/stories';
 import { useAuth } from '../../context/AuthContext';
 import { AddStoryModal } from './AddStoryModal';
@@ -23,13 +24,14 @@ function Arrow({
   disabled: boolean;
   onClick: () => void;
 }) {
+  const { t: tUi } = useTranslation('ui');
   return (
     <button
       type="button"
       className="stories-strip-arrow"
       onClick={onClick}
       disabled={disabled}
-      aria-label={dir === -1 ? 'Previous' : 'Next'}
+      aria-label={dir === -1 ? tUi('previous_arrow') : tUi('next_arrow')}
     >
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d={dir === -1 ? 'M17 2 L4 12 L17 22 Z' : 'M7 2 L20 12 L7 22 Z'} />
@@ -56,6 +58,7 @@ export function StoriesStrip() {
   const [addOpen, setAddOpen] = useState(false);
   const { user: authUser } = useAuth();
   const railRef = useRef<HTMLDivElement>(null);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     let cancelled = false;
@@ -156,7 +159,7 @@ export function StoriesStrip() {
           <button
             type="button"
             className="stories-strip-add"
-            title="Add Storie"
+            title={tUi('add_story')}
             onClick={(e) => {
               e.stopPropagation();
               setAddOpen(true);

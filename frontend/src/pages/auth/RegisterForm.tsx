@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+/* readAndValidateImage is a plain helper, not a component, so it cannot hold a hook:
+   it reads the same bundle through the instance instead. */
+import i18n from '../../i18n';
 import { InfluencerSearch } from '../profile/ProfileSidebar';
 
 /**
@@ -31,10 +34,11 @@ interface SocialNetwork {
  * cross is SweetAlert2's own `showCloseButton`, which the client asked for here.
  */
 function Swal({ message, onClose }: { message: string; onClose: () => void }) {
+  const { t: tUi } = useTranslation('ui');
   return (
     <div className="swal-overlay" onClick={onClose}>
       <div className="swal-modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="swal-close" onClick={onClose} aria-label="Close">
+        <button type="button" className="swal-close" onClick={onClose} aria-label={tUi('close')}>
           ×
         </button>
         <div className="swal-title">{message}</div>
@@ -57,6 +61,7 @@ interface Select2Props {
 }
 
 function Select2Multi({ options, selected, onChange, placeholder, max, allowTags }: Select2Props) {
+  const { t: tUi } = useTranslation('ui');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const boxRef = useRef<HTMLDivElement>(null);
@@ -121,7 +126,7 @@ function Select2Multi({ options, selected, onChange, placeholder, max, allowTags
       />
       {open && (
         <div className="s2-dropdown">
-          {visible.length === 0 && !allowTags && <div className="s2-option disabled">No results</div>}
+          {visible.length === 0 && !allowTags && <div className="s2-option disabled">{tUi('no_results')}</div>}
           {visible.map((o) => (
             <div
               key={o}
@@ -168,7 +173,7 @@ export function readAndValidateImage(file: File, onValid: (dataUrl: string) => v
     const tempImage = new Image();
     tempImage.onload = () => {
       if (tempImage.width < 590 || tempImage.height < 300) {
-        alert('❌ Image too small. Minimum size is 590x300 pixels.');
+        alert(i18n.t('image_too_small_cover', { ns: 'ui' }));
       } else {
         onValid(dataUrl);
       }

@@ -38,6 +38,7 @@ export function InfluencerControlPanelModal({
   onSaved: () => void;
 }) {
   const { t } = useTranslation('content');
+  const { t: tUi } = useTranslation('ui');
   const { t: tNav } = useTranslation('nav');
   const { setUser } = useAuth();
 
@@ -60,7 +61,8 @@ export function InfluencerControlPanelModal({
   const videoAdsDisplay = String(videoAds).includes('.') ? String(videoAds) : `${videoAds}.00`;
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [subListOpen, setSubListOpen] = useState(false);
-  const [partnershipOpen, setPartnershipOpen] = useState(false);
+  // partnership — waits with the video-views row above
+  // const [partnershipOpen, setPartnershipOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState(profile.name ?? '');
@@ -144,10 +146,10 @@ export function InfluencerControlPanelModal({
     if (!newNetworkId) return;
     try {
       await api.post('/me/networks', { networkId: Number(newNetworkId), url: networkUrl });
-      setFlash({ ok: true, text: 'Network added successfully' });
+      setFlash({ ok: true, text: tUi('network_added') });
       onSaved();
     } catch {
-      setFlash({ ok: false, text: 'Could not add network' });
+      setFlash({ ok: false, text: tUi('network_add_failed') });
     }
   }
 
@@ -228,7 +230,7 @@ export function InfluencerControlPanelModal({
             <button
               type="button"
               className="close d-block"
-              aria-label="Close"
+              aria-label={tUi('close')}
               onClick={onClose}
               style={{
                 fontSize: 45,
@@ -356,7 +358,7 @@ export function InfluencerControlPanelModal({
             )}
 
             <hr style={HR} />
-            <h3 style={H3}>NETWORKS:</h3>
+            <h3 style={H3}>{tUi('networks_heading')}</h3>
 
             {/* blade quirk: border + footer credits live under the NETWORKS heading here */}
             <div className="container-fluid" style={{ paddingLeft: 0 }}>
@@ -405,21 +407,21 @@ export function InfluencerControlPanelModal({
                 value={footerCredits}
                 onChange={(e) => setFooterCredits(e.target.value)}
               >
-                <option style={{ color: 'black' }} value="name">Name</option>
-                <option style={{ color: 'black' }} value="username">Username</option>
+                <option style={{ color: 'black' }} value="name">{tUi('name_plain')}</option>
+                <option style={{ color: 'black' }} value="username">{tUi('username')}</option>
               </select>
               <button
                 type="button"
                 className="save_btn"
                 style={{ ...SAVE_BTN, position: 'relative', height: 'fit-content', marginRight: 21 }}
-                onClick={() => void save({ footerNameUsername: footerCredits }, 'Footer content editted successfully')}
+                onClick={() => void save({ footerNameUsername: footerCredits }, tUi('footer_content_saved'))}
               >
                 {t('save_button_cpanel')}
               </button>
             </div>
 
             <div className="custom-file" style={{ display: 'flex' }}>
-              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>First Network</label>
+              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>{t('first_network')}</label>
               <select
                 className="form-control"
                 name="first_network"
@@ -441,10 +443,10 @@ export function InfluencerControlPanelModal({
                   void api
                     .patch('/me/first-network', { firstNetwork })
                     .then(() => {
-                      setFlash({ ok: true, text: 'Network successfully' });
+                      setFlash({ ok: true, text: tUi('network_reordered') });
                       onSaved();
                     })
-                    .catch(() => setFlash({ ok: false, text: 'Could not reorder networks' }))
+                    .catch(() => setFlash({ ok: false, text: tUi('network_reorder_failed') }))
                 }
               >
                 {t('save_button_cpanel')}
@@ -499,7 +501,7 @@ export function InfluencerControlPanelModal({
                 }}
               >
                 {noneLeft ? (
-                  <option>You have already taken all social networks</option>
+                  <option>{tUi('networks_all_taken')}</option>
                 ) : (
                   availableNetworks.map((n) => (
                     <option className="network_option" value={String(n.id)} style={{ color: 'black' }} key={n.id}>
@@ -536,7 +538,7 @@ export function InfluencerControlPanelModal({
                   </div>
                   <div className="col-md-3" style={{ textAlign: 'end', paddingRight: 22 }}>
                     <button type="button" className="save_btn" style={SAVE_BTN} onClick={addNetwork}>
-                      Add
+                      {t('add_button_cpanel')}
                     </button>
                   </div>
                 </div>
@@ -571,7 +573,7 @@ export function InfluencerControlPanelModal({
                 <div className="col-xs-12">
                   <div className="form-group" style={{ display: 'flex' }}>
                     <label style={{ color: 'white' }}>
-                      {t('video_ads_earnings', { defaultValue: 'Video Ads Earnings:' })} ${videoAdsDisplay}
+                      {tUi('video_ads_earnings')} ${videoAdsDisplay}
                     </label>
                   </div>
                 </div>
@@ -592,15 +594,19 @@ export function InfluencerControlPanelModal({
                     style={SAVE_BTN}
                     onClick={() => setSubListOpen(true)}
                   >
-                    See All
+                    {t('see_all_button_cpanel')}
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* earnings from video views — the blade prints a fixed $0.00 beside a black
-                two-line button that opens the "ask partnership" modal (#askPartnershipOverlay).
-                The figure is hard-coded there too; nothing feeds it yet. */}
+            {/* ---- "Earnings from Video Views" — TAKEN OUT, NOT DELETED ----------------
+                Laravel hard-codes the $0.00 and shows "Not available until 10K Subscribers"
+                to everyone — an account with 713,346 followers included — so nothing here
+                ever did anything. Beside the working Video Ads Earnings line above it, it
+                read as a broken twin of it. Uncomment this block, and the three pieces
+                marked "partnership" below, to bring it back.
+
             <div className="container-fluid" style={{ paddingLeft: 0 }}>
               <div className="row pb-3">
                 <div className="col-xs-6">
@@ -619,6 +625,7 @@ export function InfluencerControlPanelModal({
                 </div>
               </div>
             </div>
+            -------------------------------------------------------------------------- */}
 
             <h3 style={H3}>{t('payment_methods')}</h3>
 
@@ -654,7 +661,7 @@ export function InfluencerControlPanelModal({
             <hr style={HR} />
             <h3 style={H3}>{t('my_subscriptions')}</h3>
             {subscriptions.length === 0 ? (
-              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>No Subscriptions</p>
+              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>{tUi('no_subscriptions')}</p>
             ) : (
               subscriptions.map((s) => (
                 <Fragment key={s.id}>
@@ -666,7 +673,7 @@ export function InfluencerControlPanelModal({
             <hr style={HR} />
             <h3 style={H3}>{t('my_followerships')}</h3>
             {followerships.length === 0 ? (
-              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>No Followerships</p>
+              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>{tUi('no_followerships')}</p>
             ) : (
               followerships.map((f) => (
                 <Fragment key={f.id}>
@@ -739,11 +746,11 @@ export function InfluencerControlPanelModal({
                         void api
                           .patch(`/me/networks/${editNetwork.id}`, { url: editNetworkUrl })
                           .then(() => {
-                            setFlash({ ok: true, text: 'Network url editted successfully' });
+                            setFlash({ ok: true, text: tUi('network_url_updated') });
                             setEditNetwork(null);
                             onSaved();
                           })
-                          .catch(() => setFlash({ ok: false, text: 'Could not update network' }))
+                          .catch(() => setFlash({ ok: false, text: tUi('network_update_failed') }))
                       }
                     >
                       {t('save_button_cpanel')}
@@ -755,7 +762,7 @@ export function InfluencerControlPanelModal({
                 className="delete save_btn"
                 onClick={() =>
                   void api.delete(`/me/networks/${editNetwork.id}`).then(() => {
-                    setFlash({ ok: true, text: 'Network deleted successfully' });
+                    setFlash({ ok: true, text: tUi('network_deleted') });
                     setEditNetwork(null);
                     onSaved();
                   })
@@ -776,7 +783,7 @@ export function InfluencerControlPanelModal({
                   cursor: 'pointer',
                 }}
               >
-                Delete it
+                {t('delete_button_cpanel')}
               </span>
             </div>
           </div>
@@ -793,7 +800,7 @@ export function InfluencerControlPanelModal({
           onDone={(newBalance) => {
             setEarnings(newBalance);
             setWithdrawOpen(false);
-            setFlash({ ok: true, text: 'Payment withdrawal request sent successfully' });
+            setFlash({ ok: true, text: tUi('withdraw_sent') });
           }}
         />
       )}
@@ -804,89 +811,92 @@ export function InfluencerControlPanelModal({
         onClose={() => setSubListOpen(false)}
       />
 
-      {partnershipOpen && <PartnershipModal onClose={() => setPartnershipOpen(false)} />}
+      {/* partnership — {partnershipOpen && <PartnershipModal onClose={() => setPartnershipOpen(false)} />} */}
     </div>
   );
 }
 
-/** The black two-line button beside the video-views figure (.open-btn in the blade). */
-const PARTNERSHIP_BTN: React.CSSProperties = {
-  background: '#000000',
-  color: '#ffffff',
-  padding: '3px 15px',
-  fontWeight: 'bold',
-  border: 0,
-  outline: 0,
-};
-
-/**
- * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
- *
- * The blade also carries a stray "Send Welcome Email" link to example@email.com inside this
- * box; it is placeholder debris, not something a creator should be shown, so it is left out.
- */
-function PartnershipModal({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation('content');
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.7)',
-        zIndex: 999999999,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          width: '90%',
-          maxWidth: 380,
-          padding: '28px 22px',
-          borderRadius: 7,
-          textAlign: 'center',
-          position: 'relative',
-          color: '#fff',
-          background: '#8a2be2',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span
-          onClick={onClose}
-          style={{ position: 'absolute', top: 12, right: 14, fontSize: 24, cursor: 'pointer', opacity: 0.7 }}
-        >
-          &times;
-        </span>
-        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 18, color: 'white' }}>
-          {t('notavailable10k_title')}
-        </h3>
-        <p style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>
-          {t('notavailable10k_message')}
-        </p>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            marginTop: 18,
-            background: 'limegreen',
-            color: 'white',
-            padding: '10px 40px',
-            fontSize: '0.9em',
-            fontWeight: 600,
-            cursor: 'pointer',
-            border: '3px solid green',
-            fontFamily:
-              'Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace',
-          }}
-        >
-          ⭐OK
-        </button>
-      </div>
-    </div>
-  );
-}
+// ---- partnership button + dialog: TAKEN OUT WITH THE VIDEO-VIEWS ROW ------------
+// Nothing reaches either once that row is commented out above. Line comments rather
+// than a block: PartnershipModal's own /** */ would close a block comment early.
+// /** The black two-line button beside the video-views figure (.open-btn in the blade). */
+// const PARTNERSHIP_BTN: React.CSSProperties = {
+//   background: '#000000',
+//   color: '#ffffff',
+//   padding: '3px 15px',
+//   fontWeight: 'bold',
+//   border: 0,
+//   outline: 0,
+// };
+//
+// /**
+//  * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
+//  *
+//  * The blade also carries a stray "Send Welcome Email" link to example@email.com inside this
+//  * box; it is placeholder debris, not something a creator should be shown, so it is left out.
+//  */
+// function PartnershipModal({ onClose }: { onClose: () => void }) {
+//   const { t } = useTranslation('content');
+//   return (
+//     <div
+//       style={{
+//         position: 'fixed',
+//         inset: 0,
+//         background: 'rgba(0,0,0,0.7)',
+//         zIndex: 999999999,
+//         display: 'flex',
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//       }}
+//       onClick={onClose}
+//     >
+//       <div
+//         style={{
+//           width: '90%',
+//           maxWidth: 380,
+//           padding: '28px 22px',
+//           borderRadius: 7,
+//           textAlign: 'center',
+//           position: 'relative',
+//           color: '#fff',
+//           background: '#8a2be2',
+//         }}
+//         onClick={(e) => e.stopPropagation()}
+//       >
+//         <span
+//           onClick={onClose}
+//           style={{ position: 'absolute', top: 12, right: 14, fontSize: 24, cursor: 'pointer', opacity: 0.7 }}
+//         >
+//           &times;
+//         </span>
+//         <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 18, color: 'white' }}>
+//           {t('notavailable10k_title')}
+//         </h3>
+//         <p style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>
+//           {t('notavailable10k_message')}
+//         </p>
+//         <button
+//           type="button"
+//           onClick={onClose}
+//           style={{
+//             marginTop: 18,
+//             background: 'limegreen',
+//             color: 'white',
+//             padding: '10px 40px',
+//             fontSize: '0.9em',
+//             fontWeight: 600,
+//             cursor: 'pointer',
+//             border: '3px solid green',
+//             fontFamily:
+//               'Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace',
+//           }}
+//         >
+//           ⭐OK
+//         </button>
+//       </div>
+//     </div>
+//   );
+// }
 
 /** Withdraw-earnings modal — port of #withdraw_earnings_modal (≥$50, payout method set). */
 function WithdrawModal({
@@ -901,6 +911,7 @@ function WithdrawModal({
   onDone: (newBalance: number) => void;
 }) {
   const { t } = useTranslation('content');
+  const { t: tUi } = useTranslation('ui');
   const display = String(earnings).includes('.') ? String(earnings) : `${earnings}.00`;
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
@@ -936,14 +947,18 @@ function WithdrawModal({
         <label style={{ color: '#fff', marginTop: 10, display: 'block' }}>{t('earnings')} ${display}</label>
 
         {earnings < 50 ? (
-          <p style={{ color: '#fff' }}>You need a balance over $50.00 to withdraw.</p>
+          <p style={{ color: '#fff' }}>{tUi('withdraw_min_balance')}</p>
         ) : !hasPayout ? (
-          <p style={{ color: '#fff' }}>You can't withdraw money, first update a Payment Method.</p>
+          <p style={{ color: '#fff' }}>{tUi('withdraw_no_method')}</p>
         ) : (
           <form onSubmit={submit} style={{ marginTop: 16 }}>
-            <p style={{ color: '#fff' }}>Select an amount to withdraw<br />(maximum available: ${display})</p>
+            <p style={{ color: '#fff' }}>
+              {tUi('withdraw_select_amount')}
+              <br />
+              {tUi('withdraw_max_available')}${display})
+            </p>
             <div className="d-flex align-items-center" style={{ gap: 10 }}>
-              <label style={{ color: '#fff', margin: 0 }}>Amount:</label>
+              <label style={{ color: '#fff', margin: 0 }}>{tUi('amount_label')}</label>
               <input
                 type="number"
                 step="0.01"

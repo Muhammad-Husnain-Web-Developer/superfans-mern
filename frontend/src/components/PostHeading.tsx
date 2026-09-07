@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { markFeedReturn } from '../utils/feedMemory';
 import { rememberScroll } from '../utils/useScrollMemory';
@@ -30,6 +31,7 @@ export function PostHeading({
 }) {
   const runRef = useRef<HTMLSpanElement | null>(null);
   const [overflows, setOverflows] = useState(false);
+  const { t: tUi } = useTranslation('ui');
 
   const handles = [...(author ? [author] : []), ...tagged].filter((h) => h.usernameUrl);
 
@@ -86,7 +88,7 @@ export function PostHeading({
               {h.verified && (
                 <img
                   src={assetImage('verified.png')}
-                  alt="Verified"
+                  alt={tUi('alt_verified')}
                   width={18}
                   height={18}
                   style={{ marginLeft: 5, verticalAlign: 'middle', display: 'inline-block' }}

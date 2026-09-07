@@ -1,4 +1,5 @@
 import { likeFill, likeLevel } from '../utils/format';
+import { useTranslation } from 'react-i18next';
 import '../styles/rating-pill.css';
 
 /**
@@ -30,6 +31,7 @@ export function RatingPill({
   onLike: () => void;
   onHate: () => void;
 }) {
+  const { t: tUi } = useTranslation('ui');
   const stop = (e: React.MouseEvent, run: () => void) => {
     e.stopPropagation();
     e.preventDefault();
@@ -83,7 +85,7 @@ export function RatingPill({
         style={{ cursor: 'pointer' }}
         onClick={(e) => stop(e, onHate)}
       >
-        <img src="/brand/caca.webp" alt="Hate" className="poop-img" draggable={false} />
+        <img src="/brand/caca.webp" alt={tUi('alt_hate')} className="poop-img" draggable={false} />
       </span>
     </div>
   );

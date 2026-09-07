@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -51,6 +52,7 @@ function AdsModal({
   user: ReturnType<typeof useAuth>['user'];
   onClose: () => void;
 }) {
+  const { t: tUi } = useTranslation('ui');
   const titles = { search: '🔍 Search', config: '⚙️ Configuration', help: '❓ Help' } as const;
 
   return createPortal(
@@ -61,7 +63,7 @@ function AdsModal({
           <div className="modal-content">
             <div className="modal-header">
               <h5 className="modal-title">{titles[type]}</h5>
-              <button type="button" className="close" onClick={onClose} aria-label="Close">
+              <button type="button" className="close" onClick={onClose} aria-label={tUi('close')}>
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>

@@ -40,6 +40,7 @@ export function PostReportButton({
 }) {
   const { t: tReport } = useTranslation('report');
   const [open, setOpen] = useState(false);
+  const { t: tUi } = useTranslation('ui');
   /* On a phone the menu is pinned to the top of the screen (report-menu.css). It
      has to leave the card to do that: an ancestor of the feed card carries a
      transform, which would make `position: fixed` resolve against that box
@@ -63,7 +64,8 @@ export function PostReportButton({
       .post('/users/reports/post', { postId, reason })
       .then(() => {
         if (onReported) onReported();
-        else window.alert('Your report has been successfully submitted. Thanks for making this social network better.');
+        /* the same line the other three report flows show, in the viewer's language */
+        else window.alert(tReport('thank_you'));
       })
       .catch(() => {});
   }
@@ -97,7 +99,7 @@ export function PostReportButton({
           setOpen((v) => !v);
         }}
         style={buttonStyle}
-        title="Report"
+        title={tUi('report')}
       >
         <img
           src={assetImage('arrowDown_.png')}

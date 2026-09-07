@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
 import { api } from '../../api/client';
@@ -188,6 +189,7 @@ export function AllUserPosts() {
   const [influencerId, setInfluencerId] = useState<number | null>(null);
   const [flash, setFlash] = useState<Flash>(null);
   const [state, setState] = useState<'loading' | 'ok' | 'denied'>('loading');
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     document.title = 'Superfans | All Posts';
@@ -282,7 +284,7 @@ export function AllUserPosts() {
           <h5>
             <b>{flash.text}</b>
           </h5>
-          <button type="button" className="close" aria-label="Close" onClick={() => setFlash(null)}>
+          <button type="button" className="close" aria-label={tUi('close')} onClick={() => setFlash(null)}>
             <span aria-hidden="true">&times;</span>
           </button>
         </div>

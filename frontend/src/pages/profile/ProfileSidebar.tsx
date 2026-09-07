@@ -44,6 +44,7 @@ export function InfluencerSearch({
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -120,7 +121,7 @@ export function InfluencerSearch({
                 {hit.verified && (
                   <img
                     src={assetImage('verified.png')}
-                    alt="Verified"
+                    alt={tUi('alt_verified')}
                     width={18}
                     height={18}
                     style={{ position: 'relative', bottom: 2, marginLeft: 5, flexShrink: 0 }}
@@ -153,6 +154,7 @@ const LOCALE_FLAGS: Record<string, string> = {
  * guests see the purple "Login | ⏻" button linking to /login?username=X.
  */
 export function GuestHeader({ usernameUrl }: { usernameUrl: string }) {
+  const { t: tAuth } = useTranslation('auth');
   const { user: authUser } = useAuth();
   if (authUser) return null; // logged-in header renders nothing (logout is commented out in the blade)
   if (!usernameUrl) return null; // blade renders the button only when $user is set (not on /world)
@@ -173,7 +175,7 @@ export function GuestHeader({ usernameUrl }: { usernameUrl: string }) {
                   style={{ borderRadius: 20 }}
                   href={`/login?username=${usernameUrl}`}
                 >
-                  <b>Login</b> | <i className="fa fa-power-off" aria-hidden="true"></i>
+                  <b>{tAuth('Login_btn')}</b> | <i className="fa fa-power-off" aria-hidden="true"></i>
                 </a>
               </li>
             </ul>
@@ -188,6 +190,7 @@ export function GuestHeader({ usernameUrl }: { usernameUrl: string }) {
 export function FooterLanguageSelector() {
   const { i18n } = useTranslation();
   const [open, setOpen] = useState(false);
+  const { t: tUi } = useTranslation('ui');
   const current = i18n.resolvedLanguage ?? 'en';
 
   useEffect(() => {
@@ -217,7 +220,7 @@ export function FooterLanguageSelector() {
               setOpen((v) => !v);
             }}
           >
-            Language:
+            {tUi('language_label')}
             <img
               src={assetImage(LOCALE_FLAGS[current] ?? 'euflag.png')}
               alt={current}
@@ -452,6 +455,7 @@ export function ProfileSidebar({
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t: tUi } = useTranslation('ui');
   // Which of the WALL | POSTS tabs is active depends on the route (/:user vs /posts/:user).
   const onPostsTab = pathname.startsWith('/posts/');
 
@@ -627,7 +631,7 @@ export function ProfileSidebar({
                     top: 3,
                   }}
                 ></span>{' '}
-                Streaming
+                {tUi('nav_streaming')}
               </a>
             </li>
 
@@ -750,7 +754,7 @@ export function ProfileSidebar({
                 <button
                   type="button"
                   onClick={() => setGoLiveOpen(false)}
-                  aria-label="Close"
+                  aria-label={tUi('close')}
                   style={{ float: 'right', fontSize: 45, fontWeight: 700, lineHeight: 1, opacity: 1, color: '#fff', background: 'none', border: 'none', cursor: 'pointer', marginTop: -2, padding: 0 }}
                 >
                   ×
@@ -758,7 +762,7 @@ export function ProfileSidebar({
                 <div style={{ textAlign: 'center', height: 20, marginTop: 35 }}>
                   <img src="/assets/images/superman2.png" style={{ display: 'inline-block', height: 51 }} alt="" />
                   <h5 style={{ fontSize: 30, textAlign: 'center', color: '#fff', display: 'inline-block', margin: 0 }}>
-                    Message
+                    {tUi('message_label')}
                   </h5>
                 </div>
               </div>

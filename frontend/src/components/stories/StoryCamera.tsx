@@ -25,6 +25,7 @@ export function StoryCamera({
   const [error, setError] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     let cancelled = false;
@@ -131,7 +132,7 @@ export function StoryCamera({
         </button>
         {!error && !recording && (
           <>
-            <button type="button" className="story-camera-shutter" onClick={snap} title="Photo" />
+            <button type="button" className="story-camera-shutter" onClick={snap} title={tUi('photo')} />
             <button type="button" className="story-camera-btn record" onClick={record}>
               ● {t('record')}
             </button>

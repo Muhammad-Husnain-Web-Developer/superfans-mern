@@ -28,6 +28,7 @@ interface FeedAd {
 
 /** "Super Ads" tile injected after every 21st post (user_posts.blade.php). */
 function AdItem({ ad }: { ad: FeedAd }) {
+  const { t: tUi } = useTranslation('ui');
   const frame: React.CSSProperties = { borderRadius: 26, border: '7px solid lightgray', width: '100%' };
   return (
     <div className="work-item">
@@ -50,7 +51,7 @@ function AdItem({ ad }: { ad: FeedAd }) {
             <VolumeButton videoId={`video-ad-${ad.id}`} />
           </div>
         ) : (
-          <img src={assetImage(ad.media)} alt="Ad" className="img-responsive" style={frame} />
+          <img src={assetImage(ad.media)} alt={tUi('alt_ad')} className="img-responsive" style={frame} />
         )}
       </a>
     </div>
@@ -67,6 +68,7 @@ export function Posts() {
   /* /user/posts and /influencer/posts show the viewer's own posts and carry no
      param, exactly as Laravel serves those URLs. */
   const { usernameUrl: routeUsername } = useParams();
+  const { t: tUi } = useTranslation('ui');
   /* AddPostModal sends the poster here with a fresh stamp. Without it, adding a post while
      already on this page would navigate to the route it is already on, and nothing would
      refetch — the new post would need a manual reload, which is the complaint. */
@@ -123,7 +125,7 @@ export function Posts() {
     return (
       <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
         <h1 style={{ fontSize: '4em', color: '#da1212' }}>404</h1>
-        <p>Not Found</p>
+        <p>{tUi('not_found')}</p>
       </div>
     );
   }
@@ -185,7 +187,7 @@ export function Posts() {
               {profile.verified && (
                 <img
                   src={assetImage('verified.png')}
-                  alt="Verified"
+                  alt={tUi('alt_verified')}
                   width={18}
                   height={18}
                   style={{ position: 'relative', bottom: 1, display: 'inline-block' }}

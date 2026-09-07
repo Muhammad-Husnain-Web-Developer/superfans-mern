@@ -57,6 +57,7 @@ export function WorldSidebar({
 } = {}) {
   useLayoutPageStyles();
   const { t } = useTranslation('content');
+  const { t: tUi } = useTranslation('ui');
   const { t: tNav } = useTranslation('nav');
   const { user: authUser } = useAuth();
   const { t: tFooter } = useTranslation('footer');
@@ -167,7 +168,7 @@ export function WorldSidebar({
                     top: 3,
                   }}
                 ></span>{' '}
-                Streaming
+                {tUi('nav_streaming')}
               </a>
             </li>
 
@@ -259,7 +260,7 @@ export function WorldSidebar({
                   🏢: SUPER ADS CENTER
                 </a>{' '}
               </span>
-              <br />© 2025 Superfans World S.L <br />
+              <br />{tUi('copyright_line')} <br />
               All Rights Reserved.{' '}
               <span>
                 {tFooter('powered_by', { defaultValue: 'Powered by' })} <a href="/world">SUPERFANSS.APP</a>
@@ -323,6 +324,7 @@ function WorldPostCard({
 }) {
   const { user: authUser } = useAuth();
   const { t: tReport } = useTranslation('report');
+  const { t: tUi } = useTranslation('ui');
   /* pinned to the top of the screen on a phone (report-menu.css); it must leave
      the card to do that, since an ancestor's transform would otherwise become
      the containing block for `position: fixed` */
@@ -575,7 +577,7 @@ function toggleHate() {
           <a href="#" onClick={onMediaClick} style={{ cursor: 'pointer' }}>
             <img
               src={assetImage(media)}
-              alt="Post Image"
+              alt={tUi('alt_post_image')}
               className="img-responsive posttt-img"
               style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
             />
@@ -667,6 +669,7 @@ export function World() {
   const { t: tReport } = useTranslation('report');
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
   const [addPostOpen, setAddPostOpen] = useState(false);
+  const { t: tUi } = useTranslation('ui');
   /* Stepping back into the feed replays the posts that were on screen, rather
      than asking for a fresh shuffle that would put strangers where the reader
      left off. Clicking World or reloading still deals a new hand. Read once, at
@@ -815,7 +818,7 @@ export function World() {
             ) : (
               !loading && (
                 <div style={{ textAlign: 'center', marginTop: 50 }}>
-                  <p>No posts available yet.</p>
+                  <p>{tUi('no_posts_available')}</p>
                 </div>
               )
             )}
@@ -824,7 +827,7 @@ export function World() {
 
         {loading && (
           <div style={{ justifyContent: 'center', alignItems: 'center', width: '100%', textAlign: 'center', display: 'flex' }}>
-            <img src={assetImage('spinner.gif')} alt="Loading..." style={{ width: 50 }} />
+            <img src={assetImage('spinner.gif')} alt={tUi('loading')} style={{ width: 50 }} />
           </div>
         )}
       </div>

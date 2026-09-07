@@ -147,6 +147,7 @@ export function UserFeed() {
 /** One feed tile: author heading, media, report, and the same 👁️ views + rating row the
  *  world feed and the walls carry. Click → full-screen viewer. */
 function FeedCard({ post }: { post: FeedPost }) {
+  const { t: tUi } = useTranslation('ui');
   const navigate = useNavigate();
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [heart, setHeart] = useState(false);
@@ -346,7 +347,7 @@ function doHate() {
           <img
             src={media ? assetImage(media) : LOCKED_POST_IMAGE}
             className="feed-card-media img-responsive"
-            alt="Nueva Modelo Superfans - ¡Bienvenid@ a mi Portfolio!"
+            alt={tUi('alt_portfolio')}
           />
         )}
       </div>

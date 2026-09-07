@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -21,6 +22,8 @@ interface SearchHit {
  */
 export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
   const { user: authUser } = useAuth();
+  const { t: tUi } = useTranslation('ui');
+  const { t: tAuth } = useTranslation('auth');
   /* The blade hangs #add_post_modal and #streamingModalCenter off the layout
      footer, so both buttons work on every page that shows this bar. Here they
      were left to each page to provide, and only the profile ever did — which is
@@ -62,7 +65,7 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
         <input
           type="text"
           className="footer-search-input influencer_search"
-          placeholder="🔎Search"
+          placeholder={tUi('search_placeholder')}
           autoComplete="off"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -115,7 +118,7 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
 
           <div className="footer-btn-stream" onClick={() => setStreamOpen(true)} style={{ cursor: 'pointer' }}>
             <span className="stream-indicator"></span>
-            Stream
+            {tUi('nav_stream')}
           </div>
 
           <a href="/user/messages" className="footer-btn-message">
@@ -133,7 +136,7 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
           onClick={registerModal.openLogin}
           style={{ borderRadius: 20, cursor: 'pointer' }}
         >
-          <b>Login</b> | <i className="fa fa-power-off" aria-hidden="true"></i>
+          <b>{tAuth('Login_btn')}</b> | <i className="fa fa-power-off" aria-hidden="true"></i>
         </div>
       )}
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
@@ -46,6 +47,7 @@ export function AdLeadForm({
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [v, setV] = useState<Record<string, string>>({});
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     api
@@ -107,7 +109,7 @@ export function AdLeadForm({
   );
 
   const close = onClose ? (
-    <button className="lead-form-close" onClick={onClose} aria-label="Close">
+    <button className="lead-form-close" onClick={onClose} aria-label={tUi('close')}>
       ✖
     </button>
   ) : null;

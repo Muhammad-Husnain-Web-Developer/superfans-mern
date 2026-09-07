@@ -22,6 +22,7 @@ export function StreamModal({ open, onClose }: { open: boolean; onClose: () => v
   const [bio, setBio] = useState('');
   const [tags, setTags] = useState('');
   const [busy, setBusy] = useState(false);
+  const { t: tUi } = useTranslation('ui');
 
   async function submitGoLive(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +61,7 @@ export function StreamModal({ open, onClose }: { open: boolean; onClose: () => v
             <button
               type="button"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={tUi('close')}
               style={{ float: 'right', fontSize: 45, fontWeight: 700, lineHeight: 1, opacity: 1, color: '#fff', background: 'none', border: 'none', cursor: 'pointer', marginTop: -2, padding: 0 }}
             >
               ×
@@ -68,7 +69,7 @@ export function StreamModal({ open, onClose }: { open: boolean; onClose: () => v
             <div style={{ textAlign: 'center', height: 20, marginTop: 35 }}>
               <img src="/assets/images/superman2.png" style={{ display: 'inline-block', height: 51 }} alt="" />
               <h5 style={{ fontSize: 30, textAlign: 'center', color: '#fff', display: 'inline-block', margin: 0 }}>
-                Message
+                {tUi('message_label')}
               </h5>
             </div>
           </div>
@@ -108,7 +109,7 @@ export function StreamModal({ open, onClose }: { open: boolean; onClose: () => v
               </form>
             ) : (
               <h3 style={{ color: '#fff', textAlign: 'center', marginTop: 15, fontSize: 24, fontWeight: 700 }}>
-                THIS USER IS NOT ON 🔴 AIR.
+                {tUi('not_on_air')}
               </h3>
             )}
           </div>

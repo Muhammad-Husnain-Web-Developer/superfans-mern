@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { Room, RoomEvent, type RemoteTrack } from 'livekit-client';
 import { api } from '../../api/client';
@@ -14,6 +15,7 @@ export function WatchLive() {
 
   const [params] = useSearchParams();
   const roomName = params.get('room') || 'myroom';
+  const { t: tUi } = useTranslation('ui');
   const [userName] = useState(
     () => params.get('user') || `guest_${Math.floor(Math.random() * 10000)}`,
   );
@@ -24,7 +26,7 @@ export function WatchLive() {
   const roomRef = useRef<Room | null>(null);
 
   useEffect(() => {
-    document.title = 'Watch Live Stream';
+    document.title = tUi('watch_live_title');
     return () => {
       void roomRef.current?.disconnect();
     };
@@ -71,15 +73,15 @@ export function WatchLive() {
 
   return (
     <>
-      <h2>👀 Watching Live Stream</h2>
+      <h2>{tUi('watch_live_heading')}</h2>
 
       {status !== 'live' && (
         <button id="startBtn" onClick={startWatching} disabled={status === 'connecting'}>
           ▶️ Start Watching
         </button>
       )}
-      {status === 'connecting' && <div id="loadingIndicator">⏳ Connecting to stream...</div>}
-      {status === 'failed' && <div id="loadingIndicator">❌ Failed to connect.</div>}
+      {status === 'connecting' && <div id="loadingIndicator">{tUi('watch_connecting')}</div>}
+      {status === 'failed' && <div id="loadingIndicator">{tUi('watch_failed')}</div>}
 
       <div id="video-container" ref={videoContainer}></div>
 
@@ -90,7 +92,7 @@ export function WatchLive() {
         User: <span id="userName">{userName}</span>
       </p>
 
-      <h3>👥 Viewers:</h3>
+      <h3>{tUi('watch_viewers')}</h3>
       <ul id="viewerList">
         {viewers.map((v) => (
           <li key={v}>{v}</li>

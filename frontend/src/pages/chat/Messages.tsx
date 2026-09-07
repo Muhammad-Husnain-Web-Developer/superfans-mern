@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useTranslation } from 'react-i18next';
 import { io, type Socket } from 'socket.io-client';
 import { api } from '../../api/client';
 import { fetchProfile } from '../../api/profiles';
@@ -47,6 +48,7 @@ export function Messages() {
   const chatboxRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const selectedRef = useRef<ChatUser | null>(null);
+  const { t: tUi } = useTranslation('ui');
   selectedRef.current = selected;
 
   useEffect(() => {
@@ -222,7 +224,7 @@ export function Messages() {
                     Putting the status in Busy will activate <br /> a premium account at $10.
                   </span>
                 </span>
-                <span style={{ position: 'relative', bottom: 3 }}>Busy/ON</span>
+                <span style={{ position: 'relative', bottom: 3 }}>{tUi('chat_busy_on')}</span>
                 <label className="switch">
                   <input type="checkbox" id="chatToggle" checked={chatToggle} onChange={(e) => toggleChat(e.target.checked)} />
                   <span className="slider round"></span>
@@ -259,7 +261,7 @@ export function Messages() {
                   >
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 500, color: '#111' }}>{u.name}</div>
-                      <div style={{ fontSize: 12, color: '#667781' }}>Last seen today</div>
+                      <div style={{ fontSize: 12, color: '#667781' }}>{tUi('chat_last_seen_today')}</div>
                     </div>
                     <div style={{ fontSize: 10, color: '#667781' }}>2:30 PM</div>
                   </li>
@@ -297,7 +299,7 @@ export function Messages() {
                     <div style={{ fontWeight: 500, fontSize: 16, display: 'flex', alignItems: 'center' }}>
                       <span id="currentChatUser">{selected.name}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#667781' }}>Online</div>
+                    <div style={{ fontSize: 12, color: '#667781' }}>{tUi('chat_online')}</div>
                   </div>
                 </div>
               </div>
@@ -347,7 +349,7 @@ export function Messages() {
                 <textarea
                   id="chatMessageInput"
                   className="form-control"
-                  placeholder="Type your message..."
+                  placeholder={tUi('chat_type_message')}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => {
@@ -378,8 +380,8 @@ export function Messages() {
           >
             <div style={{ width: '100%', textAlign: 'center', padding: 20, marginTop: '30%' }}>
               ✉️
-              <h4 style={{ fontWeight: 300, color: '#555' }}>Select a conversation to start chatting</h4>
-              <p style={{ color: '#999', fontSize: 14 }}>Your messages will appear here</p>
+              <h4 style={{ fontWeight: 300, color: '#555' }}>{tUi('chat_pick_conversation')}</h4>
+              <p style={{ color: '#999', fontSize: 14 }}>{tUi('chat_messages_appear')}</p>
             </div>
           </div>
         )}

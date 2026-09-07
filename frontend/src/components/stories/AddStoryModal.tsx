@@ -26,6 +26,7 @@ export function AddStoryModal({ onClose, onPosted }: { onClose: () => void; onPo
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { t: tUi } = useTranslation('ui');
   /* Pas 3: Edit leaves this first screen and opens the editor over the chosen file; the
      upload waits for Publicació there. */
   const [editing, setEditing] = useState(false);
@@ -96,7 +97,7 @@ export function AddStoryModal({ onClose, onPosted }: { onClose: () => void; onPo
             type="button"
             className="add-story-close"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tUi('close')}
           >
             <span aria-hidden="true">×</span>
           </button>

@@ -16,10 +16,11 @@ import { PhoneField } from '../../components/PhoneField';
  * cross is SweetAlert2's own `showCloseButton`, which the client asked for here.
  */
 function Swal({ message, onClose }: { message: string; onClose: () => void }) {
+  const { t: tUi } = useTranslation('ui');
   return (
     <div className="swal-overlay" onClick={onClose}>
       <div className="swal-modal" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="swal-close" onClick={onClose} aria-label="Close">
+        <button type="button" className="swal-close" onClick={onClose} aria-label={tUi('close')}>
           ×
         </button>
         <div className="swal-title">{message}</div>
@@ -40,6 +41,7 @@ export function BusinessRegister() {
     false,
   );
   const { t, i18n } = useTranslation('auth');
+  const { t: tUi } = useTranslation('ui');
   const { setUser } = useAuth();
   const navigate = useNavigate();
 
@@ -124,7 +126,7 @@ export function BusinessRegister() {
         </a>
         {/* unitless `letter-spacing: -0.3` in the blade — see BusinessLogin */}
         <h6 style={{ fontFamily: '"Anton", sans-serif', fontWeight: 550, fontSize: 19, color: '#333', marginBottom: 21 }}>
-          SUPER ADS CENTER
+          {t('superadscenter', { ns: 'content' })}
         </h6>
       </div>
 
@@ -184,7 +186,7 @@ export function BusinessRegister() {
       <div className="auth-form-group">
         <input
           type="text"
-          placeholder="Enter your DNI / NIF / ID"
+          placeholder={tUi('business_dni')}
           className="auth-input"
           value={dni}
           onChange={(e) => setDni(e.target.value)}
@@ -194,7 +196,7 @@ export function BusinessRegister() {
       <div className="auth-form-group">
         <input
           type="text"
-          placeholder="Name of Company / Social reason (optional)"
+          placeholder={tUi('business_company_name')}
           className="auth-input"
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
@@ -203,7 +205,7 @@ export function BusinessRegister() {
       <div className="auth-form-group">
         <input
           type="text"
-          placeholder="Número CIF / EIN / Business ID (optional)"
+          placeholder={tUi('business_cif')}
           className="auth-input"
           value={companyId}
           onChange={(e) => setCompanyId(e.target.value)}
@@ -212,7 +214,7 @@ export function BusinessRegister() {
       <div className="auth-form-group">
         <input
           type="text"
-          placeholder="Enter your Address"
+          placeholder={tUi('business_address')}
           className="auth-input"
           value={address}
           onChange={(e) => setAddress(e.target.value)}

@@ -114,6 +114,22 @@ adminRouter.put(
         videoAdsEarnings: z.number().min(0).optional(),
       })
       .parse(req.body);
+
+    /* Only a creator earns. A fan is on the paying side of this platform and a business
+       account buys ads rather than being paid for them, so neither has anywhere to show a
+       figure — the blade gives them no payments block at all. Setting one on them would
+       write a number nobody could ever see, so it is refused here rather than silently
+       stored. The role the check reads is the one about to be saved, if this same request
+       is changing it. */
+    if (body.earnings !== undefined || body.videoAdsEarnings !== undefined) {
+      const target = await User.findById(req.params.id, { role: 1 }).lean();
+      if (!target) throw ApiError.notFound('User not found');
+      const role = body.role ?? target.role;
+      if (role !== 'influencer') {
+        throw ApiError.badRequest('Earnings can only be set on a creator account.');
+      }
+    }
+
     await User.updateOne({ _id: req.params.id }, { $set: body });
     res.json({ success: true, message: 'User updated successfully' });
   }),

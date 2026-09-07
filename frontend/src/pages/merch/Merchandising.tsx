@@ -40,6 +40,7 @@ export function Merchandising() {
   useStandalonePageStyles([BOOTSTRAP4_CDN, '/page-css/merchandising.css']);
   const { t, i18n } = useTranslation('content');
   const [products, setProducts] = useState<MerchProduct[]>([]);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     document.title = 'Superfans | Merchandising';
@@ -56,7 +57,7 @@ export function Merchandising() {
         <img src={localeLogo(i18n.language)} alt="Superfans Logo" className="logo" />
       </a>
 
-      <h2 id="influencerTitle">Merchandasing...👕</h2>
+      <h2 id="influencerTitle">{tUi('merch_loading')}</h2>
 
       <div className="btn-group" style={{ gap: 10, marginBottom: 10 }}>
         <a href="#top" className="btn-rank btn-all">👙</a>

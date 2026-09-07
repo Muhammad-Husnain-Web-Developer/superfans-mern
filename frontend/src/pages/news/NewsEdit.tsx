@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import { assetImage } from '../../utils/format';
@@ -26,6 +27,7 @@ export function NewsEdit() {
   const [buttonLink, setButtonLink] = useState('');
   const [status, setStatus] = useState<'active' | 'paused'>('active');
   const [file, setFile] = useState<File | null>(null);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     document.title = 'Superfans | Edit News';
@@ -51,42 +53,42 @@ export function NewsEdit() {
 
   return (
     <div className="container mt-4">
-      <h2>Edit News</h2>
+      <h2>{tUi('news_edit')}</h2>
       <form onSubmit={submit}>
         <div className="form-group">
-          <label>Title</label>
+          <label>{tUi('title_label')}</label>
           <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} required />
         </div>
         <div className="form-group">
-          <label>Content</label>
+          <label>{tUi('content_label')}</label>
           <textarea className="form-control" rows={4} value={content} onChange={(e) => setContent(e.target.value)} required />
         </div>
         <div className="form-group">
-          <label>Image (optional)</label>
+          <label>{tUi('image_optional')}</label>
           <br />
           {item.image && <img src={assetImage(item.image)} width={100} className="mb-2" alt="" />}
           <input type="file" className="form-control" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         </div>
         <div className="form-group">
-          <label>Optional Button Text</label>
+          <label>{tUi('optional_button_text')}</label>
           <input type="text" className="form-control" value={buttonText} onChange={(e) => setButtonText(e.target.value)} />
         </div>
         <div className="form-group">
-          <label>Optional Button Link</label>
+          <label>{tUi('optional_button_link')}</label>
           <input type="url" className="form-control" value={buttonLink} onChange={(e) => setButtonLink(e.target.value)} />
         </div>
         <div className="form-group">
-          <label>Status</label>
+          <label>{tUi('status_label')}</label>
           <select className="form-control" value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'paused')}>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
+            <option value="active">{tUi('active')}</option>
+            <option value="paused">{tUi('paused')}</option>
           </select>
         </div>
         <button type="submit" className="btn btn-success">
-          Update News
+          {tUi('news_update')}
         </button>
         <a href="/influencer/news" className="btn btn-secondary ml-2">
-          Back
+          {tUi('back')}
         </a>
       </form>
     </div>

@@ -35,6 +35,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
      the post now and then goes to the posts page, where the post itself is. */
   const [posted, setPosted] = useState(false);
   const { t } = useTranslation('content');
+  const { t: tUi } = useTranslation('ui');
   const { t: tNav } = useTranslation('nav');
 
   const [file, setFile] = useState<File | null>(null);
@@ -99,7 +100,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
     return (
       <SwalResult
         icon="success"
-        title="Post Added"
+        title={tUi('post_added')}
         onClose={() => {
           setPosted(false);
           onClose();
@@ -136,7 +137,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
               type="button"
               className="close d-block"
               onClick={onClose}
-              aria-label="Close"
+              aria-label={tUi('close')}
               style={{
                 fontSize: 45,
                 opacity: 1,
@@ -336,13 +337,13 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
                       <div style={{ marginTop: 4 }}>
                         <i
                           className={`fa ${p.visible ? 'fa-eye' : 'fa-eye-slash'}`}
-                          title="Toggle visibility"
+                          title={tUi('toggle_visibility')}
                           onClick={() => void toggleVisibility(p.id)}
                           style={{ color: 'white', cursor: 'pointer', marginRight: 10 }}
                         ></i>
                         <i
                           className="fa fa-trash"
-                          title="Delete"
+                          title={tUi('delete')}
                           onClick={() => void deletePost(p.id)}
                           style={{ color: 'white', cursor: 'pointer' }}
                         ></i>
@@ -363,7 +364,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
                       fontSize: 12,
                     }}
                   >
-                    {t('toggle_all', { defaultValue: 'Show/Hide all' })}
+                    {tUi('toggle_all')}
                   </button>
                 </div>
               </div>

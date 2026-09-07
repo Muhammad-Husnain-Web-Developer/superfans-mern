@@ -31,7 +31,7 @@ void i18n
     fallbackLng: 'en',
     supportedLngs: [...SUPPORTED_LOCALES],
     defaultNS: 'content',
-    ns: ['auth', 'content', 'footer', 'nav', 'pagination', 'passwords', 'report', 'stories', 'validation'],
+    ns: ['auth', 'content', 'footer', 'nav', 'pagination', 'passwords', 'report', 'stories', 'ui', 'validation'],
     interpolation: { escapeValue: false },
     detection: {
       order: ['localStorage', 'navigator'],

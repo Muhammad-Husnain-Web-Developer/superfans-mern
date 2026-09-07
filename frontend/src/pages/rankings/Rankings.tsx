@@ -42,6 +42,7 @@ const DEFAULT_AVATAR = 'output-onlinepngtools (2).png';
 
 /** One table row — port of rankings/table.blade.php's <tr>. */
 function RankRow({ rank, user }: { rank: number; user: RankUser }) {
+  const { t: tUi } = useTranslation('ui');
   const longName = user.usernameUrl.length > 26;
   return (
     <tr>
@@ -50,7 +51,7 @@ function RankRow({ rank, user }: { rank: number; user: RankUser }) {
         <Link className="profile_tag" to={`/${user.usernameUrl}`}>
           <img
             src={assetImage(user.profilePicture ?? DEFAULT_AVATAR)}
-            alt="Profile"
+            alt={tUi('alt_profile')}
             width={40}
             height={40}
             style={{ borderRadius: '50%', objectFit: 'cover' }}
@@ -123,14 +124,16 @@ function RankRow({ rank, user }: { rank: number; user: RankUser }) {
 
 /** League table — port of rankings/table.blade.php. */
 function LeagueTable({ users, children }: { users: RankUser[]; children?: React.ReactNode }) {
+  const { t } = useTranslation('content');
+  const { t: tUi } = useTranslation('ui');
   return (
     <div className="table-responsive">
       <table className="table table-striped text-center">
         <thead className="thead-light">
           <tr>
-            <th>Rank</th>
-            <th>Username</th>
-            <th className="hide-on-mobile">Followers</th>
+            <th>{tUi('rank')}</th>
+            <th>{tUi('username')}</th>
+            <th className="hide-on-mobile">{t('followers')}</th>
           </tr>
         </thead>
         <tbody>
@@ -148,6 +151,7 @@ function LeagueTable({ users, children }: { users: RankUser[]; children?: React.
 export function Rankings() {
   const { t } = useTranslation('content');
   const { i18n } = useTranslation();
+  const { t: tUi } = useTranslation('ui');
   /* The blade is standalone: Bootstrap 4 CDN + Anton/BBH fonts, no layout CSS.
      Its own <style> blocks (extracted to public/page-css/rankings.css) contain
      global element rules like `p { text-align: center }`, so they must load as a
@@ -160,7 +164,7 @@ export function Rankings() {
   const [tooltipOpen, setTooltipOpen] = useState(false);
 
   useEffect(() => {
-    document.title = 'Rankings';
+    document.title = tUi('rankings_title');
     api
       .get<{ success: boolean; data: LeaguesData }>('/rankings')
       .then((r) => setData(r.data.data))
@@ -191,12 +195,12 @@ export function Rankings() {
   if (!data) return <PageLoader />;
 
   const leagues: [string, string, React.ReactNode, RankUser[]][] = [
-    ['superMagic', '🦸🏻‍♀️', <>SUPER&nbsp; LEAGUE <span style={{ fontSize: '0.38em' }}>(Top 11)</span></>, data.superMagic],
-    ['superLeague', '🪄', <>MAGIC LEAGUE <span style={{ fontSize: '0.38em' }}>(1st – 50th)</span></>, data.superLeague],
-    ['diamondLeague', '💎', <>DIAMOND LEAGUE <span style={{ fontSize: '0.38em' }}>(51st – 150th)</span></>, data.diamondLeague],
-    ['emeraldLeague', '', <>EMERALD LEAGUE <span style={{ fontSize: '0.38em' }}>(151st – 250th)</span></>, data.emeraldLeague],
-    ['goldLeague', '🏅', <>GOLD LEAGUE (251st – 500th)</>, data.goldLeague],
-    ['silverLeague', '🥈', <>SILVER LEAGUE (501st – 1000th)</>, data.silverLeague],
+    ['superMagic', '🦸🏻‍♀️', <>{tUi('league_super')} <span style={{ fontSize: '0.38em' }}>{tUi('league_top11')}</span></>, data.superMagic],
+    ['superLeague', '🪄', <>{tUi('league_magic')} <span style={{ fontSize: '0.38em' }}>{tUi('league_1_50')}</span></>, data.superLeague],
+    ['diamondLeague', '💎', <>{tUi('league_diamond')} <span style={{ fontSize: '0.38em' }}>{tUi('league_51_150')}</span></>, data.diamondLeague],
+    ['emeraldLeague', '', <>{tUi('league_emerald')} <span style={{ fontSize: '0.38em' }}>{tUi('league_151_250')}</span></>, data.emeraldLeague],
+    ['goldLeague', '🏅', <>{tUi('league_gold')} {tUi('league_251_500')}</>, data.goldLeague],
+    ['silverLeague', '🥈', <>{tUi('league_silver')} {tUi('league_501_1000')}</>, data.silverLeague],
   ];
 
   return (
@@ -241,7 +245,7 @@ export function Rankings() {
           </div>
           <div className="btn-group" style={{ gap: 10 }}>
             <a href="#emeraldLeague" className="btn-rank">
-              <img src={assetImage('emerald.png')} alt="Emerald" style={{ width: 24 }} />
+              <img src={assetImage('emerald.png')} alt={tUi('alt_emerald')} style={{ width: 24 }} />
             </a>
             <a href="#goldLeague" className="btn-rank">
               🏅
@@ -260,7 +264,7 @@ export function Rankings() {
               <h2 id={id}>
                 {id === 'emeraldLeague' ? (
                   <>
-                    <img src={assetImage('emerald.png')} alt="Emerald" style={{ width: 24 }} />{' '}
+                    <img src={assetImage('emerald.png')} alt={tUi('alt_emerald')} style={{ width: 24 }} />{' '}
                   </>
                 ) : (
                   `${emoji} `
@@ -272,14 +276,14 @@ export function Rankings() {
             </div>
           ))}
 
-          <h2 id="bronzeLeague">🥉 BRONZE LEAGUE (1001st and beyond)</h2>
+          <h2 id="bronzeLeague">🥉 {tUi('league_bronze')} {tUi('league_1001_beyond')}</h2>
           <div className="table-responsive">
             <table className="table table-striped text-center">
               <thead className="thead-light">
                 <tr>
-                  <th>Rank</th>
-                  <th>Username</th>
-                  <th className="hide-on-mobile">Followers</th>
+                  <th>{tUi('rank')}</th>
+                  <th>{tUi('username')}</th>
+                  <th className="hide-on-mobile">{t('followers')}</th>
                 </tr>
               </thead>
               <tbody id="bronze-table-body">
@@ -296,7 +300,7 @@ export function Rankings() {
           <div style={{ textAlign: 'center', marginTop: 10 }}>
             {!bronzeDone && (
               <button id="load-more-bronze" className="btn btn-dark" onClick={loadMoreBronze}>
-                SEE HIDDEN USERS
+                {tUi('see_hidden_users')}
               </button>
             )}
           </div>

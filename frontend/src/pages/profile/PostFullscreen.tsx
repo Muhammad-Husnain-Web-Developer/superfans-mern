@@ -62,6 +62,7 @@ const HeartIcon = ({ size = 32 }: { size?: number }) => (
  * the video; vertical swipe moves prev/next.
  */
 export function PostFullscreen() {
+  const { t: tUi } = useTranslation('ui');
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -356,7 +357,7 @@ function doHate() {
       })
       .catch(() => {
         setSubBusy(false);
-        setSwal({ icon: 'error', title: 'Something went wrong' });
+        setSwal({ icon: 'error', title: tUi('something_went_wrong') });
       });
   }
 
@@ -366,9 +367,9 @@ function doHate() {
       .post(`/me/follow/${post.influencer.id}`)
       .then(() => {
         setFollowing(true);
-        setSwal({ title: 'Followed Successfully' });
+        setSwal({ title: tUi('followed_successfully') });
       })
-      .catch(() => setSwal({ icon: 'error', title: 'Something went wrong' }));
+      .catch(() => setSwal({ icon: 'error', title: tUi('something_went_wrong') }));
   }
 
   /* The client asked for a share row at the head of the report list. It copies this
@@ -487,7 +488,7 @@ function doHate() {
     return (
       <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
         <h1 style={{ fontSize: '4em', color: '#da1212' }}>404</h1>
-        <p>Not Found</p>
+        <p>{tUi('not_found')}</p>
       </div>
     );
   }
@@ -603,7 +604,7 @@ function doHate() {
         <a
           href={worldBack}
           className="post-fs-back"
-          title="Back"
+          title={tUi('back')}
           onClick={(e) => {
             e.preventDefault();
             const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
@@ -620,7 +621,7 @@ function doHate() {
             <button
               type="button"
               className="post-fs-report-btn"
-              title="Report"
+              title={tUi('report')}
               onClick={(e) => { e.stopPropagation(); setReportOpen((v) => !v); }}
             >
               {/* Font Awesome in place of assets/images/arrowDown_.png, and a caret
@@ -651,7 +652,7 @@ function doHate() {
       <button
         type="button"
         className="post-fs-expand"
-        title={expanded ? 'Exit full screen' : 'Full screen'}
+        title={expanded ? tUi('exit_full_screen') : tUi('full_screen')}
         onClick={(e) => { e.stopPropagation(); toggleExpanded(); }}
       >
         <i className={`fas fa-${expanded ? 'compress' : 'expand'}`} aria-hidden="true"></i>
@@ -678,7 +679,7 @@ function doHate() {
             <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
               <img
                 src={LOCKED_POST_IMAGE}
-                alt="Locked"
+                alt={tUi('alt_locked')}
                 className="post-fs-locked"
                 style={{ width: 220, maxWidth: '60%', borderRadius: 26, border: '7px solid lightgray' }}
               />
@@ -710,7 +711,7 @@ function doHate() {
               </video>
             </div>
           ) : (
-            <img src={media ? assetImage(media) : LOCKED_POST_IMAGE} alt="Post" className="post-fullscreen-media" />
+            <img src={media ? assetImage(media) : LOCKED_POST_IMAGE} alt={tUi('alt_post')} className="post-fullscreen-media" />
           )}
         </div>
         <div className="post-fs-heart-pop-wrap">
@@ -747,7 +748,7 @@ function doHate() {
             className="post-fs-follow-btn"
             onClick={isPaidCreator ? () => setSubOpen(true) : follow}
           >
-            {isPaidCreator ? 'SUBSCRIBE +' : 'FOLLOW +'}
+            {isPaidCreator ? tUi('subscribe_plus') : tUi('follow_plus')}
           </button>
         )}
       </div>}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AdLeadForm } from '../pages/ads/AdLeadForm';
 import { PremiumFanModal } from './PremiumFanModal';
@@ -125,6 +126,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
+  const { t: tUi } = useTranslation('ui');
   /* the $10 that stands in front of writing when the advertiser is Busy */
   const [premiumOpen, setPremiumOpen] = useState(false);
   const media = item.media ?? '';
@@ -223,7 +225,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
             ) : (
               <img
                 src={assetImage(media)}
-                alt="Advertisement"
+                alt={tUi('alt_advertisement')}
                 className="img-responsive posttt-img"
                 style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
               />
@@ -310,7 +312,7 @@ export function AdCard({ item, showType = false }: { item: AdCardItem; showType?
           ) : (
             <img
               src={assetImage(media)}
-              alt="Advertisement"
+              alt={tUi('alt_advertisement')}
               className="img-responsive posttt-img"
               style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
             />

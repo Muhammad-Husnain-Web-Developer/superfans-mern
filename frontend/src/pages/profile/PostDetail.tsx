@@ -46,6 +46,7 @@ export function PostDetail() {
   const { t } = useTranslation('content');
   const { user: authUser } = useAuth();
   const registerModal = useRegisterModal();
+  const { t: tUi } = useTranslation('ui');
 
   const [post, setPost] = useState<PostDetailData | null>(null);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -112,8 +113,8 @@ export function PostDetail() {
     api
       .post(`/me/follow/${post.influencer.id}`)
       .then(() => refetch())
-      .then(() => setSwal({ title: 'Followed Successfully' }))
-      .catch(() => setSwal({ icon: 'error', title: 'Something went wrong' }))
+      .then(() => setSwal({ title: tUi('followed_successfully') }))
+      .catch(() => setSwal({ icon: 'error', title: tUi('something_went_wrong') }))
       .finally(() => setBusy(false));
   }
 
@@ -138,7 +139,7 @@ export function PostDetail() {
     return (
       <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
         <h1 style={{ fontSize: '4em', color: '#da1212' }}>404</h1>
-        <p>Not Found</p>
+        <p>{tUi('not_found')}</p>
       </div>
     );
   }
@@ -253,11 +254,11 @@ export function PostDetail() {
               <div className="col-md-4 col-sm-4 col-xs-4 text-center">
                 {post.prevId ? (
                   <Link to={`/post/${post.prevId}`}>
-                    <i className="icon-long-arrow-left"></i> <span>Anterior</span>
+                    <i className="icon-long-arrow-left"></i> <span>{tUi('previous')}</span>
                   </Link>
                 ) : (
                   <p>
-                    <i className="icon-long-arrow-left"></i> <span>Anterior</span>
+                    <i className="icon-long-arrow-left"></i> <span>{tUi('previous')}</span>
                   </p>
                 )}
               </div>
@@ -269,11 +270,11 @@ export function PostDetail() {
               <div className="col-md-4 col-sm-4 col-xs-4 text-center">
                 {post.nextId ? (
                   <Link to={`/post/${post.nextId}`}>
-                    <span>Siguiente</span> <i className="icon-long-arrow-right"></i>
+                    <span>{tUi('next')}</span> <i className="icon-long-arrow-right"></i>
                   </Link>
                 ) : (
                   <p>
-                    <span>Siguiente</span> <i className="icon-long-arrow-right"></i>
+                    <span>{tUi('next')}</span> <i className="icon-long-arrow-right"></i>
                   </p>
                 )}
               </div>

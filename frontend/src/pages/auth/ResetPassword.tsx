@@ -9,6 +9,8 @@ import './auth.css';
 /** Pixel parity with resources/views/auth/passwords/reset.blade.php */
 export function ResetPassword() {
   const { i18n } = useTranslation('auth');
+  const { t } = useTranslation('auth');
+  const { t: tUi } = useTranslation('ui');
   const { token } = useParams<{ token: string }>();
   const [params] = useSearchParams();
   const navigate = useNavigate();
@@ -58,15 +60,15 @@ export function ResetPassword() {
                   </a>
                 </div>
 
-                <h1 className="auth-title">Reset Password</h1>
-                <p className="auth-subtitle">Enter your new password below.</p>
+                <h1 className="auth-title">{t('Reset_title')}</h1>
+                <p className="auth-subtitle">{tUi('reset_enter_new')}</p>
 
                 <form onSubmit={(e) => void onSubmit(e)}>
                   <div className="auth-form-group">
                     <input
                       id="email"
                       type="email"
-                      placeholder="Your email"
+                      placeholder={tUi('your_email')}
                       className={`auth-input${error ? ' is-invalid' : ''}`}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -81,7 +83,7 @@ export function ResetPassword() {
                     <input
                       id="password"
                       type="password"
-                      placeholder="New password"
+                      placeholder={tUi('new_password')}
                       className="auth-input"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -94,7 +96,7 @@ export function ResetPassword() {
                     <input
                       id="password-confirm"
                       type="password"
-                      placeholder="Confirm new password"
+                      placeholder={tUi('confirm_new_password')}
                       className="auth-input"
                       value={passwordConfirm}
                       onChange={(e) => setPasswordConfirm(e.target.value)}
@@ -104,7 +106,7 @@ export function ResetPassword() {
                   </div>
 
                   <button type="submit" className="btn-reset-red" disabled={submitting}>
-                    Reset Password
+                    {t('Reset_title')}
                   </button>
                 </form>
               </div>

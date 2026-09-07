@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
@@ -137,10 +138,30 @@ interface CenterData {
 export function AdsCenter() {
   useStandalonePageStyles([BOOTSTRAP4_CDN, '/page-css/ads-center.css']);
   const [data, setData] = useState<CenterData | null>(null);
+  const { t: tUi } = useTranslation('ui');
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [restricted, setRestricted] = useState<{ title: string; message: string; profile?: boolean } | null>(null);
   const [superVideo, setSuperVideo] = useState(false);
+  /* the VIP request behind the Super Video dialog's one button */
+  const [vipBusy, setVipBusy] = useState(false);
+  const [vipSent, setVipSent] = useState(false);
+  const [vipError, setVipError] = useState<string | null>(null);
+
+  async function requestVip() {
+    if (vipBusy) return;
+    setVipBusy(true);
+    setVipError(null);
+    try {
+      await api.post('/ads/vip-request');
+      setVipSent(true);
+    } catch (err) {
+      const res = (err as { response?: { data?: { message?: string } } }).response;
+      setVipError(res?.data?.message ?? 'The request could not be sent. Please try again.');
+    } finally {
+      setVipBusy(false);
+    }
+  }
   const [card, setCard] = useState<AdCard | null>(null);
 
   useEffect(() => {
@@ -177,6 +198,9 @@ export function AdsCenter() {
     }
     // 3) super-video (id 14) is VIP-only
     if (c.id === 14) {
+      /* a fresh dialog each time, not the last one's outcome */
+      setVipSent(false);
+      setVipError(null);
       setSuperVideo(true);
       return;
     }
@@ -257,7 +281,7 @@ export function AdsCenter() {
           <div className="ads-modal-box" style={{ maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
             <div style={{ background: '#8a2be2', color: '#fff', borderRadius: '0.3rem', boxShadow: 'none', padding: '28px 24px', textAlign: 'center', position: 'relative' }}>
               {/* the cross every other dialog in this module closes with, in the same corner */}
-              <button className="close-modal-btn" onClick={() => setSuperVideo(false)} aria-label="Close">
+              <button className="close-modal-btn" onClick={() => setSuperVideo(false)} aria-label={tUi('close')}>
                 ✖
               </button>
               <h3 style={{ fontWeight: 700, fontSize: 26 }}>⚠️ 🪄🎬 SUPER VIDEO ADS</h3>
@@ -265,26 +289,31 @@ export function AdsCenter() {
                 UPS! This tool is only available for <b>VIP Business Accounts</b>. Become a VIP to activate Super
                 Video Ads and other special tools.
               </p>
-              {/* The blade writes `mailto:martinherrada` — no domain, so it is not an address
-                  at all and the button did nothing, in Laravel as much as here. It goes to
-                  the ads admin, the same one every ad email is sent to (ADMIN_ADS_EMAIL).
-                  The blade's own body text is restored with it; MERN had dropped it. */}
-              <a
-                href={
-                  'mailto:dmartinherrada@gmail.com' +
-                  '?subject=' +
-                  encodeURIComponent('VIP Business Account Request – Super Video Ads') +
-                  '&body=' +
-                  encodeURIComponent(
-                    'Hello, I would like to become a VIP Business Account to activate Super Video Ads and other special tools.',
-                  )
-                }
-                style={{ textDecoration: 'none' }}
-              >
-                <button style={{ background: 'white', color: '#000', fontWeight: 900, border: 'none', padding: '10px 28px', fontSize: 18, borderRadius: 7, cursor: 'pointer' }}>
-                  VERIFICATE
-                </button>
-              </a>
+              {/* The blade writes `mailto:martinherrada` — no domain, so it was not an
+                  address at all and the button did nothing, in Laravel as much as here.
+                  Repairing the address was not enough: a mailto opens nothing on a machine
+                  with no mail client, and where it does open it only drafts a message the
+                  advertiser still has to send. The request is sent from the server now, so
+                  it reaches the admin whatever the advertiser is browsing on, and they are
+                  told it went. */}
+              {vipSent ? (
+                <p style={{ fontSize: 17, fontWeight: 700, margin: 0 }}>
+                  ✅ Request sent — we will be in touch by email.
+                </p>
+              ) : (
+                <>
+                  <button
+                    style={{ background: 'white', color: '#000', fontWeight: 900, border: 'none', padding: '10px 28px', fontSize: 18, borderRadius: 7, cursor: vipBusy ? 'default' : 'pointer', opacity: vipBusy ? 0.65 : 1 }}
+                    disabled={vipBusy}
+                    onClick={() => void requestVip()}
+                  >
+                    {vipBusy ? 'Sending…' : 'VERIFICATE'}
+                  </button>
+                  {vipError && (
+                    <p style={{ fontSize: 14, marginTop: 12, marginBottom: 0, color: '#ffd7d7' }}>{vipError}</p>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

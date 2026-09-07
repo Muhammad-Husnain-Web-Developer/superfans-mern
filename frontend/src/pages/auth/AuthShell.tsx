@@ -37,6 +37,7 @@ export function localeLogo(locale: string): string {
 /** White full-screen loader with the locale logo, fading out on mount (as the Blade pages do on window load). */
 function PageLoader() {
   const { i18n } = useTranslation();
+  const { t: tUi } = useTranslation('ui');
   const [faded, setFaded] = useState(false);
   const [gone, setGone] = useState(false);
 
@@ -55,7 +56,7 @@ function PageLoader() {
       className="auth-loader"
       style={{ transition: 'opacity 2.6s ease', opacity: faded ? 0 : 1 }}
     >
-      <img src={localeLogo(i18n.resolvedLanguage ?? 'en')} alt="Loading..." />
+      <img src={localeLogo(i18n.resolvedLanguage ?? 'en')} alt={tUi('loading')} />
     </div>
   );
 }

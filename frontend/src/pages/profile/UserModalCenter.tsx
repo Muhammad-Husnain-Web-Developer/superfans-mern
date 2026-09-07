@@ -34,6 +34,8 @@ export function UserModalCenter({
 }) {
   const { t } = useTranslation('content');
   const { t: tNav } = useTranslation('nav');
+  /* wording this app added, which lang/*.php never had a line for */
+  const { t: tUi } = useTranslation('ui');
   const { setUser } = useAuth();
 
   const [bio, setBio] = useState(profile.bio ?? '');
@@ -126,10 +128,10 @@ export function UserModalCenter({
     if (!newNetworkId) return;
     try {
       await api.post('/me/networks', { networkId: Number(newNetworkId), url: networkUrl });
-      setFlash({ ok: true, text: 'Network added successfully' });
+      setFlash({ ok: true, text: tUi('network_added') });
       onSaved();
     } catch {
-      setFlash({ ok: false, text: 'Could not add network' });
+      setFlash({ ok: false, text: tUi('network_add_failed') });
     }
   }
 
@@ -142,9 +144,9 @@ export function UserModalCenter({
       .post<{ url?: string }>('/payments/verified', { plan })
       .then(({ data }) => {
         if (data.url) window.location.href = data.url;
-        else setFlash({ ok: false, text: 'Payments are not configured yet.' });
+        else setFlash({ ok: false, text: tUi('payments_not_configured') });
       })
-      .catch(() => setFlash({ ok: false, text: 'Could not start the verification payment.' }));
+      .catch(() => setFlash({ ok: false, text: tUi('verification_start_failed') }));
   }
 
   const row = (field: ReactNode, onSave: () => void, key?: string, marginTop = 0) => (
@@ -202,7 +204,7 @@ export function UserModalCenter({
             <button
               type="button"
               className="close d-block"
-              aria-label="Close"
+              aria-label={tUi('close')}
               onClick={onClose}
               style={{
                 fontSize: 45,
@@ -334,10 +336,10 @@ export function UserModalCenter({
               required
             >
               <option value="" disabled>
-                Select color
+                {tUi('select_color')}
               </option>
-              <option value="yellow">Yellow</option>
-              <option value="purple">Purple</option>
+              <option value="yellow">{tUi('color_yellow')}</option>
+              <option value="purple">{tUi('color_purple')}</option>
             </select>
 
             <div style={{ marginTop: 20 }}>
@@ -382,14 +384,14 @@ export function UserModalCenter({
             <div className="custom-file" style={{ display: 'flex' }}>
               <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>{t('footer_credits')}</label>
               <select className="form-control" style={SELECT_STYLE} value={footerCredits} onChange={(e) => setFooterCredits(e.target.value)}>
-                <option style={{ color: 'black' }} value="name">Name</option>
-                <option style={{ color: 'black' }} value="username">Username</option>
+                <option style={{ color: 'black' }} value="name">{t('name')}</option>
+                <option style={{ color: 'black' }} value="username">{tUi('username')}</option>
               </select>
               <button
                 type="button"
                 className="save_btn"
                 style={{ ...SAVE_BTN, position: 'relative', height: 'fit-content', marginRight: 21 }}
-                onClick={() => void save({ footerNameUsername: footerCredits }, 'Footer content editted successfully')}
+                onClick={() => void save({ footerNameUsername: footerCredits }, tUi('footer_content_saved'))}
               >
                 {t('save_button_cpanel')}
               </button>
@@ -397,10 +399,10 @@ export function UserModalCenter({
 
             {/* ---------- networks ---------- */}
             <hr style={HR} />
-            <h3 style={H3}>NETWORKS:</h3>
+            <h3 style={H3}>{tUi('networks_heading')}</h3>
 
             <div className="custom-file" style={{ display: 'flex' }}>
-              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>First Network</label>
+              <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>{t('first_network')}</label>
               <select className="form-control" name="first_network" style={SELECT_STYLE} value={firstNetwork} onChange={(e) => setFirstNetwork(e.target.value)}>
                 {profile.networkDetails.map((n) => (
                   <option style={{ color: 'black' }} value={String(n.id)} key={n.id}>
@@ -416,10 +418,10 @@ export function UserModalCenter({
                   void api
                     .patch('/me/first-network', { firstNetwork })
                     .then(() => {
-                      setFlash({ ok: true, text: 'Network successfully' });
+                      setFlash({ ok: true, text: tUi('network_reordered') });
                       onSaved();
                     })
-                    .catch(() => setFlash({ ok: false, text: 'Could not reorder networks' }))
+                    .catch(() => setFlash({ ok: false, text: tUi('network_reorder_failed') }))
                 }
               >
                 {t('save_button_cpanel')}
@@ -474,7 +476,7 @@ export function UserModalCenter({
                 }}
               >
                 {atNetworkLimit ? (
-                  <option>Una cuenta standard esta limitada a 3 redes sociales</option>
+                  <option>{tUi('networks_limit_standard')}</option>
                 ) : (
                   availableNetworks.map((n) => (
                     <option className="network_option" value={String(n.id)} style={{ color: 'black' }} key={n.id}>
@@ -511,7 +513,7 @@ export function UserModalCenter({
                   </div>
                   <div className="col-md-3" style={{ textAlign: 'end', paddingRight: 22 }}>
                     <button type="button" className="save_btn" style={SAVE_BTN} onClick={addNetwork}>
-                      Add
+                      {t('add_button_cpanel')}
                     </button>
                   </div>
                 </div>
@@ -550,11 +552,11 @@ export function UserModalCenter({
               <div className="form-group" style={{ display: 'flex' }}>
                 <label htmlFor="gender" style={{ color: 'white', marginRight: 10 }}>{t('gender')}</label>
                 <select id="gender" className="form-control" style={{ background: 'white', height: 40 }} value={gender} onChange={(e) => setGender(e.target.value)}>
-                  <option value="" disabled>Select Gender</option>
-                  <option value="Man">Man</option>
-                  <option value="Woman">Woman</option>
-                  <option value="Trans">Trans</option>
-                  <option value="Binary">Binary</option>
+                  <option value="" disabled>{tUi('select_gender')}</option>
+                  <option value="Man">{tUi('gender_man')}</option>
+                  <option value="Woman">{tUi('gender_woman')}</option>
+                  <option value="Trans">{tUi('gender_trans')}</option>
+                  <option value="Binary">{tUi('gender_binary')}</option>
                 </select>
               </div>,
               () => void save({ gender }, 'Gender editted successfully'),
@@ -568,7 +570,7 @@ export function UserModalCenter({
             <hr style={HR} />
             <h3 style={H3}>{t('my_subscriptions')}</h3>
             {subscriptions.length === 0 ? (
-              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>No Subscriptions</p>
+              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>{tUi('no_subscriptions')}</p>
             ) : (
               subscriptions.map((s) => <RelationTile key={s.id} username={s.usernameUrl} picture={s.profilePicture} />)
             )}
@@ -576,7 +578,7 @@ export function UserModalCenter({
             <hr style={HR} />
             <h3 style={H3}>{t('my_followerships')}</h3>
             {followerships.length === 0 ? (
-              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>No Followerships</p>
+              <p style={{ margin: 0, textAlign: 'center', color: 'white' }}>{tUi('no_followerships')}</p>
             ) : (
               followerships.map((f) => (
                 <RelationTile
@@ -623,10 +625,10 @@ export function UserModalCenter({
                       void api
                         .post('/me/request-creator-account')
                         .then(() => {
-                          setFlash({ ok: true, text: 'Congrats, You are creator now.' });
+                          setFlash({ ok: true, text: tUi('creator_granted') });
                           onSaved();
                         })
-                        .catch(() => setFlash({ ok: false, text: 'Request failed' }))
+                        .catch(() => setFlash({ ok: false, text: tUi('request_failed') }))
                     }
                   >
                     {t('request_creator')}
@@ -652,7 +654,7 @@ export function UserModalCenter({
             {/* ---------- request verified account (Redsys) ---------- */}
             <hr style={HR} />
             <h3 style={{ ...H3, textAlign: 'center' }}>
-              <img src="/assets/images/verified.png" width={24} alt="Verified Badge" style={{ position: 'relative', bottom: 2 }} />{' '}
+              <img src="/assets/images/verified.png" width={24} alt={tUi('verified_badge_alt')} style={{ position: 'relative', bottom: 2 }} />{' '}
               {t('verified_account_request')}
             </h3>
             <center>
@@ -665,10 +667,10 @@ export function UserModalCenter({
                     void api
                       .delete('/payments/redsys/verified')
                       .then(() => {
-                        setFlash({ ok: true, text: 'Verification cancelled' });
+                        setFlash({ ok: true, text: tUi('verification_cancelled') });
                         onSaved();
                       })
-                      .catch(() => setFlash({ ok: false, text: 'Could not cancel' }))
+                      .catch(() => setFlash({ ok: false, text: tUi('verification_cancel_failed') }))
                   }
                 >
                   {t('unsubscribe')}
@@ -681,7 +683,7 @@ export function UserModalCenter({
                     style={{ background: 'transparent', color: 'white', border: '2px solid white', padding: '0 10px' }}
                     onClick={() => requestVerified('quinzenal')}
                   >
-                    Quinzenal – $26,99€
+                    {tUi('plan_fortnightly')}
                   </button>{' '}
                   <button
                     type="button"
@@ -689,7 +691,7 @@ export function UserModalCenter({
                     style={{ background: 'transparent', color: 'white', border: '2px solid white', padding: '0 10px' }}
                     onClick={() => requestVerified('monthly')}
                   >
-                    Monthly – $49,99
+                    {tUi('plan_monthly')}
                   </button>
                 </>
               )}
@@ -724,11 +726,11 @@ export function UserModalCenter({
                         void api
                           .patch(`/me/networks/${editNetwork.id}`, { url: editNetworkUrl })
                           .then(() => {
-                            setFlash({ ok: true, text: 'Network url editted successfully' });
+                            setFlash({ ok: true, text: tUi('network_url_updated') });
                             setEditNetwork(null);
                             onSaved();
                           })
-                          .catch(() => setFlash({ ok: false, text: 'Could not update network' }))
+                          .catch(() => setFlash({ ok: false, text: tUi('network_update_failed') }))
                       }
                     >
                       {t('save_button_cpanel')}
@@ -740,7 +742,7 @@ export function UserModalCenter({
                 className="delete save_btn"
                 onClick={() =>
                   void api.delete(`/me/networks/${editNetwork.id}`).then(() => {
-                    setFlash({ ok: true, text: 'Network deleted successfully' });
+                    setFlash({ ok: true, text: tUi('network_deleted') });
                     setEditNetwork(null);
                     onSaved();
                   })
@@ -761,7 +763,7 @@ export function UserModalCenter({
                   cursor: 'pointer',
                 }}
               >
-                Delete it
+                {t('delete_button_cpanel')}
               </span>
             </div>
           </div>

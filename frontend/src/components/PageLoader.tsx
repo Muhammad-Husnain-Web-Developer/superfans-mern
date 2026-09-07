@@ -12,6 +12,7 @@ export function PageLoader() {
   const { i18n } = useTranslation();
   const [faded, setFaded] = useState(false);
   const [gone, setGone] = useState(false);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     const start = () => {
@@ -49,7 +50,7 @@ export function PageLoader() {
         pointerEvents: faded ? 'none' : undefined,
       }}
     >
-      <img src={localeLogo(i18n.resolvedLanguage ?? 'en')} alt="Loading..." style={{ width: '59%' }} />
+      <img src={localeLogo(i18n.resolvedLanguage ?? 'en')} alt={tUi('loading')} style={{ width: '59%' }} />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { login as apiLogin, register as apiRegister, type RegisterInput } from '../api/auth';
@@ -44,6 +45,8 @@ function fileToDataUrl(file: File): Promise<string> {
 }
 
 export function RegisterModalProvider({ children }: { children: ReactNode }) {
+  const { t: tAuth } = useTranslation('auth');
+  const { t: tUi } = useTranslation('ui');
   const [visible, setVisible] = useState(false);
   /* drives the open animation: the frame mounts at its off-screen start, then
      `in` is added on the next frame so the transition actually runs */
@@ -232,7 +235,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
             <button
               type="button"
               className="close d-block"
-              aria-label="Close"
+              aria-label={tUi('close')}
               onClick={close}
               style={{
                 fontSize: 45,
@@ -278,7 +281,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
                 className="modal-title"
                 style={{ fontSize: 30, textAlign: 'center', color: 'white', display: 'inline-block' }}
               >
-                {view === 'login' ? 'Login' : 'Regístrate'}
+                {view === 'login' ? tAuth('Login_btn') : tUi('register_title')}
               </h5>
             </div>
           </div>
@@ -315,9 +318,9 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   const choiceView = (
     <>
       <h1 className="mb-3" style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'white' }}>
-        Primero, crea tu cuenta
+        {tUi('register_first_create')}
       </h1>
-      <p style={{ textAlign: 'center' }}>Es muy rápido. Elige un tipo de cuenta.</p>
+      <p style={{ textAlign: 'center' }}>{tUi('register_quick_choose')}</p>
       <div className="container-fluid">
         <div className="row" style={{ display: 'flex' }}>
           <div className="col-md-6" style={{ flex: 1 }}>
@@ -326,7 +329,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
               onClick={() => setView('creator')}
               style={{ display: 'block', fontSize: 20, margin: '0 auto', cursor: 'pointer', textAlign: 'center' }}
             >
-              Creador
+              {tAuth('creator')}
             </span>
           </div>
           <div className="col-md-6" style={{ flex: 1 }}>
@@ -343,7 +346,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
                 textAlign: 'center',
               }}
             >
-              Fan
+              {tUi('fan')}
             </span>
           </div>
         </div>
@@ -353,7 +356,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
         <p style={{ marginBottom: 20 }}>
           Already Registered?{' '}
           <span className="button_hover_underlined" onClick={() => setView('login')} style={{ fontWeight: 'bold' }}>
-            <span style={{ cursor: 'pointer' }}>Login</span>
+            <span style={{ cursor: 'pointer' }}>{tAuth('Login_btn')}</span>
           </span>
         </p>
       </div>
@@ -365,7 +368,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
     <>
       {formGroup(
         <>
-          <label htmlFor="">Social Networks</label>
+          <label htmlFor="">{tAuth('social_networks')}</label>
           <Select2Multi
             id={`social_networks${suffix}`}
             options={networks.map((n) => n.name)}
@@ -423,7 +426,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
       <label className="form-check-label" htmlFor="termsCheckboxModal" style={{ color: 'white' }}>
         I agree to the{' '}
         <a style={{ color: 'purple' }} href="https://superfans.world/terminosdeuso" target="_blank" rel="noreferrer">
-          Terms and Conditions
+          {tAuth('terms_and_conditions')}
         </a>
       </label>
     </div>
@@ -432,31 +435,31 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   const creatorView = (
     <form onSubmit={(e) => e.preventDefault()}>
       <h1 className="mb-3" style={{ textAlign: 'center', color: 'white', marginBottom: '0.5rem' }}>
-        Como Influencer
+        {tUi('register_as_influencer')}
       </h1>
-      <p style={{ color: 'white', textAlign: 'center' }}>Rellena los campos para el alta.</p>
-      {formGroup(input({ type: 'text', placeholder: 'Introduce tu nombre', required: true, value: name, onChange: (e) => setName(e.target.value) }))}
-      {formGroup(input({ type: 'email', placeholder: 'Introduce tu email', required: true, value: email, onChange: (e) => setEmail(e.target.value) }))}
-      {formGroup(input({ type: 'password', placeholder: 'Introduce una contraseña', required: true, value: password, onChange: (e) => setPassword(e.target.value) }))}
-      {formGroup(input({ type: 'password', placeholder: 'Confirma la contraseña', required: true, value: passwordConfirm, onChange: (e) => setPasswordConfirm(e.target.value) }))}
+      <p style={{ color: 'white', textAlign: 'center' }}>{tAuth('register_description')}</p>
+      {formGroup(input({ type: 'text', placeholder: tAuth('enter_name'), required: true, value: name, onChange: (e) => setName(e.target.value) }))}
+      {formGroup(input({ type: 'email', placeholder: tAuth('enter_email'), required: true, value: email, onChange: (e) => setEmail(e.target.value) }))}
+      {formGroup(input({ type: 'password', placeholder: tAuth('enter_pass'), required: true, value: password, onChange: (e) => setPassword(e.target.value) }))}
+      {formGroup(input({ type: 'password', placeholder: tAuth('confirm_password'), required: true, value: passwordConfirm, onChange: (e) => setPasswordConfirm(e.target.value) }))}
       {networksField('2')}
       {formGroup(
         input({
           type: 'number',
           step: '0.01',
           min: '0.50',
-          placeholder: 'Introduce tu precio de membresía',
+          placeholder: tAuth('enter_subscription_price'),
           required: true,
           value: price,
           onChange: (e) => setPrice(e.target.value),
         }),
       )}
-      {fileField('profile', 'Profile picture...', profileFile, setProfileFile)}
-      {fileField('cover', 'Cover picture...', coverFile, setCoverFile)}
+      {fileField('profile', tUi('profile_picture_placeholder'), profileFile, setProfileFile)}
+      {fileField('cover', tUi('cover_picture_placeholder'), coverFile, setCoverFile)}
       {formGroup(
         input({
           type: 'text',
-          placeholder: 'Choose your username or URL',
+          placeholder: tAuth('choose_username_url'),
           required: true,
           value: username,
           onChange: (e) => setUsername(e.target.value),
@@ -470,7 +473,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
         onClick={() => void submitRegister('influencer')}
         style={acceptBtn}
       >
-        Aceptar
+        {tUi('accept')}
       </button>
     </form>
   );
@@ -478,17 +481,17 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   const fanView = (
     <form onSubmit={(e) => e.preventDefault()}>
       <h1 className="mb-3" style={{ textAlign: 'center', color: 'white', marginBottom: '0.5rem' }}>
-        Como Espectador
+        {tUi('register_as_viewer')}
       </h1>
-      <p style={{ color: 'white', textAlign: 'center' }}>Rellena los campos.</p>
-      {formGroup(input({ type: 'text', placeholder: 'Introduce tu nombre', required: true, value: name, onChange: (e) => setName(e.target.value) }))}
-      {formGroup(input({ type: 'email', placeholder: 'Introduce tu email', required: true, value: email, onChange: (e) => setEmail(e.target.value) }))}
-      {formGroup(input({ type: 'password', placeholder: 'Introduce una contraseña', required: true, value: password, onChange: (e) => setPassword(e.target.value) }))}
-      {formGroup(input({ type: 'password', placeholder: 'Confirma la contraseña', required: true, value: passwordConfirm, onChange: (e) => setPasswordConfirm(e.target.value) }))}
+      <p style={{ color: 'white', textAlign: 'center' }}>{tUi('register_fill_fields')}</p>
+      {formGroup(input({ type: 'text', placeholder: tAuth('enter_name'), required: true, value: name, onChange: (e) => setName(e.target.value) }))}
+      {formGroup(input({ type: 'email', placeholder: tAuth('enter_email'), required: true, value: email, onChange: (e) => setEmail(e.target.value) }))}
+      {formGroup(input({ type: 'password', placeholder: tAuth('enter_pass'), required: true, value: password, onChange: (e) => setPassword(e.target.value) }))}
+      {formGroup(input({ type: 'password', placeholder: tAuth('confirm_password'), required: true, value: passwordConfirm, onChange: (e) => setPasswordConfirm(e.target.value) }))}
       {formGroup(
         input({
           type: 'text',
-          placeholder: 'Choose your username or URL',
+          placeholder: tAuth('choose_username_url'),
           required: true,
           value: username,
           onChange: (e) => setUsername(e.target.value),
@@ -502,7 +505,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
         onClick={() => void submitRegister('user')}
         style={acceptBtn}
       >
-        Aceptar
+        {tUi('accept')}
       </button>
     </form>
   );
@@ -517,14 +520,14 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
         }}
       >
         <h3 className="mb-3" style={{ textAlign: 'center', marginBottom: '0.5rem', color: 'white' }}>
-          Inicia sesión
+          {tAuth('Login_title')}
         </h3>
-        <p style={{ textAlign: 'center', color: 'white' }}>Fill the form to login.</p>
+        <p style={{ textAlign: 'center', color: 'white' }}>{tAuth('Login_des')}</p>
         {formGroup(
           <input
             id="email"
             type="email"
-            placeholder="Enter your email"
+            placeholder={tAuth('enter_email')}
             className="form-control modal_input register_modal_input login-modal-input"
             required
             autoComplete="email"
@@ -536,7 +539,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
           <input
             id="password"
             type="password"
-            placeholder="Enter your password"
+            placeholder={tAuth('enter_pass')}
             className="form-control modal_input register_modal_input login-modal-input"
             required
             autoComplete="current-password"
@@ -552,7 +555,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
             submits with (auth/login.blade.php:301), dot and all. */}
         <button type="submit" id="sendlogin" className="btn-login-green" disabled={submitting}>
           <b>
-            Login
+            {tAuth('Login_btn')}
             <span className="dot">..</span>
           </b>
         </button>
@@ -570,7 +573,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
             }}
             style={{ textAlign: 'center', fontWeight: 'bold' }}
           >
-            <span style={{ cursor: 'pointer' }}>Create One</span>
+            <span style={{ cursor: 'pointer' }}>{tAuth('Login_create_btn')}</span>
           </span>
         </p>
       </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 import { assetImage } from '../utils/format';
 import '../styles/premium-fan-modal.css';
@@ -17,6 +18,17 @@ import '../styles/premium-fan-modal.css';
  * button's #409c40 border and monospace face off its own. The purple ground and the popup
  * geometry are shared with the chat dialog, both being SweetAlerts on the same page.
  */
+/**
+ * These lines are printed with {!! !!} in the blade, so the markup inside them is real and
+ * has to be rendered, not escaped.
+ *
+ * The trailing <br><br> on the queue line is dropped: the button row below already carries
+ * that gap as a margin, and printing both would double it.
+ */
+function bladeHtml(value: string) {
+  return { __html: value.replace(/(<br\s*\/?>|\s)+$/i, '') };
+}
+
 export function PremiumFanModal({
   influencerId,
   usernameUrl,
@@ -28,9 +40,11 @@ export function PremiumFanModal({
   profilePicture?: string | null;
   onClose: () => void;
 }) {
+  const { t } = useTranslation('content');
   const [step, setStep] = useState<'busy' | 'pay'>('busy');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t: tUi } = useTranslation('ui');
 
   /* both dialogs pass showCloseButton: true, and swal closes on Escape */
   useEffect(() => {
@@ -62,7 +76,7 @@ export function PremiumFanModal({
   return (
     <div className="swal-scrim" onClick={onClose}>
       <div className="swal-pop premium-box" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="swal-close" onClick={onClose} aria-label="Close">
+        <button type="button" className="swal-close" onClick={onClose} aria-label={tUi('close')}>
           ×
         </button>
 
@@ -73,34 +87,27 @@ export function PremiumFanModal({
               <img className="swal-icon-img" src={assetImage(profilePicture)} alt="" />
             )}
             <h2 className="swal-title">
-              {usernameUrl ? `@${usernameUrl} ` : ''}Super Busy!
+              {usernameUrl ? `@${usernameUrl} ` : ''}
+              {t('titlebusy_premium_fan')}
             </h2>
             <div className="premium-text">
-              This influencer is responding to a lot of messages right now, you’re in the
-              queue.
+              <span dangerouslySetInnerHTML={bladeHtml(t('description_premium_fan'))} />
               {/* the blade separates these with <br><br>; the row carries the gap as a
                   margin instead, so it matches the spacing every other dialog uses */}
               <div className="premium-btn-row">
                 <button type="button" className="premium-be-fan" onClick={() => setStep('pay')}>
-                  🎖 BE ️PREMIUM FAN
+                  {t('button_premium_fan')}
                 </button>
               </div>
             </div>
           </>
         ) : (
           <>
-            <h2 className="swal-title">🏅 Priority Access – $10</h2>
+            <h2 className="swal-title">{t('titlepay_premium_fan')}</h2>
             <div className="premium-text">
-              Want to skip the queue and get a faster reply?
-              <br />
-              <br />
-              <strong>This one-time $10 payment</strong> gives you priority access.
-              <br />
-              <br />
-              <span className="premium-fineprint">
-                This premium subscription won’t be renewed next month, don’t worry! It’s only
-                for 1 use.
-              </span>
+              {/* the fine print is a <font size="11px"> in the string, which is what
+                  .premium-fineprint sets too, so the rendering is unchanged */}
+              <span dangerouslySetInnerHTML={bladeHtml(t('descriptionpay_premium_fan'))} />
 
               {error && <p className="premium-error">{error}</p>}
 
@@ -111,7 +118,7 @@ export function PremiumFanModal({
                   onClick={() => void pay()}
                   disabled={busy}
                 >
-                  {busy ? 'Opening…' : '✨ PAY $10'}
+                  {busy ? tUi('opening') : t('buttonpay_premium_fan')}
                 </button>
               </div>
             </div>

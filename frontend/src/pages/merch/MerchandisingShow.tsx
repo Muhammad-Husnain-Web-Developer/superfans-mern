@@ -33,6 +33,7 @@ export function MerchandisingShow() {
   const { t, i18n } = useTranslation('content');
   const { t: tAuth } = useTranslation('auth');
   const { user: authUser } = useAuth();
+  const { t: tUi } = useTranslation('ui');
 
   const [product, setProduct] = useState<MerchProduct | null>(null);
   const [influencers, setInfluencers] = useState<InfluencerOption[]>([]);
@@ -62,7 +63,7 @@ export function MerchandisingShow() {
       .catch(() => setNotFound(true));
   }, [slug]);
 
-  if (notFound) return <div className="container py-5 text-center">Product not found</div>;
+  if (notFound) return <div className="container py-5 text-center">{tUi('product_not_found')}</div>;
   if (!product) return null;
 
   const images = [product.image, ...(product.extraImages ?? [])];
@@ -95,7 +96,7 @@ export function MerchandisingShow() {
       <a href="/">
         <img
           src={localeLogo(i18n.language)}
-          alt="Logo"
+          alt={tUi('alt_logo')}
           className="mb-4"
           style={{ maxWidth: 200, display: 'block', margin: '0 auto' }}
         />
@@ -197,7 +198,7 @@ export function MerchandisingShow() {
 
         {!authUser && (
           <div className="form-group required">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">{tUi('email_address')}</label>
             <input
               type="email"
               id="email"
@@ -210,7 +211,7 @@ export function MerchandisingShow() {
         )}
 
         <div className="form-group required">
-          <label htmlFor="country">Country</label>
+          <label htmlFor="country">{tUi('country_label')}</label>
           <select
             id="country"
             className="form-control country-select"
@@ -218,7 +219,7 @@ export function MerchandisingShow() {
             onChange={(e) => setCountry(e.target.value)}
             required
           >
-            <option value="">Select Country</option>
+            <option value="">{tUi('select_country')}</option>
             {COUNTRIES.map((c) => (
               <option value={c} key={c}>
                 {c}
@@ -228,7 +229,7 @@ export function MerchandisingShow() {
         </div>
 
         <div className="form-group required">
-          <label htmlFor="city">City</label>
+          <label htmlFor="city">{tUi('city_label')}</label>
           <input
             type="text"
             id="city"
@@ -240,7 +241,7 @@ export function MerchandisingShow() {
         </div>
 
         <div className="form-group required">
-          <label htmlFor="zip">ZIP Code</label>
+          <label htmlFor="zip">{tUi('zip_code')}</label>
           <input
             type="text"
             id="zip"
@@ -252,12 +253,12 @@ export function MerchandisingShow() {
         </div>
 
         <div className="form-group required">
-          <label htmlFor="address">Shipping Address (with number and indications)</label>
+          <label htmlFor="address">{tUi('shipping_address')}</label>
           <input
             type="text"
             id="address"
             className="form-control"
-            placeholder="e.g., 123 Main St, Apartment 4B, near Central Park"
+            placeholder={tUi('address_example')}
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             required
@@ -266,7 +267,7 @@ export function MerchandisingShow() {
 
         <p>
           <img src={assetImage('cardesecurity.png')} style={{ width: 50 }} alt="" />
-          Your payment will be processed securely through Redsys
+          {tUi('redsys_secure')}
         </p>
 
         <div className="form-group" style={{ position: 'relative' }}>

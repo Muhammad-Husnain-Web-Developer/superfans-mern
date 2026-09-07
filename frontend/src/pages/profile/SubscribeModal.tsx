@@ -24,6 +24,7 @@ export function SubscribeModal({
 }) {
   const { t } = useTranslation('content');
   const [agreed, setAgreed] = useState(false);
+  const { t: tUi } = useTranslation('ui');
   /* shown when the button is pressed before the terms are accepted */
   const [needsTerms, setNeedsTerms] = useState(false);
 
@@ -74,7 +75,7 @@ export function SubscribeModal({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close"
+          aria-label={tUi('close')}
           style={{ position: 'absolute', right: 10, top: 6, background: 'none', border: 0, fontSize: 45, color: '#fff', lineHeight: 1, cursor: 'pointer' }}
         >
           ×

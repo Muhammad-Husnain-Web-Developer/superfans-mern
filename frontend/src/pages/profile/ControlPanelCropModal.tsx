@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 import { api } from '../../api/client';
@@ -10,6 +11,7 @@ import { api } from '../../api/client';
  * cannot drift.
  */
 export function useCropUpload(onSaved: (filename: string, kind: 'profile' | 'cover') => void) {
+  const { t: tUi } = useTranslation('ui');
   const [crop, setCrop] = useState<{ src: string; type: 'profile' | 'cover' } | null>(null);
 
   function onFileChange(kind: 'profile' | 'cover', file: File | null) {
@@ -20,7 +22,7 @@ export function useCropUpload(onSaved: (filename: string, kind: 'profile' | 'cov
       const probe = new Image();
       probe.onload = () => {
         if (probe.width < 250 || probe.height < 250) {
-          alert('Image too small. Minimum size is 250x250.');
+          alert(tUi('image_too_small'));
           return;
         }
         setCrop({ src: dataUrl, type: kind });
@@ -69,6 +71,7 @@ export function ControlPanelCropModal({
   onCancel: () => void;
   onCropped: (dataUrl: string) => void;
 }) {
+  const { t: tUi } = useTranslation('ui');
   const imgRef = useRef<HTMLImageElement>(null);
   const cropperRef = useRef<Cropper | null>(null);
 
@@ -107,21 +110,22 @@ export function ControlPanelCropModal({
             <button
               type="button"
               className="close"
-              aria-label="Close"
+              aria-label={tUi('close')}
               onClick={onCancel}
               style={{ position: 'absolute', right: 10, background: 'transparent', border: 0 }}
             >
               <span aria-hidden="true">×</span>
             </button>
             <h5 className="modal-title cropper-title" id="modalLabel">
-              Recorta la imagen para subirla
+              {tUi('crop_image_title')}
             </h5>
             <p
               className="cropper-subtitle"
               style={{ color: '#666', fontFamily: 'consolas', fontSize: '0.7em', marginTop: 35 }}
             >
-              Estamos en <i>Beta Phase</i>. Pronto estará disponible subir imágenes HD en tu cover
-              o foto de perfil.
+              {/* the <i> around "Beta Phase" is part of the line, so it is rendered rather
+                  than escaped — the same way the blade prints its own marked-up strings */}
+              <span dangerouslySetInnerHTML={{ __html: tUi('crop_beta_notice') }} />
             </p>
           </div>
           <div className="modal-body">
@@ -141,10 +145,10 @@ export function ControlPanelCropModal({
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-default" onClick={onCancel}>
-              Cancel
+              {tUi('cancel')}
             </button>
             <button type="button" className="btn btn-secondary" id="crop" onClick={crop}>
-              Crop
+              {tUi('crop')}
             </button>
           </div>
         </div>

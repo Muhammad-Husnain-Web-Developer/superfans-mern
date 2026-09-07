@@ -28,6 +28,7 @@ export function SubscriberListModal({
   const [rows, setRows] = useState<SubscriberRow[]>([]);
   const [isOwner, setIsOwner] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const { t: tUi } = useTranslation('ui');
 
   useEffect(() => {
     if (!open || !usernameUrl) return;
@@ -44,7 +45,7 @@ export function SubscriberListModal({
   if (!open) return null;
 
   function remove(row: SubscriberRow) {
-    if (!window.confirm('Confirm delete subscription? - Yes or No')) return;
+    if (!window.confirm(tUi('delete_subscription_confirm'))) return;
     api
       .delete(`/me/incoming/${row.type}/${row.id}`)
       .then(() => {
@@ -86,7 +87,7 @@ export function SubscriberListModal({
             type="button"
             onClick={onClose}
             style={{ position: 'absolute', right: 6, top: 4, background: 'none', border: 0, fontSize: 45, color: '#fff', lineHeight: 1, cursor: 'pointer' }}
-            aria-label="Close"
+            aria-label={tUi('close')}
           >
             ×
           </button>
@@ -102,7 +103,7 @@ export function SubscriberListModal({
         <div style={{ textAlign: 'center' }}>
           {loaded && rows.length === 0 ? (
             <p style={{ margin: 0, textAlign: 'center', color: '#fff' }}>
-              This user have no subscribers or followers yet
+              {tUi('no_subscribers_yet')}
             </p>
           ) : (
             rows.map((r) => (
@@ -117,7 +118,7 @@ export function SubscriberListModal({
                 </p>
                 {isOwner && (
                   <div style={{ textAlign: 'right', marginBottom: -25, marginRight: -13 }}>
-                    <span onClick={() => remove(r)} title="Delete" style={{ cursor: 'pointer' }}>
+                    <span onClick={() => remove(r)} title={tUi('delete')} style={{ cursor: 'pointer' }}>
                       <i className="far fa-trash-alt" style={{ color: 'black' }}></i>
                     </span>
                   </div>

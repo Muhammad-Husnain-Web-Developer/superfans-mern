@@ -8,7 +8,12 @@ import { ApiError } from '../middleware/errors.js';
 import { saveBase64Media } from '../services/storage.js';
 import { paymentProvider } from '../services/payments/index.js';
 import { sendMail } from '../services/mailer.js';
-import { adCreatedUser, adCreatedAdmin, adStatusChanged } from '../services/adEmails.js';
+import {
+  adCreatedUser,
+  adCreatedAdmin,
+  adStatusChanged,
+  vipAccessRequestAdmin,
+} from '../services/adEmails.js';
 import { env } from '../config/env.js';
 import { User } from '../models/User.js';
 import { Post } from '../models/Post.js';
@@ -133,6 +138,33 @@ function profileDto(p: InstanceType<typeof AdUserProfile> | null) {
     companySize: p.companySize ?? '',
   };
 }
+
+/* ---------------- VIP access request (Super Video's VERIFICATE) ---------------- */
+/**
+ * The Super Video card is VIP-only, and its dialog's one button asks the admin to open it.
+ * The blade made that a `mailto:` — a broken one, with no domain — which does nothing at
+ * all on a machine with no mail client, and even repaired it only fills in a draft the
+ * advertiser still has to send. This sends the request, so the client actually receives it.
+ *
+ * Awaited rather than fired and forgotten, unlike the ad mails beside it: those ride along
+ * with work that has already succeeded, while here the mail IS the work, and the advertiser
+ * is told whether it went.
+ */
+adsRouter.post(
+  '/vip-request',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const me = await User.findById(req.auth!.userId, { name: 1, email: 1, role: 1 }).lean();
+    if (!me) throw ApiError.unauthorized();
+    const mail = vipAccessRequestAdmin({
+      userName: me.name ?? '',
+      userEmail: me.email ?? '',
+      role: me.role ?? 'user',
+    });
+    await sendMail(ADMIN_ADS_EMAIL, mail.subject, mail.html);
+    res.json({ success: true, message: 'Request sent' });
+  }),
+);
 
 /* ---------------- dashboard (index) ---------------- */
 adsRouter.get(

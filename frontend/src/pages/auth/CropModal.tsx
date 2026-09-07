@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 import { api } from '../../api/client';
@@ -20,6 +21,7 @@ interface CropModalProps {
  * crop → canvas 1095×1080 → base64 → POST → { filename }.
  */
 export function CropModal({ imageSrc, pictureType, onClose, onUploaded }: CropModalProps) {
+  const { t: tUi } = useTranslation('ui');
   const imgRef = useRef<HTMLImageElement>(null);
   const previewRef = useRef<HTMLDivElement>(null);
   const cropperRef = useRef<Cropper | null>(null);
@@ -63,13 +65,13 @@ export function CropModal({ imageSrc, pictureType, onClose, onUploaded }: CropMo
       <div className="crop-modal-dialog">
         <div className="crop-modal-content">
           <div className="crop-modal-header">
-            <button type="button" className="crop-modal-close" aria-label="Close" onClick={onClose}>
+            <button type="button" className="crop-modal-close" aria-label={tUi('close')} onClick={onClose}>
               <span aria-hidden="true">—</span>
             </button>
-            <h5 className="crop-modal-title">Recorta la imagen para subirla</h5>
+            <h5 className="crop-modal-title">{tUi('crop_image_title')}</h5>
             <p className="crop-modal-subtitle">
-              Estamos en <i>Beta Phase</i>. Pronto estará disponible subir imágenes HD en tu cover o
-              foto de perfil.
+              {/* the <i> around "Beta Phase" is part of the line, so it is rendered */}
+              <span dangerouslySetInnerHTML={{ __html: tUi('crop_beta_notice') }} />
             </p>
           </div>
           <div className="crop-modal-body">
@@ -84,10 +86,10 @@ export function CropModal({ imageSrc, pictureType, onClose, onUploaded }: CropMo
           </div>
           <div className="crop-modal-footer">
             <button type="button" className="crop-btn-cancel" onClick={onClose}>
-              Cancel
+              {tUi('cancel')}
             </button>
             <button type="button" className="crop-btn-crop" onClick={crop}>
-              Crop
+              {tUi('crop')}
             </button>
           </div>
         </div>

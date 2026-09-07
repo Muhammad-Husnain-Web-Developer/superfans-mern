@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { assetImage } from '../../utils/format';
@@ -35,6 +36,7 @@ export function News() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
+  const { t: tUi } = useTranslation('ui');
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -67,7 +69,7 @@ export function News() {
   }
 
   async function remove(id: string) {
-    if (!window.confirm('Delete this news?')) return;
+    if (!window.confirm(tUi('news_delete_confirm'))) return;
     await api.delete(`/news/${id}`);
     setFlash('News deleted');
     load();
@@ -75,7 +77,7 @@ export function News() {
 
   return (
     <div className="container mt-4">
-      <h2 className="mb-4">News Management</h2>
+      <h2 className="mb-4">{tUi('news_management')}</h2>
 
       {flash && (
         <div className="alert alert-success alert-dismissible fade show" role="alert">
@@ -87,41 +89,41 @@ export function News() {
       )}
 
       <button className="btn btn-primary mb-3" onClick={() => setShowForm((v) => !v)}>
-        Add New News
+        {tUi('news_add')}
       </button>
 
       {showForm && (
         <div className="card p-3 mb-4">
           <form onSubmit={submit}>
             <div className="form-group">
-              <label htmlFor="title">Title</label>
+              <label htmlFor="title">{tUi('title_label')}</label>
               <input type="text" className="form-control" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label htmlFor="content">Content</label>
+              <label htmlFor="content">{tUi('content_label')}</label>
               <textarea className="form-control" rows={4} value={content} onChange={(e) => setContent(e.target.value)} required />
             </div>
             <div className="form-group">
-              <label htmlFor="image">Optional Image</label>
+              <label htmlFor="image">{tUi('optional_image')}</label>
               <input type="file" className="form-control" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
             </div>
             <div className="form-group">
-              <label htmlFor="button_text">Optional Button Text</label>
-              <input type="text" className="form-control" placeholder="e.g., Read More" value={buttonText} onChange={(e) => setButtonText(e.target.value)} />
+              <label htmlFor="button_text">{tUi('optional_button_text')}</label>
+              <input type="text" className="form-control" placeholder={tUi('read_more_example')} value={buttonText} onChange={(e) => setButtonText(e.target.value)} />
             </div>
             <div className="form-group">
-              <label htmlFor="button_link">Optional Button Link</label>
+              <label htmlFor="button_link">{tUi('optional_button_link')}</label>
               <input type="url" className="form-control" placeholder="https://..." value={buttonLink} onChange={(e) => setButtonLink(e.target.value)} />
             </div>
             <div className="form-group">
-              <label htmlFor="status">Status</label>
+              <label htmlFor="status">{tUi('status_label')}</label>
               <select className="form-control" value={status} onChange={(e) => setStatus(e.target.value as 'active' | 'paused')}>
-                <option value="active">Active</option>
-                <option value="paused">Inactive</option>
+                <option value="active">{tUi('active')}</option>
+                <option value="paused">{tUi('inactive')}</option>
               </select>
             </div>
             <button type="submit" className="btn btn-success">
-              Post News
+              {tUi('news_post')}
             </button>
           </form>
         </div>
@@ -131,12 +133,12 @@ export function News() {
         <thead className="thead-dark">
           <tr>
             <th>ID</th>
-            <th>Title</th>
-            <th>Content</th>
-            <th>Image</th>
-            <th>Button</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>{tUi('title_label')}</th>
+            <th>{tUi('content_label')}</th>
+            <th>{tUi('image_label')}</th>
+            <th>{tUi('button_label')}</th>
+            <th>{tUi('status_label')}</th>
+            <th>{tUi('actions_label')}</th>
           </tr>
         </thead>
         <tbody>
@@ -147,7 +149,7 @@ export function News() {
               <td>{item.content.length > 100 ? `${item.content.slice(0, 100)}...` : item.content}</td>
               <td>
                 {item.image ? (
-                  <img src={assetImage(item.image)} width={80} alt="News Image" />
+                  <img src={assetImage(item.image)} width={80} alt={tUi('alt_news_image')} />
                 ) : (
                   <span className="text-muted">N/A</span>
                 )}
@@ -168,10 +170,10 @@ export function News() {
               </td>
               <td>
                 <button className="btn btn-sm btn-warning" onClick={() => navigate(`/influencer/news/${item.id}/edit`)}>
-                  Edit
+                  {tUi('edit')}
                 </button>{' '}
                 <button className="btn btn-sm btn-danger" onClick={() => void remove(item.id)}>
-                  Delete
+                  {tUi('delete')}
                 </button>
               </td>
             </tr>

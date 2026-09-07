@@ -74,11 +74,14 @@ function EditUser({ user, onClose, onSaved }: { user: AdminUser; onClose: () => 
     const amount = Number(earnings);
     const video = Number(videoAds);
     try {
-      await api.put(`/admin/users/${user.id}`, {
-        ...f,
-        ...(Number.isFinite(amount) && amount >= 0 ? { earnings: amount } : {}),
-        ...(Number.isFinite(video) && video >= 0 ? { videoAdsEarnings: video } : {}),
-      });
+      const money =
+        f.role === 'influencer'
+          ? {
+              ...(Number.isFinite(amount) && amount >= 0 ? { earnings: amount } : {}),
+              ...(Number.isFinite(video) && video >= 0 ? { videoAdsEarnings: video } : {}),
+            }
+          : {};
+      await api.put(`/admin/users/${user.id}`, { ...f, ...money });
       onSaved();
     } finally { setBusy(false); }
   }
@@ -105,6 +108,10 @@ function EditUser({ user, onClose, onSaved }: { user: AdminUser; onClose: () => 
         {/* One figure per user, as in Laravel: `users.earnings` is the total and
             earnings_logs only records what each payment was for. Video Ads has no bucket
             of its own, so this is where the client sets it. */}
+        {/* Only a creator earns — a fan pays and a business buys ads, and neither has a
+            payments block to show a figure in. The endpoint refuses it as well. */}
+        {f.role === 'influencer' && (
+        <>
         <div className="form-group">
           <label>Earnings (total, $)</label>
           <input
@@ -130,6 +137,8 @@ function EditUser({ user, onClose, onSaved }: { user: AdminUser; onClose: () => 
           />
           <small className="text-muted">Shown on its own line in the creator's control panel.</small>
         </div>
+        </>
+        )}
         <button className="btn btn-primary" disabled={busy}>Save</button>
       </form>
     </AdminModal>
