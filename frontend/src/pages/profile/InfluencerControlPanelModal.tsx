@@ -61,8 +61,8 @@ export function InfluencerControlPanelModal({
   const videoAdsDisplay = String(videoAds).includes('.') ? String(videoAds) : `${videoAds}.00`;
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [subListOpen, setSubListOpen] = useState(false);
-  // partnership — waits with the video-views row above
-  // const [partnershipOpen, setPartnershipOpen] = useState(false);
+  // partnership — waits with the video-views row abov
+  const [partnershipOpen, setPartnershipOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState(profile.name ?? '');
@@ -582,30 +582,25 @@ export function InfluencerControlPanelModal({
 
             <div className="container-fluid" style={{ paddingLeft: 0 }}>
               <div className="row pb-3">
-                <div className="col-xs-6">
+                {/* <div className="col-xs-6">
                   <div className="form-group" style={{ display: 'flex' }}>
                     <label style={{ color: 'white' }}>{t('subscriber_history')}</label>
                   </div>
-                </div>
+                </div> */}
                 <div className="col-xs-6" style={{ textAlign: 'end', paddingRight: 22 }}>
-                  <button
+                  {/* <button
                     type="button"
                     className="launch_subscriber_list_modal launch_sub_modal save_btn"
                     style={SAVE_BTN}
                     onClick={() => setSubListOpen(true)}
                   >
                     {t('see_all_button_cpanel')}
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
 
-            {/* ---- "Earnings from Video Views" — TAKEN OUT, NOT DELETED ----------------
-                Laravel hard-codes the $0.00 and shows "Not available until 10K Subscribers"
-                to everyone — an account with 713,346 followers included — so nothing here
-                ever did anything. Beside the working Video Ads Earnings line above it, it
-                read as a broken twin of it. Uncomment this block, and the three pieces
-                marked "partnership" below, to bring it back.
+          {}
 
             <div className="container-fluid" style={{ paddingLeft: 0 }}>
               <div className="row pb-3">
@@ -625,7 +620,6 @@ export function InfluencerControlPanelModal({
                 </div>
               </div>
             </div>
-            -------------------------------------------------------------------------- */}
 
             <h3 style={H3}>{t('payment_methods')}</h3>
 
@@ -811,92 +805,112 @@ export function InfluencerControlPanelModal({
         onClose={() => setSubListOpen(false)}
       />
 
-      {/* partnership — {partnershipOpen && <PartnershipModal onClose={() => setPartnershipOpen(false)} />} */}
+       {partnershipOpen && <PartnershipModal onClose={() => setPartnershipOpen(false)} />} 
     </div>
   );
 }
 
-// ---- partnership button + dialog: TAKEN OUT WITH THE VIDEO-VIEWS ROW ------------
-// Nothing reaches either once that row is commented out above. Line comments rather
-// than a block: PartnershipModal's own /** */ would close a block comment early.
-// /** The black two-line button beside the video-views figure (.open-btn in the blade). */
-// const PARTNERSHIP_BTN: React.CSSProperties = {
-//   background: '#000000',
-//   color: '#ffffff',
-//   padding: '3px 15px',
-//   fontWeight: 'bold',
-//   border: 0,
-//   outline: 0,
-// };
-//
-// /**
-//  * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
-//  *
-//  * The blade also carries a stray "Send Welcome Email" link to example@email.com inside this
-//  * box; it is placeholder debris, not something a creator should be shown, so it is left out.
-//  */
-// function PartnershipModal({ onClose }: { onClose: () => void }) {
-//   const { t } = useTranslation('content');
-//   return (
-//     <div
-//       style={{
-//         position: 'fixed',
-//         inset: 0,
-//         background: 'rgba(0,0,0,0.7)',
-//         zIndex: 999999999,
-//         display: 'flex',
-//         justifyContent: 'center',
-//         alignItems: 'center',
-//       }}
-//       onClick={onClose}
-//     >
-//       <div
-//         style={{
-//           width: '90%',
-//           maxWidth: 380,
-//           padding: '28px 22px',
-//           borderRadius: 7,
-//           textAlign: 'center',
-//           position: 'relative',
-//           color: '#fff',
-//           background: '#8a2be2',
-//         }}
-//         onClick={(e) => e.stopPropagation()}
-//       >
-//         <span
-//           onClick={onClose}
-//           style={{ position: 'absolute', top: 12, right: 14, fontSize: 24, cursor: 'pointer', opacity: 0.7 }}
-//         >
-//           &times;
-//         </span>
-//         <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 18, color: 'white' }}>
-//           {t('notavailable10k_title')}
-//         </h3>
-//         <p style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>
-//           {t('notavailable10k_message')}
-//         </p>
-//         <button
-//           type="button"
-//           onClick={onClose}
-//           style={{
-//             marginTop: 18,
-//             background: 'limegreen',
-//             color: 'white',
-//             padding: '10px 40px',
-//             fontSize: '0.9em',
-//             fontWeight: 600,
-//             cursor: 'pointer',
-//             border: '3px solid green',
-//             fontFamily:
-//               'Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace',
-//           }}
-//         >
-//           ⭐OK
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
+
+/** The black two-line button beside the video-views figure (.open-btn in the blade). */
+const PARTNERSHIP_BTN: React.CSSProperties = {
+  background: '#000000',
+  color: '#ffffff',
+  padding: '3px 15px',
+  fontWeight: 'bold',
+  border: 0,
+  outline: 0,
+};
+
+/**
+ * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
+ *
+ * The blade also carries a stray "Send Welcome Email" link to example@email.com inside this
+ * box; it is placeholder debris, not something a creator should be shown, so it is left out.
+ */
+/**
+ * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
+ */
+function PartnershipModal({ onClose }: { onClose: () => void }) {
+  const { t } = useTranslation('content');
+  const { user } = useAuth();
+
+  const emailSubject = encodeURIComponent('Partnership for generate incomes Ads in Video');
+  const emailBody = encodeURIComponent(
+    `Hello, my name is ${user?.name || '......'} and I request a Partnership for activate the Tool of EARNINGS VIDEO ADS.`
+  );
+  const mailtoLink = `mailto:superfansworldapp@gmail.com?subject=${emailSubject}&body=${emailBody}`;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(0,0,0,0.7)',
+        zIndex: 999999999,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          width: '90%',
+          maxWidth: 380,
+          padding: '28px 22px',
+          borderRadius: 7,
+          textAlign: 'center',
+          position: 'relative',
+          color: '#fff',
+          background: '#8a2be2',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span
+          onClick={onClose}
+          style={{ position: 'absolute', top: 12, right: 14, fontSize: 24, cursor: 'pointer', opacity: 0.7 }}
+        >
+          &times;
+        </span>
+        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 18, color: 'white' }}>
+          {t('notavailable10k_title')}
+        </h3>
+        <p style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>
+          {t('notavailable10k_message')}
+        </p>
+
+        {/* OK Button – opens email with pre-filled subject & body */}
+        <a
+          href={mailtoLink}
+          onClick={() => setTimeout(onClose, 300)}
+          style={{
+            display: 'inline-block',
+            marginTop: 18,
+            background: 'limegreen',
+            color: 'white',
+            padding: '10px 40px',
+            fontSize: '0.9em',
+            fontWeight: 600,
+            cursor: 'pointer',
+            border: '3px solid green',
+            fontFamily:
+              'Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace',
+            textDecoration: 'none',
+            transition: 'background-color 0.5s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'green';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'limegreen';
+          }}
+        >
+          OK
+        </a>
+      </div>
+    </div>
+  );
+}
 
 /** Withdraw-earnings modal — port of #withdraw_earnings_modal (≥$50, payout method set). */
 function WithdrawModal({

@@ -109,12 +109,47 @@ const IMPLIED_MIN = 10;
     from — without it that figure would have nothing to stand on */
 const SEED_VOTES = 100;
 
+// export function likePercent(
+//   likes: number,
+//   hates: number,
+//   seed?: number | null,
+//   post?: { id?: string | null; views?: number | null },
+// ): number | null {
+//   const id = post?.id ?? '';
+//   const views = post?.views ?? 0;
+
+//   let base = 0;
+//   let baseLikes = 0;
+//   if (id && views > 0) {
+//     const rate = ENGAGEMENT_MIN + postNoise(id, 'r') * (ENGAGEMENT_MAX - ENGAGEMENT_MIN);
+//     const liked =
+//       seed == null ? LIKED_MIN + postNoise(id, 'l') * (LIKED_MAX - LIKED_MIN) : seed / 100;
+//     base = Math.min(IMPLIED_CAP, Math.max(IMPLIED_MIN, Math.round(views * rate)));
+//     baseLikes = base * liked;
+//   } else if (seed != null) {
+//     base = SEED_VOTES;
+//     baseLikes = (seed / 100) * SEED_VOTES;
+//   }
+
+//   const total = base + likes + hates;
+//   if (total === 0) return null;
+//   const pct = Math.round(((baseLikes + likes) / total) * 100);
+//   if (pct >= 100) return 100;
+//   if (pct <= 0) return null;
+//   return pct;
+// }
+
 export function likePercent(
   likes: number,
   hates: number,
   seed?: number | null,
   post?: { id?: string | null; views?: number | null },
 ): number | null {
+  // ✅ FIX: Agar 0 votes hain → null return (middle bar, "Like" dikhega)
+  if (likes === 0 && hates === 0) {
+    return null;
+  }
+
   const id = post?.id ?? '';
   const views = post?.views ?? 0;
 
