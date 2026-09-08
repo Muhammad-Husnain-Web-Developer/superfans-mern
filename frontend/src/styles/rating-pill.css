@@ -161,10 +161,24 @@
     white-space: nowrap;
 }
 
+/* Once the viewer has liked, the 👎 half has nothing to report and stands back up on two
+   lines — the client's rule, and the room the "% Liked" beside it needs: measured, the half
+   goes from 66px to 44px, which is what lets "100% Liked" sit on the same 144px pill.
+   Only the wall's row is touched; the viewer's rail is stacked to begin with. */
+.stats-wrapper.has-actions .rating-pill.is-liked .hated-segment {
+    flex-direction: column;
+    gap: 0;
+}
+
 .stats-wrapper.has-actions .thumb-up,
 .stats-wrapper.has-actions .thumb-down {
     font-size: 13px;
     line-height: 1;
+}
+
+/* stacked, the thumb sits a hair above its word — the spacing the blade drew */
+.stats-wrapper.has-actions .rating-pill.is-liked .thumb-down {
+    margin-bottom: 1px;
 }
 
 .stats-wrapper.has-actions .liked-text,
@@ -407,7 +421,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 14px 4px 6px;
+    /* Uneven on purpose: the red above it is cut on the diagonal and overlaps 12px into this
+       box, so a little under half of that is hidden and the label has to sit that much lower
+       to read as centred in the grey the eye actually sees.
+       Measured at 14/6 the two-line label ("22% Hated") stood 1.4px taller than the box left
+       it and came out cramped against the foot of the pill; 13/5 keeps the same 8px lead and
+       gives it the room. */
+    padding: 13px 4px 5px;
     font-size: 11px;
     font-weight: bold;
 }

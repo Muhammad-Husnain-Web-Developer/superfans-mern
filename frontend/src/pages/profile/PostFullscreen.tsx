@@ -296,29 +296,38 @@ export function PostFullscreen() {
   }, [post, id, worldRun, stepIndex]);
 
   /**
-   * Start every clip with its sound on — the client does not want to tap for it.
+   * Play, and carry the sound the client asked for wherever the browser allows it.
    *
-   * A browser will not autoplay a loud video unless the page has been
-   * interacted with. Arriving here from the feed counts, since the tap that
-   * opened the post lands on this same document; opening the URL cold does not.
-   * So it asks for sound first and, only if that is refused, falls back to a
-   * muted playback and lifts the mute on the reader's next touch — which is
-   * better than a video that sits still.
+   * Muted is the only state a browser will start a clip in on its own, and the element itself
+   * now says so — an iPhone will not begin an unmuted video at all, and it will not be talked
+   * into one afterwards either: setting `muted = false` from script is not a tap, so Safari
+   * simply stops the clip. Asking for sound first is what left every video in the reel showing
+   * its poster and nothing else on an iPhone, which is what the client reported.
+   *
+   * So the sound is lifted only where the reader has already touched the page — arriving here
+   * from the feed counts, the tap that opened the post landing on this same document — and
+   * `navigator.userActivation` is what says whether that happened. Safari does not implement
+   * it, which is the right answer there anyway. If the lift is refused even so, the clip is
+   * quieted and restarted rather than left standing, and the tap that toggles sound still
+   * works from either state.
    */
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
     let cancelled = false;
+    /* React writes `muted` as a property and never as an attribute, and iOS reads the
+       attribute when it decides whether a clip may begin on its own. Written here it is
+       still in time: the wrapper is keyed on the post, so the element is a new one and its
+       media has not begun loading yet. */
+    v.setAttribute('muted', '');
     /* only the mute is ours to set — the volume is the reader's, and it already
        starts at full */
-    v.muted = false;
+    v.muted = !(navigator.userActivation?.hasBeenActive ?? false);
 
     void v.play().catch(() => {
-      /* refused for being loud — play it quietly rather than not at all. The
-         tap that already toggles the sound lifts this, so nothing extra
-         listens for it and nothing fights that toggle. */
-      if (cancelled) return;
+      /* refused for being loud — play it quietly rather than not at all */
+      if (cancelled || v.muted) return;
       v.muted = true;
       void v.play().catch(() => {});
     });
@@ -865,14 +874,16 @@ function doHate() {
                 src={LOCKED_POST_IMAGE}
                 alt={tUi('alt_locked')}
                 className="post-fs-locked"
-                style={{ width: 220, maxWidth: '60%', borderRadius: 26, border: '7px solid lightgray' }}
+                /* square corners, and wider: 60% was what actually held the tile back on a
+                   phone, so the cap moves with the width or the extra pixels do nothing */
+                style={{ width: 300, maxWidth: '78%', borderRadius: 26, border: '7px solid lightgray' }}
               />
               <a
                 href={author?.usernameUrl ? `/${author.usernameUrl}` : '#'}
                 onClick={(e) => { e.preventDefault(); if (author?.usernameUrl) navigate(`/${author.usernameUrl}`); }}
-                style={{ background: '#fff', border: '2px solid #d91e33', color: '#d91e33', borderRadius: 6, padding: '10px 18px', fontSize: 15, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                style={{ background: '#fff', border: '2px solid #d91e33', color: '#d91e33', borderRadius: 0, padding: '7px 13px', fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 ,marginLeft: 5, marginRight: 5}}
               >
-                <img src="/assets/images/SUPERHEROINA.svg" style={{ width: 22 }} alt="" />
+                <img src="/assets/images/SUPERHEROINA.svg" style={{ width: 18 }} alt="" />
                 {author?.role === 'influencer'
                   ? `${tContent('subscribe', { defaultValue: 'Subscribe' })} + ${tContent('to_see_post', { defaultValue: 'to see this post' })} | $${author?.priceOfSubscription ?? ''}`
                   : `${tContent('follow', { defaultValue: 'Follow' })} + ${tContent('to_see_post', { defaultValue: 'to see this post' })}`}
@@ -888,6 +899,10 @@ function doHate() {
                 className="post-fullscreen-media"
                 autoPlay
                 loop
+                /* iOS starts a clip inline only when the element itself declares this, and
+                   only from here — set from script a moment later it is too late, and the
+                   video stays on its poster. The effect above lifts it where it may. */
+                muted
                 playsInline
                 poster={post.thumbnail ? assetImage(`thumbnails/${post.thumbnail}`) : undefined}
               >

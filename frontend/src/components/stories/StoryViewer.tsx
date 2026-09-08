@@ -83,6 +83,7 @@ export function StoryViewer({
     else void v.play().catch(() => undefined);
   }, [menuOpen, swal]);
 
+
   useEffect(() => {
     let cancelled = false;
     setStories(null);
@@ -102,6 +103,22 @@ export function StoryViewer({
   }, [usernameUrl]);
 
   const current = stories && stories.length > index ? stories[index] : null;
+  /* Sound, where the browser will give it. A story is always reached by tapping its ring, so
+     the page has been touched and a desktop browser allows the lift; an iPhone never does —
+     asking there only stops the story — and `navigator.userActivation`, which Safari does not
+     implement, is what tells the two apart. Muted and playing beats silent and still. */
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !current || current.mediaType !== 'video') return;
+    /* the attribute React does not write, which is the one iOS reads — see the post viewer */
+    v.setAttribute('muted', '');
+    if (!(navigator.userActivation?.hasBeenActive ?? false)) return;
+    v.muted = false;
+    void v.play().catch(() => {
+      v.muted = true;
+      void v.play().catch(() => undefined);
+    });
+  }, [current]);
 
   const advance = useCallback(() => {
     setMenuOpen(false);
@@ -350,6 +367,10 @@ export function StoryViewer({
             key={current.id}
             ref={videoRef}
             autoPlay
+            /* the same rule the post viewer answers to: an iPhone begins a clip inline only
+               when the element declares this itself, and a story left without it stopped at
+               its first frame. The effect below lifts it where the browser allows sound. */
+            muted
             playsInline
             controls={false}
             onEnded={advance}

@@ -74,7 +74,11 @@ export function RatingPill({
           or 100 — while the number beside it stays true. The labels keep their places so a
           low mark cannot squeeze them out; only the fill moves, and it slides. */}
       <div
-        className="rating-pill"
+        /* `is-liked` stands the quiet 👎 half back up on two lines, which is the client's own
+           rule: "When you click LIKE, the HATE becomes vertical." It is also what makes room —
+           the half carrying the percentage needs the width, and stacked the other one gives up
+           22px of it. */
+        className={liked ? 'rating-pill is-liked' : 'rating-pill'}
         style={{ '--sf-fill': `${likeFill(likeLevel(pct))}%` } as React.CSSProperties}
       >
         <span className="rating-fill" aria-hidden="true" />

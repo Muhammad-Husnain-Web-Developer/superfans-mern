@@ -47,10 +47,26 @@ export function isVideoFile(filename: string | null): boolean {
   return VIDEO_EXTENSIONS.includes(ext);
 }
 
-/** `<source type>` from the file extension (Laravel maps .mov → video/quicktime). */
-export function videoMime(filename: string): string {
+/**
+ * What to put in `<source type>` — and, for a .mov, nothing at all.
+ *
+ * The blade names it `video/quicktime`, which is what the file honestly is. But a browser
+ * reads that attribute as a promise and drops any source it cannot keep: Chrome answers
+ * `canPlayType('video/quicktime')` with the empty string, so it skips the source without
+ * fetching a byte of it. Measured on one of our own files: `source error`, `currentSrc`
+ * empty, the clip never starts — twenty posts whose video simply never played.
+ *
+ * Left unnamed, the same file loads and plays: what is inside the QuickTime container is
+ * ordinary H.264, which Chrome reads once it looks. Safari, which does take .mov at its
+ * word, is no worse off — there is only one source, so nothing is being chosen between.
+ *
+ * `undefined` rather than an empty string: React then leaves the attribute off altogether,
+ * and an empty `type=""` is a promise of its own.
+ */
+export function videoMime(filename: string): string | undefined {
   const ext = filename.split('.').pop()?.toLowerCase() ?? 'mp4';
-  return `video/${ext === 'mov' ? 'quicktime' : ext}`;
+  if (ext === 'mov') return undefined;
+  return `video/${ext}`;
 }
 
 /** Media URL — same shape as Laravel's asset('assets/images/...') */
