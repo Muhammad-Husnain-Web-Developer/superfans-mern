@@ -161,11 +161,15 @@
     white-space: nowrap;
 }
 
-/* Once the viewer has liked, the 👎 half has nothing to report and stands back up on two
-   lines — the client's rule, and the room the "% Liked" beside it needs: measured, the half
-   goes from 66px to 44px, which is what lets "100% Liked" sit on the same 144px pill.
+/* Once a vote has been cast either way, the 👎 half stands up on two lines — 👎 over its
+   label rather than beside it.
+   After a like it is the quiet half and gives up the width the "% Liked" beside it needs
+   (measured: 66px down to 44px, which is what lets "100% Liked" sit on the same 144px pill).
+   After a hate it is the half carrying the figure, and standing up is how "28% Hated" fits
+   in the width it has. Before either, it reads across, which is how the client asked for it.
    Only the wall's row is touched; the viewer's rail is stacked to begin with. */
-.stats-wrapper.has-actions .rating-pill.is-liked .hated-segment {
+.stats-wrapper.has-actions .rating-pill.is-liked .hated-segment,
+.stats-wrapper.has-actions .rating-pill.is-hated .hated-segment {
     flex-direction: column;
     gap: 0;
 }
@@ -177,15 +181,38 @@
 }
 
 /* stacked, the thumb sits a hair above its word — the spacing the blade drew */
-.stats-wrapper.has-actions .rating-pill.is-liked .thumb-down {
+.stats-wrapper.has-actions .rating-pill.is-liked .thumb-down,
+.stats-wrapper.has-actions .rating-pill.is-hated .thumb-down {
     margin-bottom: 1px;
 }
+
+/* The red half keeps reading across — it is only ever the one word "Like" once a hate has
+   been cast — but it stops holding the width the like reading would have given it, so the
+   grey beside it can grow into the figure it now carries. That growth is the client's own
+   "the GRAY BAR GROWTHS", and a quarter of the pill is the floor he set under it. */
+.stats-wrapper.has-actions .rating-pill.is-hated .hated-segment {
+    /* the share the bar hands it, and the words are not squeezed under it */
+    min-width: 35%;
+    flex-shrink: 0;
+    /* The 14px on the left is the room the red's diagonal needs, and the client spotted that
+       the word does not need all of it: at 8px the figure still clears the slant by a margin
+       (measured: nothing of it falls under the cut) and the six it gives back are what let
+       "100% Hated" finish inside the pill. */
+    padding-left: 8px;
+}
+
 
 .stats-wrapper.has-actions .liked-text,
 .stats-wrapper.has-actions .hated-text {
     font-size: 11px;
     text-transform: capitalize;
     line-height: 1;
+}
+
+/* two points off the grey half's word once it carries a figure — the client's own, and what
+   lets "100% Hated" sit inside the quarter of the pill the bar leaves it */
+.stats-wrapper.has-actions .rating-pill.is-hated .hated-text {
+    font-size: 9px;
 }
 
 /* The blade dimmed this until the viewer had hated the post. The client asked for the
