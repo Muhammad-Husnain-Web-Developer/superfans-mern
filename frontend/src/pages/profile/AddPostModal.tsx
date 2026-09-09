@@ -22,6 +22,67 @@ interface AddPostModalProps {
 }
 
 /**
+ * One of the creator's own posts as it appears in either modal: the thumbnail with the eye
+ * and the bin under it. The blade repeats this markup in #add_post_modal and again in
+ * #all_post_modal (layouts_direct_user/footer.blade.php:2413 and :2578); it is written once
+ * here so the two cannot drift apart.
+ */
+function PostTile({
+  post,
+  onToggle,
+  onDelete,
+  toggleTitle,
+  deleteTitle,
+}: {
+  post: ProfilePost;
+  onToggle: () => void;
+  onDelete: () => void;
+  toggleTitle: string;
+  deleteTitle: string;
+}) {
+  return (
+    <div style={{ marginTop: 15, textAlign: 'center' }}>
+      {/* Every thumbnail in the same 70px box. The blade only caps the width, so a portrait
+          photo stands twice as tall as a landscape one and the rows come out ragged — the
+          client's drawing has them even. `cover` fills the box without squashing anything. */}
+      <div className="add-post-thumb">
+        {post.imageVideo && isVideoFile(post.imageVideo) ? (
+          <video
+            controls
+            loop
+            controlsList="nodownload"
+            poster={post.thumbnail ? assetImage(`thumbnails/${post.thumbnail}`) : undefined}
+          >
+            <source src={assetImage(post.imageVideo)} type={videoMime(post.imageVideo)} />
+          </video>
+        ) : (
+          <img src={post.imageVideo ? assetImage(post.imageVideo) : LOCKED_POST_IMAGE} alt="" />
+        )}
+      </div>
+      <div style={{ marginTop: 4 }}>
+        <i
+          className={`fa ${post.visible ? 'fa-eye' : 'fa-eye-slash'}`}
+          title={toggleTitle}
+          onClick={onToggle}
+          style={{ color: 'white', cursor: 'pointer', marginRight: 10 }}
+        ></i>
+        <i
+          className="fa fa-trash"
+          title={deleteTitle}
+          onClick={onDelete}
+          style={{ color: 'white', cursor: 'pointer' }}
+        ></i>
+      </div>
+    </div>
+  );
+}
+
+/** how many of the creator's posts the first modal shows before "ALL POSTS ..." takes over.
+    The blade stops at six (`->limit(6)`); the client asked for "a little bit more", and ten
+    is what his own drawing shows — two rows of five. */
+const POSTS_IN_MODAL = 10;
+
+/**
  * Pixel parity with #add_post_modal (layouts_influencer/footer.blade.php):
  * red rounded modal, superman icon, file input, people tagging with
  * suggestions, purple ✎ Post button, "My posts" management strip.
@@ -34,6 +95,10 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
      the page underneath never changed, so nothing at all happened on screen. It confirms
      the post now and then goes to the posts page, where the post itself is. */
   const [posted, setPosted] = useState(false);
+  /* #all_post_modal — the blade's second dialog, reached from "ALL POSTS ..." and left again
+     by the arrow at its top left (layouts_direct_user/footer.blade.php:2542, and the pair of
+     handlers at :5430 that swap one modal for the other). */
+  const [allOpen, setAllOpen] = useState(false);
   const { t } = useTranslation('content');
   const { t: tUi } = useTranslation('ui');
   const { t: tNav } = useTranslation('nav');
@@ -127,8 +192,12 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
     >
       {/* the margin lives in the stylesheet: it has to change at 768px, which an
           inline style cannot express */}
+      {/* the blade hides this one the moment the second opens
+          (`$('#add_post_modal').modal('hide')`, footer.blade.php:5434) and shows it again on
+          the way back, so the two are never on screen together */}
       <div
         className="modal-dialog modal-dialog-centered add-post-dialog"
+        hidden={allOpen}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content" style={{ borderRadius: 20, background: 'red' }}>
@@ -303,75 +372,111 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
               {t('my_posts', { defaultValue: 'My posts' })}
             </p>
 
-            <div className="container-fluid">
-              <div className="row" style={{ display: 'flex', flexWrap: 'wrap' }}>
-                <div className="col-md-9" style={{ flex: '1 1 70%' }}>
-                  {myPosts.slice(0, 6).map((p) => (
-                    <div
-                      key={p.id}
-                      style={{
-                        paddingLeft: '3%',
-                        paddingRight: '3%',
-                        display: 'inline-block',
-                        marginTop: 15,
-                        textAlign: 'center',
-                      }}
-                    >
-                      {p.imageVideo && isVideoFile(p.imageVideo) ? (
-                        <video
-                          controls
-                          loop
-                          controlsList="nodownload"
-                          style={{ maxWidth: 70, border: 0, marginBottom: -6 }}
-                          poster={p.thumbnail ? assetImage(`thumbnails/${p.thumbnail}`) : undefined}
-                        >
-                          <source src={assetImage(p.imageVideo)} type={videoMime(p.imageVideo)} />
-                        </video>
-                      ) : (
-                        <img
-                          src={p.imageVideo ? assetImage(p.imageVideo) : LOCKED_POST_IMAGE}
-                          style={{ maxWidth: 70, display: 'inline-block' }}
-                          alt=""
-                        />
-                      )}
-                      <div style={{ marginTop: 4 }}>
-                        <i
-                          className={`fa ${p.visible ? 'fa-eye' : 'fa-eye-slash'}`}
-                          title={tUi('toggle_visibility')}
-                          onClick={() => void toggleVisibility(p.id)}
-                          style={{ color: 'white', cursor: 'pointer', marginRight: 10 }}
-                        ></i>
-                        <i
-                          className="fa fa-trash"
-                          title={tUi('delete')}
-                          onClick={() => void deletePost(p.id)}
-                          style={{ color: 'white', cursor: 'pointer' }}
-                        ></i>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="col-md-3" style={{ flex: '1 1 30%', marginTop: 15 }}>
-                  <button
-                    type="button"
-                    onClick={() => void toggleAll()}
-                    style={{
-                      background: 'transparent',
-                      color: 'white',
-                      border: '2px solid white',
-                      padding: '4px 10px',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                    }}
-                  >
-                    {tUi('toggle_all')}
-                  </button>
-                </div>
+            {/* Show/Hide all sits under that heading, where the client asked for it — the
+                blade has it away at the foot of the strip, past the posts. */}
+            <button
+              type="button"
+              onClick={() => void toggleAll()}
+              className="add-post-toggle-all"
+            >
+              <i className="fa fa-eye" aria-hidden="true"></i> {tUi('toggle_all')}
+            </button>
+
+            {/* The run of posts with "ALL POSTS ..." standing the full height of it at the
+                right. The blade centres that button under the strip instead; the client drew
+                it upright beside the posts, which is what this is. */}
+            <div className="add-post-mine">
+              <div className="add-post-grid">
+                {myPosts.slice(0, POSTS_IN_MODAL).map((p) => (
+                  <PostTile
+                    key={p.id}
+                    post={p}
+                    onToggle={() => void toggleVisibility(p.id)}
+                    onDelete={() => void deletePost(p.id)}
+                    toggleTitle={tUi('toggle_visibility')}
+                    deleteTitle={tUi('delete')}
+                  />
+                ))}
               </div>
+              <button type="button" className="add-post-all-btn" onClick={() => setAllOpen(true)}>
+                {t('all_posts', { defaultValue: 'All Posts' })} ...
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {allOpen && (
+        <div
+          className="modal-dialog modal-dialog-centered add-post-dialog add-post-all-dialog"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="modal-content" style={{ borderRadius: 20, background: 'red' }}>
+            <div className="modal-header" style={{ border: 0 }}>
+              {/* the arrow the blade puts at the left, which closes this and brings the first
+                  dialog back rather than dropping the creator out of both */}
+              <button
+                type="button"
+                className="close d-block add-post-back"
+                onClick={() => setAllOpen(false)}
+                aria-label={tUi('back')}
+              >
+                <i className="fas fa-arrow-left" aria-hidden="true"></i>
+              </button>
+              <button
+                type="button"
+                className="close d-block"
+                onClick={onClose}
+                aria-label={tUi('close')}
+                style={{
+                  fontSize: 45,
+                  opacity: 1,
+                  color: 'white',
+                  background: 'transparent',
+                  border: 0,
+                  float: 'right',
+                  lineHeight: 1,
+                  cursor: 'pointer',
+                }}
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+              <div style={{ textAlign: 'center', marginTop: 35 }}>
+                <img
+                  src={assetImage('superman2.png')}
+                  style={{ display: 'inline-block', height: 51 }}
+                  alt=""
+                />
+                <h5
+                  className="modal-title"
+                  style={{ fontSize: 30, textAlign: 'center', color: 'white', display: 'inline-block' }}
+                >
+                  {t('all_posts', { defaultValue: 'All Posts' })}
+                </h5>
+              </div>
+            </div>
+
+            <div className="modal-body post-modal" style={{ border: 0, padding: 15 }}>
+              <p style={{ color: 'white', fontWeight: 600, margin: 0, marginTop: 20 }}>
+                {t('my_posts', { defaultValue: 'My posts' })}
+              </p>
+              {/* every one of them here, where the first dialog showed only the newest ten */}
+              <div className="add-post-grid add-post-grid-all">
+                {myPosts.map((p) => (
+                  <PostTile
+                    key={p.id}
+                    post={p}
+                    onToggle={() => void toggleVisibility(p.id)}
+                    onDelete={() => void deletePost(p.id)}
+                    toggleTitle={tUi('toggle_visibility')}
+                    deleteTitle={tUi('delete')}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

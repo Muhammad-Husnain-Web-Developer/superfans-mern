@@ -38,6 +38,7 @@ import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { SubscriberListModal } from './SubscriberListModal';
 import { SubscribeModal } from './SubscribeModal';
 import { PremiumFanModal } from '../../components/PremiumFanModal';
+import { ChatWithModal } from './ChatWithModal';
 
 /** Bio with newlines → line breaks (nl2br) and @mentions linked, as the Blade page does. */
 export function Bio({ bio }: { bio: string }) {
@@ -408,9 +409,9 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   useEffect(() => {
     if (paymentStatus) {
       setSwal({
-        icon: paymentStatus.includes('successful') ? 'success' : 'error',
-        title: paymentStatus.includes('successful') ? 'Success' : 'Payment',
-        text: paymentStatus,
+        icon: paymentStatus.ok ? 'success' : 'error',
+        title: tUi(paymentStatus.ok ? 'payment_success_title' : 'payment_title'),
+        text: paymentStatus.message,
       });
     }
   }, [paymentStatus]);
@@ -514,6 +515,10 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
 
   // last posts shown on the wall (Laravel: limit 2, newest first)
   const lastPosts = posts.slice(0, 2);
+  /* what gives a viewer a claim on a hidden post, the All Posts page's own rule: a creator is
+     subscribed to, a fan is followed. */
+  const viewerHasAccess =
+    profile.role === 'influencer' ? profile.viewerSubscribed : profile.viewerFollowing;
   const isOwner = authUser?.usernameUrl === profile.usernameUrl;
 
   return (
@@ -1059,7 +1064,14 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                 <PostItem
                   key={post.id}
                   post={post}
-                  locked={profile.role === 'influencer' && !isOwner && !post.visible}
+                  /* The same test the All Posts page makes (Posts.tsx, from user_posts.blade):
+                     the owner sees everything, and for anyone else a post is locked only when it
+                     is hidden AND they have no claim on it — subscribed to a creator, following
+                     a fan. This wall had neither half of that. It asked whether the profile
+                     belonged to a creator and whether the post was hidden, and stopped there,
+                     so a subscriber still met a padlock on a creator's wall while a hidden post
+                     on a fan's wall was shown to everybody. */
+                  locked={!isOwner && !post.visible && !viewerHasAccess}
                   author={{
                     usernameUrl: profile.usernameUrl,
                     profilePicture: profile.profilePicture,
@@ -1171,13 +1183,22 @@ export function FollowButtons({
 }) {
   const { t } = useTranslation('content');
   const { t: tUi } = useTranslation('ui');
-  const navigate = useNavigate();
+  /* who is looking — the chat dialog writes as them and draws their picture beside their
+     own lines */
+  const { user: viewer } = useAuth();
   const [following, setFollowing] = useState(profile.viewerFollowing);
   const [subscribed, setSubscribed] = useState(profile.viewerSubscribed);
   const [busy, setBusy] = useState(false);
   const [subModalOpen, setSubModalOpen] = useState(false);
   /* the one dialog left behind the ✉️: the $10 that buys the right to write */
   const [premiumOpen, setPremiumOpen] = useState(false);
+  /* `?chat=1` comes back on the premium checkout's return: the fan has just bought the right
+     to write, so the dialog opens on arrival rather than making them find the ✉️ again. Read
+     once, at the first render, and the flag is taken out of the address with the payment's
+     own params so a reload does not raise it a second time. */
+  const [chatOpen, setChatOpen] = useState(
+    () => new URLSearchParams(window.location.search).get('chat') === '1',
+  );
 
   /* keep the button in sync when the parent refetches the profile (e.g. after a
      payment reconciles the subscription). */
@@ -1256,11 +1277,12 @@ export function FollowButtons({
       setSubModalOpen(true);
       return;
     }
-    /* Writing happens on the Messages page, not in a dialog of its own: it is the same
-       /chatbox conversation either way, and the client wants the fan to land in the real
-       inbox with the creator open. A pair who have never written to each other yet are
-       opened all the same — the page takes the handle and starts an empty thread. */
-    if (canWrite) navigate(`/user/messages?to=${profile.usernameUrl}`);
+    /* The blade's own dialog, back where it was. It was the Messages page for a while — the
+       same /chatbox conversation either way, and landing in the real inbox was the client's
+       call at the time — but he has asked for the blade's "Chat with @name" again, so that is
+       what opens. Nothing is lost by it: a message written here is the same thread the inbox
+       shows. */
+    if (canWrite) setChatOpen(true);
     else setPremiumOpen(true);
   }
 
@@ -1343,6 +1365,17 @@ export function FollowButtons({
           usernameUrl={profile.usernameUrl}
           profilePicture={profile.profilePicture}
           onClose={() => setPremiumOpen(false)}
+        />
+      )}
+
+      {chatOpen && viewer && (
+        <ChatWithModal
+          influencerId={profile.id}
+          usernameUrl={profile.usernameUrl}
+          profilePicture={profile.profilePicture}
+          viewerId={viewer.id}
+          viewerPicture={viewer.profilePicture}
+          onClose={() => setChatOpen(false)}
         />
       )}
     </div>

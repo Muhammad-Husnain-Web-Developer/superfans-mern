@@ -66,7 +66,7 @@ export function MyAds() {
       <div className="main">
         <h2 className="mb-4">Manage My Ads</h2>
         {paymentStatus && (
-          <div className="alert alert-info">{paymentStatus}</div>
+          <div className="alert alert-info">{paymentStatus.message}</div>
         )}
 
         {loading ? (

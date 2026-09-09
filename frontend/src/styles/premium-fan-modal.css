@@ -109,7 +109,7 @@
    with the blade's yellow over it. `margin-right: 10px` is the blade's own. */
 .premium-be-fan {
   display: inline-block;
-  margin: 0 10px 0 0;
+  margin: 0;
   padding: 7.5px 13.2px;
   border-radius: 3px;
   background-color: #ffeb3b;
@@ -129,8 +129,40 @@
   text-decoration: none;
 }
 
+/* the pair sits centred, OK first — the order and the 10px between them are the client's
+   own screen and the blade's `margin-right: 10px` on the yellow one */
 .premium-btn-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   margin-top: 1.2em;
+}
+
+/* SweetAlert's confirm button, in the colours the layout paints every one of them:
+   `.swal2-confirm { color: black !important; background: white !important }`
+   (layouts_direct_user/main.blade.php:344-347). The geometry is swal's `.swal2-styled`,
+   the same one the yellow button beside it carries, so the two stand the same height. */
+.premium-ok {
+  display: inline-block;
+  margin: 0;
+  padding: 7.5px 13.2px;
+  border: 0;
+  border-radius: 3px;
+  background: #fff;
+  color: #000;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+/* `.swal2-confirm:hover` from the same block: the white gives way and the purple edge shows */
+.premium-ok:hover {
+  outline: 2px solid #7500a8;
+  color: #fff;
+  background: transparent;
 }
 
 /* class="btn btn-success" — Bootstrap's geometry, with the blade's border and its

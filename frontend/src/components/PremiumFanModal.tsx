@@ -94,7 +94,18 @@ export function PremiumFanModal({
               <span dangerouslySetInnerHTML={bladeHtml(t('description_premium_fan'))} />
               {/* the blade separates these with <br><br>; the row carries the gap as a
                   margin instead, so it matches the spacing every other dialog uses */}
+              {/* Two buttons, OK first. OK is SweetAlert's own confirm button — the copy of the
+                  blade we hold turns it off (`showConfirmButton: false`), but the client's live
+                  screen shows it, so it is drawn. White on black is not a choice either: the
+                  layout paints every swal confirm that way
+                  (layouts_direct_user/main.blade.php:344-347). It does what OK does — closes
+                  the dialog and leaves the fan where they were. */}
               <div className="premium-btn-row">
+                {/* "OK" is not translated: it is SweetAlert's own default confirm text, which
+                    the blade never overrides — the client's Spanish screen reads OK too. */}
+                <button type="button" className="premium-ok" onClick={onClose}>
+                  OK
+                </button>
                 <button type="button" className="premium-be-fan" onClick={() => setStep('pay')}>
                   {t('button_premium_fan')}
                 </button>

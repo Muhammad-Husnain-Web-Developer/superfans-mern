@@ -63,10 +63,14 @@ paymentsRouter.post(
       /* `payment`, not a name of this flow's own: usePaymentReturn keys off that one word,
          and it is what reconciles the charge on the way back. Every other checkout here
          uses it; this one did not, so the fan returned with the money taken and no access.
-         The fan lands in the inbox rather than back on the profile — what they paid for is
-         the right to write, so `to` opens the creator's conversation ready for the first
-         message. A cancelled payment goes back to the profile they came from. */
-      successUrl: `${APP}/user/messages?payment=success&session_id={CHECKOUT_SESSION_ID}&to=${influencer.usernameUrl}`,
+
+         Back to the creator's own profile, which is where the blade leaves them —
+         `return back()->with('message_subscription', ...)` (UserController@stripePostPremium).
+         It went to the inbox for a while; the client has since asked for the blade's dialog
+         back, and the dialog lives on the profile. `chat=1` opens it on arrival, so the fan
+         is not made to find the ✉️ again for something they have just paid for. A cancelled
+         payment lands on the same page without it. */
+      successUrl: `${APP}/${influencer.usernameUrl}?payment=success&session_id={CHECKOUT_SESSION_ID}&chat=1`,
       cancelUrl: `${APP}/${influencer.usernameUrl}?payment=cancelled`,
     });
     res.json({ success: true, url });

@@ -17,3 +17,113 @@
     margin: 30px auto;
   }
 }
+
+/* ---- "Mis publicaciones" — the strip of the creator's own posts -----------------------
+ *
+ * The blade lays this out as a Bootstrap row: `col-md-9` of posts capped at six, the
+ * Show/Hide all button away in a `col-md-3`, and an "All Posts" button centred underneath
+ * (layouts_direct_user/footer.blade.php:2425-2519). The client redrew it: Show/Hide all
+ * under the heading, ten posts instead of six, and "ALL POSTS ..." standing upright beside
+ * them. These rules are that drawing; the colours are the modal's own red and white.
+ */
+
+/* under the heading, where the client put it */
+.add-post-toggle-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 12px;
+  border: 2px solid #fff;
+  border-left: 6px solid #fff;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.add-post-mine {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* five to a row, so ten fill the two rows the client drew */
+.add-post-grid {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+/* the upright button at the end of the run: it takes the height of both rows, which is what
+   `align-items: stretch` on the row above gives it */
+.add-post-all-btn {
+  flex: 0 0 84px;
+  border: 5px solid #fff;
+  height: 200px;
+  background: transparent;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  cursor: pointer;
+  padding: 8px 6px;
+  margin-top: 20px;
+}
+.add-post-all-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* the second dialog holds every post, so it is given room to run and scrolls */
+.add-post-grid-all {
+  margin-top: 6px;
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+/* the arrow that goes back to the first dialog — the blade's own 27px, floated left */
+.add-post-back {
+  float: left;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 27px;
+  line-height: 1;
+  opacity: 1;
+  cursor: pointer;
+}
+
+/* on a phone five across would leave thumbnails too small to pick out */
+@media screen and (max-width: 560px) {
+  .add-post-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .add-post-all-btn {
+    flex-basis: 64px;
+    font-size: 11px;
+  }
+}
+
+/* one box for every thumbnail, so the rows line up whatever shape the photo is */
+.add-post-thumb {
+  width: 70px;
+  height: 70px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.15);
+}
+.add-post-thumb img,
+.add-post-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border: 0;
+}

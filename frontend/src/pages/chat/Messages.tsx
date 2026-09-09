@@ -183,7 +183,7 @@ export function Messages() {
             pointerEvents: 'none',
           }}
         >
-          {paymentStatus}
+          {paymentStatus.message}
         </div>
       )}
       <div className="row g-0" style={{ height: '100%', margin: 0 }}>

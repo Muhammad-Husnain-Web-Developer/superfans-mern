@@ -324,7 +324,7 @@ export function MerchandisingShow() {
 
         {(paymentStatus || notice) && (
           <p style={{ textAlign: 'center', color: '#856404', background: '#fff3cd', padding: 10 }}>
-            {paymentStatus || notice}
+            {paymentStatus?.message ?? notice}
           </p>
         )}
 

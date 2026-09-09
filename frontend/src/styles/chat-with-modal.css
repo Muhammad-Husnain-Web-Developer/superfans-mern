@@ -1,0 +1,234 @@
+/* "Chat with @name" — the dialog the profile's ✉️ raises.
+ *
+ * The blade opens it as a SweetAlert (user_profile.blade.php:1461-1497) and SweetAlert2 is not
+ * a dependency here, so the box is drawn by hand. Every number below was read off the client's
+ * own running screen rather than guessed at: the modal was measured pixel by pixel from the
+ * screenshot he supplied, scaled by its 600px width (678px in the image, so 1.13), and the
+ * colours sampled from it.
+ *
+ * Note this is NOT the dialog in our read-only Laravel copy at ../superfans — that one still
+ * carries a "Chat with @name" heading, a hairline grey input and no rule under the button. The
+ * client's live site has moved on from it, and his screen is what these values follow. Where a
+ * value survives from the older blade it is marked as such.
+ */
+
+.chatwith-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* 600px and #8a2be2 are the two values the older blade and the client's screen agree on:
+   `width: 600` on the Swal call, and `.swal2-modal { background: #8a2be2 }` from the layout
+   (layouts_direct_user/main.blade.php:335). The corner is rounder than SweetAlert's own 5px —
+   measured about 24px on his screen. */
+.chatwith-pop {
+  position: relative;
+  margin: auto;
+  width: 600px;
+  max-width: 96%;
+  padding: 0 0 22px;
+  border-radius: 24px;
+  background: #8a2be2;
+  color: #fff;
+  /* the blade's page sets `html { font-size: 10px }`, so the layout's `.swal2-popup
+     { font-size: 1.2rem }` lands on 12px — measured, not assumed */
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 12px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* showCloseButton: true — 36px, #ccc, 30px glyph, off the older blade's own rendering */
+.chatwith-close {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #ccc;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 30px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.1s;
+}
+.chatwith-close:hover {
+  color: #fff;
+}
+
+/* iconHtml: 92px round with a 4px white ring — the blade's own markup, and the client's
+   screen draws it the same size */
+.chatwith-icon {
+  display: block;
+  width: 92px;
+  height: 92px;
+  margin: 22px auto 14px;
+  border-radius: 74px;
+  border: 4px solid #fff;
+  object-fit: cover;
+}
+
+/* The heading is gone. The older blade titles the dialog "Chat with @name"; the client's
+   screen goes straight from the picture to the box you write in, so nothing is drawn here. */
+
+.chatwith-body {
+  /* Measured off his screen: the white of the field is 404px across and its violet edge 6px,
+     so the box is 416 of the 600 and the air either side is 92. */
+  padding: 0 92px;
+  text-align: left;
+}
+
+/* White field inside a thick violet edge — measured 6px of #6a0bc9 around a white fill. The
+   older blade drew a 1px #ccc hairline instead; this is the client's own screen. */
+.chatwith-input {
+  display: block;
+  width: 100%;
+  /* 70px of white inside the 6px edge, measured — 82 with the border, border-box below */
+  height: 82px;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 6px solid #6a0bc9;
+  border-radius: 4px;
+  background: #fff;
+  color: #000;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.35;
+  outline: none;
+  resize: none;
+}
+.chatwith-input::placeholder {
+  color: #a9a9a9;
+}
+
+/* `<div style="text-align: right">` in the blade, and on the client's screen too */
+.chatwith-send-row {
+  margin-top: 14px;
+  text-align: right;
+}
+
+/* Bright green in a dark green edge, square-cornered — the colours measured off the client's
+   own screen, #17c948 inside 6px of #067a0b. (The older blade's button was Bootstrap's
+   #5cb85c in a 2px #409c40.)
+   The size is the login page's button rather than the 87x35 the screenshot shows: the client
+   asked for these two to match, and has each time asked for the size alone — "just size not
+   color or font". #sendlogin measures 96 x 44 (layout-direct-user.css:1094), so that is what
+   is set here, edge included. */
+.chatwith-send {
+  display: inline-block;
+  box-sizing: border-box;
+  min-width: 96px;
+  height: 44px;
+  padding: 0 12px;
+  border: 6px solid #067a0b;
+  border-radius: 0;
+  background: #17c948;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.chatwith-send:hover {
+  background: #14b840;
+}
+.chatwith-send:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+/* The dashed rule between the composer and the history. Measured 7px thick in #6b0bce, a
+   20px dash against a 7px gap — too long a dash for `border-top: dashed`, which draws its own
+   ratio, so the run is painted instead. The dashes on his screen have rounded ends; a
+   repeating gradient cannot round each one, which is the single place this drawing is an
+   approximation rather than a measurement. */
+.chatwith-rule {
+  height: 7px;
+  margin: 20px 0 14px;
+  border-radius: 4px;
+  background-image: repeating-linear-gradient(
+    to right,
+    #6b0bce 0,
+    #6b0bce 20px,
+    transparent 20px,
+    transparent 27px
+  );
+}
+
+/* max-height: 300px and the 10px padding are the blade's own, and his screen keeps them */
+.chatwith-box {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0;
+  text-align: left;
+}
+
+.chatwith-msg {
+  margin-bottom: 14px;
+  word-break: break-word;
+}
+
+/* "Sent 16 Abril" — a lighter tint of the ground, regular weight, above each message */
+.chatwith-sent {
+  color: #d9c2f5;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* the small round picture and who is speaking, on one line */
+.chatwith-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* 32px round with a white ring — the blade's own figures for the line's little avatar */
+.chatwith-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 74px;
+  border: 4px solid #fff;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.chatwith-text {
+  margin-top: 4px;
+  font-size: 15px;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.chatwith-error {
+  margin: 10px 0 0;
+  color: #ffd7d7;
+  font-size: 12px;
+}
+
+.chatwith-empty {
+  margin: 0;
+  color: #d9c2f5;
+  font-size: 13px;
+}
+
+/* On a phone the 85px inset would leave almost nothing to write in */
+@media screen and (max-width: 560px) {
+  .chatwith-body {
+    padding: 0 20px;
+  }
+}
