@@ -893,9 +893,17 @@ function doHate() {
                 style={{ background: '#fff', border: '2px solid #d91e33', color: '#d91e33', borderRadius: 0, padding: '7px 13px', fontSize: 13, fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 ,marginLeft: 5, marginRight: 5}}
               >
                 <img src="/assets/images/SUPERHEROINA.svg" style={{ width: 18 }} alt="" />
-                {author?.role === 'influencer'
-                  ? `${tContent('subscribe', { defaultValue: 'Subscribe' })} + ${tContent('to_see_post', { defaultValue: 'to see this post' })} | $${author?.priceOfSubscription ?? ''}`
-                  : `${tContent('follow', { defaultValue: 'Follow' })} + ${tContent('to_see_post', { defaultValue: 'to see this post' })}`}
+                {author?.role === 'influencer' ? (
+                  <>
+                    {tContent('subscribe', { defaultValue: 'Subscribe' })}<b style={{ marginLeft: '-5px', fontWeight: 900 }}>+</b>{' '}
+                    {tContent('to_see_post', { defaultValue: 'to see the post' })} | ${author?.priceOfSubscription ?? ''}
+                  </>
+                ) : (
+                  <>
+                    {tContent('follow', { defaultValue: 'Follow' })}<b>+</b>{' '}
+                    {tContent('to_see_post', { defaultValue: 'to see the post' })}
+                  </>
+                )}
               </a>
             </div>
           ) : media && isVideoFile(media) ? (
@@ -956,7 +964,7 @@ function doHate() {
             className="post-fs-follow-btn"
             onClick={isPaidCreator ? () => setSubOpen(true) : follow}
           >
-            {isPaidCreator ? tUi('subscribe_plus') : tUi('follow_plus')}
+            {isPaidCreator ? tUi('subscribe_plus') : tUi('follow_plus')}<b>+</b>
           </button>
         )}
       </div>}

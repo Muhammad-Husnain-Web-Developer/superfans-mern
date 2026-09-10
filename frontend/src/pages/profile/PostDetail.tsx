@@ -233,13 +233,13 @@ export function PostDetail() {
                   />
                   {post.influencer?.role === 'influencer' ? (
                     <>
-                      {t('subscribe', { defaultValue: 'Subscribe' })} <b>+</b>{' '}
+                      {t('subscribe', { defaultValue: 'Subscribe' })}<b style={{ marginLeft: '-5px', fontWeight: 900 }}>+</b>{' '}
                       {t('to_see_post', { defaultValue: 'to see the post' })} |{' '}
                       <b>${post.influencer.priceOfSubscription ?? ''}</b>
                     </>
                   ) : (
                     <>
-                      {t('follow', { defaultValue: 'Follow' })} <b>+</b>{' '}
+                      {t('follow', { defaultValue: 'Follow' })}<b>+</b>{' '}
                       {t('to_see_post', { defaultValue: 'to see the post' })}
                     </>
                   )}
