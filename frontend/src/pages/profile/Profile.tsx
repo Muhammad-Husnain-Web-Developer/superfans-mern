@@ -781,7 +781,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
             {/* @username + verified + report dropdown */}
             <div style={{ display: 'block', position: 'relative' }}>
               {/* client change: nicknames read bold, as they already do in the world feed */}
-              <span style={{ userSelect: 'text', fontWeight: 700 }}>
+              <span style={{ userSelect: 'text', fontWeight: 500 }}>
                 @{profile.usernameUrl}{' '}
                 {profile.verified && (
                   <img
