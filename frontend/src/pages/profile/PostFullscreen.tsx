@@ -165,6 +165,11 @@ export function PostFullscreen() {
   const [expanded, setExpanded] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
+  /* What the reader themselves chose about the sound, and nothing else: `null` until they
+     have touched it. The reel swaps one clip for another as they scroll, and each new one
+     used to work its own mute out from scratch — so a reader who had turned the sound off
+     had it come back on at the next post, which is what the client reported. */
+  const mutePref = useRef<boolean | null>(null);
   const lastTap = useRef(0);
   const singleTapTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStart = useRef({ x: 0, y: 0 });
@@ -321,9 +326,11 @@ export function PostFullscreen() {
        still in time: the wrapper is keyed on the post, so the element is a new one and its
        media has not begun loading yet. */
     v.setAttribute('muted', '');
-    /* only the mute is ours to set — the volume is the reader's, and it already
-       starts at full */
-    v.muted = !(navigator.userActivation?.hasBeenActive ?? false);
+    /* Their own choice wins, and it carries from clip to clip. Only when they have not made
+       one does the guess below stand in: sound where the page has already been touched,
+       quiet where it has not (an iPhone, always). Volume itself is never ours to set — it
+       starts at full and stays where the reader leaves it. */
+    v.muted = mutePref.current ?? !(navigator.userActivation?.hasBeenActive ?? false);
 
     void v.play().catch(() => {
       /* refused for being loud — play it quietly rather than not at all */
@@ -568,6 +575,8 @@ function doHate() {
       singleTapTimer.current = setTimeout(() => {
         singleTapTimer.current = null;
         v.muted = !v.muted;
+        /* remembered, so the next clip in the reel opens the way they left this one */
+        mutePref.current = v.muted;
       }, 400);
     }
     lastTap.current = now;
