@@ -217,7 +217,14 @@ function UserPicker({ picked, onPick }: { picked: PickedUser | null; onPick: (u:
       api
         .get<{ users: PickedUser[] }>(`/admin/all-users?search=${encodeURIComponent(value.trim())}`)
         .then((r) => {
-          setHits(r.data.users.slice(0, 8)); /* the site's list shows eight, as the blades' plugin does */
+          /* The search answers in id order and matches anywhere in the email too, so the
+             account actually being typed could sit past the eighth row. Closest first:
+             username beginning with the term, then email, then the rest as they came. */
+          const term = value.trim().toLowerCase();
+          const rank = (u: PickedUser) =>
+            u.usernameUrl.toLowerCase().startsWith(term) ? 0 : u.email.toLowerCase().startsWith(term) ? 1 : 2;
+          const sorted = r.data.users.map((u, i) => ({ u, i })).sort((a, b) => rank(a.u) - rank(b.u) || a.i - b.i);
+          setHits(sorted.slice(0, 8).map((x) => x.u)); /* the site's list shows eight, as the blades' plugin does */
           setOpen(true);
         })
         .catch(() => setHits([]));
