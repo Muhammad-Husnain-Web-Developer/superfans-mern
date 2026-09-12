@@ -777,7 +777,7 @@ adminRouter.post('/reach-locks', requireAuth, admin(async (req, res) => {
     b.kind === 'zone'
       ? { kind: 'zone', user: null, from: b.from, to: b.to, percent: b.percent }
       : { kind: 'user', user: key.user, from: null, to: b.to, percent: b.percent };
-  const saved = await ReachLock.findOneAndUpdate(key, doc, { upsert: true, new: true, setDefaultsOnInsert: true })
+  const saved = await ReachLock.findOneAndUpdate(key, doc, { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true })
     .populate('user', 'usernameUrl email')
     .lean();
   forgetLocks();
@@ -786,7 +786,7 @@ adminRouter.post('/reach-locks', requireAuth, admin(async (req, res) => {
 
 adminRouter.put('/reach-locks/:id', requireAuth, admin(async (req, res) => {
   const { percent } = z.object({ percent: z.coerce.number().int().min(0).max(100) }).parse(req.body);
-  const saved = await ReachLock.findByIdAndUpdate(req.params.id, { percent }, { new: true }).populate('user', 'usernameUrl email').lean();
+  const saved = await ReachLock.findByIdAndUpdate(req.params.id, { percent }, { returnDocument: 'after' }).populate('user', 'usernameUrl email').lean();
   if (!saved) throw ApiError.notFound('Lock not found');
   forgetLocks();
   res.json({ success: true, lock: lockDto(saved as unknown as Parameters<typeof lockDto>[0]) });
