@@ -12,6 +12,19 @@ export function createApp() {
   const app = express();
 
   app.disable('x-powered-by');
+
+  /**
+   * nginx sits in front of this process and forwards every request over the loopback, so
+   * without this `req.ip` is nginx's own address and never the visitor's. It was: of the 563
+   * post visits recorded on the live server in the last thirty days, all 563 read
+   * `::ffff:127.0.0.1`.
+   *
+   * `loopback` rather than a hop count or `true`: only a proxy on 127.0.0.1 is believed, which
+   * is exactly our nginx. A visitor cannot then hand us a forged `X-Forwarded-For` and be
+   * taken at their word, which `true` would allow — and the country a post is stamped with is
+   * about to depend on this being honest.
+   */
+  app.set('trust proxy', 'loopback');
   app.use(
     cors({
       origin: env.CLIENT_ORIGIN,

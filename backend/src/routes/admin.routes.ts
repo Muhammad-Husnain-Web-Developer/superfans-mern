@@ -9,6 +9,8 @@ import { Subscription } from '../models/Subscription.js';
 import { Ad, AdPayment } from '../models/ads.js';
 import { Post } from '../models/Post.js';
 import { Coupon, Package, PackageInclude, Modal, Asset, WaterMark, Cart } from '../models/adminEntities.js';
+import { ReachLock } from '../models/ReachLock.js';
+import { forgetLocks } from '../utils/worldReach.js';
 
 export const adminRouter = Router();
 
@@ -721,6 +723,94 @@ adminRouter.get('/orders/:id', requireAuth, admin(async (req, res) => {
   if (!o) throw ApiError.notFound('Order not found');
   res.json({ success: true, order: orderDto(o as unknown as Parameters<typeof orderDto>[0]) });
 }));
+
+/* ================= reach lockers =================
+   The two lockers the client asked for beside his user panel: "Country Zone Post Locker"
+   (posts from one place, shown in another) and "User Individual Locker Country" (one
+   account's posts, shown in a place). Each writes a figure over what the ladder would have
+   given — see models/ReachLock.ts. The WORLD feed reads them through a one-minute cache,
+   which every write below drops so the owner sees his rule take at once. */
+
+const lockPlace = z.object({
+  country: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/, 'country must be an ISO-3166 alpha-2 code'),
+  region: z.string().trim().toUpperCase().max(8).nullable().optional().transform((v) => v || null),
+});
+
+const lockBody = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('zone'), from: lockPlace, to: lockPlace, percent: z.coerce.number().int().min(0).max(100) }),
+  /* the account may be named by id, username or email — whichever the owner has to hand */
+  z.object({ kind: z.literal('user'), user: z.string().trim().min(1), to: lockPlace, percent: z.coerce.number().int().min(0).max(100) }),
+]);
+
+function lockDto(l: {
+  _id: unknown; kind: string; percent: number; createdAt?: Date;
+  from?: { country: string; region?: string | null } | null;
+  to: { country: string; region?: string | null };
+  user?: { _id: unknown; usernameUrl?: string; email?: string } | unknown | null;
+}) {
+  const u = l.user && typeof l.user === 'object' && 'usernameUrl' in l.user ? (l.user as { _id: unknown; usernameUrl?: string; email?: string }) : null;
+  return {
+    id: String(l._id),
+    kind: l.kind,
+    user: u ? { id: String(u._id), usernameUrl: u.usernameUrl ?? '', email: u.email ?? '' } : null,
+    from: l.from ? { country: l.from.country, region: l.from.region ?? null } : null,
+    to: { country: l.to.country, region: l.to.region ?? null },
+    percent: l.percent,
+    createdAt: l.createdAt,
+  };
+}
+
+adminRouter.get('/reach-locks', requireAuth, admin(async (_req, res) => {
+  const locks = await ReachLock.find().sort({ kind: 1, createdAt: 1 }).populate('user', 'usernameUrl email').lean();
+  res.json({ success: true, locks: locks.map((l) => lockDto(l as unknown as Parameters<typeof lockDto>[0])) });
+}));
+
+/* Writing the same pairing twice changes its figure rather than adding a second rule — the
+   unique index on the model is what makes the pairing the key. */
+adminRouter.post('/reach-locks', requireAuth, admin(async (req, res) => {
+  const b = lockBody.parse(req.body);
+  const key =
+    b.kind === 'zone'
+      ? { kind: 'zone' as const, user: null, 'from.country': b.from.country, 'from.region': b.from.region ?? null, 'to.country': b.to.country, 'to.region': b.to.region ?? null }
+      : { kind: 'user' as const, user: await resolveLockUser(b.user), from: null, 'to.country': b.to.country, 'to.region': b.to.region ?? null };
+  const doc =
+    b.kind === 'zone'
+      ? { kind: 'zone', user: null, from: b.from, to: b.to, percent: b.percent }
+      : { kind: 'user', user: key.user, from: null, to: b.to, percent: b.percent };
+  const saved = await ReachLock.findOneAndUpdate(key, doc, { upsert: true, new: true, setDefaultsOnInsert: true })
+    .populate('user', 'usernameUrl email')
+    .lean();
+  forgetLocks();
+  res.json({ success: true, lock: lockDto(saved as unknown as Parameters<typeof lockDto>[0]) });
+}));
+
+adminRouter.put('/reach-locks/:id', requireAuth, admin(async (req, res) => {
+  const { percent } = z.object({ percent: z.coerce.number().int().min(0).max(100) }).parse(req.body);
+  const saved = await ReachLock.findByIdAndUpdate(req.params.id, { percent }, { new: true }).populate('user', 'usernameUrl email').lean();
+  if (!saved) throw ApiError.notFound('Lock not found');
+  forgetLocks();
+  res.json({ success: true, lock: lockDto(saved as unknown as Parameters<typeof lockDto>[0]) });
+}));
+
+adminRouter.delete('/reach-locks/:id', requireAuth, admin(async (req, res) => {
+  const gone = await ReachLock.findByIdAndDelete(req.params.id).lean();
+  if (!gone) throw ApiError.notFound('Lock not found');
+  forgetLocks();
+  res.json({ success: true });
+}));
+
+/** The account an individual lock is about, from whatever the owner typed for it. */
+async function resolveLockUser(who: string) {
+  const byId = /^[0-9a-f]{24}$/i.test(who) ? await User.findById(who, { _id: 1 }).lean() : null;
+  const u =
+    byId ??
+    (await User.findOne(
+      { $or: [{ usernameUrl: who }, { email: who.toLowerCase() }, { usernameUrl: who.replace(/^@/, '') }] },
+      { _id: 1 },
+    ).lean());
+  if (!u) throw ApiError.notFound(`No user "${who}"`);
+  return u._id;
+}
 
 /* ================= DTOs ================= */
 function userDto(u: { _id: unknown; name?: string; usernameUrl?: string; email?: string; role?: string; status?: string; verified?: boolean; vip?: boolean; noOfFollowers?: number; earnings?: number; videoAdsEarnings?: number; growthStatus?: string; growthGearLevel?: number; createdAt?: Date }) {

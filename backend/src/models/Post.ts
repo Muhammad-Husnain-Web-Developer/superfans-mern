@@ -21,6 +21,23 @@ export interface IPost {
   /** true when the media file is absent on disk — such posts are hidden from all listings
    *  (recomputed by scripts/flag-missing-media). */
   mediaMissing?: boolean;
+  /**
+   * Where this post was made, read from the poster's address at the moment they made it.
+   *
+   * Stamped once and never revised: the client's rule is that a post belongs to the WORLD of
+   * the country it was posted from, so it must not follow its author abroad later. Absent on
+   * every post that already existed, and on any made from an address we cannot place — those
+   * are shown everywhere, which is the client's own answer for them.
+   */
+  place?: {
+    /** ISO-3166 alpha-2 */
+    country: string;
+    /** region code inside it, e.g. `CT` for Catalunya */
+    region?: string | null;
+    city?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+  } | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,6 +57,18 @@ const postSchema = new Schema<IPost>(
     growthStartTime: Date,
     mysqlId: { type: Number, unique: true, sparse: true },
     mediaMissing: { type: Boolean, default: false, index: true },
+    place: {
+      type: {
+        _id: false,
+        /* indexed: every WORLD listing is about to filter on it */
+        country: { type: String, index: true },
+        region: { type: String, default: null },
+        city: { type: String, default: null },
+        lat: { type: Number, default: null },
+        lng: { type: Number, default: null },
+      },
+      default: null,
+    },
   },
   { timestamps: true },
 );

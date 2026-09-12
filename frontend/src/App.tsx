@@ -44,6 +44,7 @@ import { AdminOrders } from './pages/admin/AdminOrders';
 import { AdminGrowth } from './pages/admin/AdminGrowth';
 import { AllUsers } from './pages/admin/AllUsers';
 import { AllUserPosts } from './pages/admin/AllUserPosts';
+import { ReachLocks } from './pages/admin/ReachLocks';
 import { AdManagement } from './pages/admin/AdManagement';
 import { Merchandising } from './pages/merch/Merchandising';
 import { MerchandisingShow } from './pages/merch/MerchandisingShow';
@@ -204,6 +205,8 @@ function App() {
               (routes/web.php:470, :487) so his existing links keep working. */}
           <Route path="influencer/all_users" element={<NewsGuard><AllUsers /></NewsGuard>} />
           <Route path="influencer/all_user_posts/:id" element={<NewsGuard><AllUserPosts /></NewsGuard>} />
+          {/* The country lockers the client asked for beside his user panel — no blade, same shell. */}
+          <Route path="influencer/reach_locks" element={<NewsGuard><ReachLocks /></NewsGuard>} />
           <Route path="influencer/ads" element={<NewsGuard><AdManagement /></NewsGuard>} />
           {/* all-ads lives under super-ads here; the blade's address redirects to it */}
           <Route path="influencer/all-ads" element={<Navigate to="/super-ads/all-ads" replace />} />

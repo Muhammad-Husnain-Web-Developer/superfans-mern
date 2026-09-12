@@ -23,6 +23,7 @@ interface CountryDto {
 
 let countriesCache: CountryDto[] | null = null;
 const citiesCache = new Map<string, string[]>();
+const regionsCache = new Map<string, CountryDto[]>();
 
 async function dataset() {
   return import('country-state-city');
@@ -62,6 +63,33 @@ geoRouter.get(
     const data = await allCountries();
     cacheForADay(res);
     res.json({ success: true, data });
+  }),
+);
+
+/**
+ * The regions of one country, by the ISO-3166-2 code the address lookup reports them under —
+ * `CT` for Catalonia — so the owner's lockers can name one the way `geo.ts` will see it.
+ */
+geoRouter.get(
+  '/regions',
+  asyncHandler(async (req, res) => {
+    const iso = await resolveIso(String(req.query.country ?? ''));
+    if (!iso) {
+      res.json({ success: true, data: [] });
+      return;
+    }
+
+    let regions = regionsCache.get(iso);
+    if (!regions) {
+      const { State } = await dataset();
+      regions = State.getStatesOfCountry(iso)
+        .map((s) => ({ name: s.name, iso2: s.isoCode }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      regionsCache.set(iso, regions);
+    }
+
+    cacheForADay(res);
+    res.json({ success: true, data: regions });
   }),
 );
 

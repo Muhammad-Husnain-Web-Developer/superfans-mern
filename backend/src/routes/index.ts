@@ -19,8 +19,13 @@ import { adminRouter } from './admin.routes.js';
 import { geoRouter } from './geo.routes.js';
 import { SocialNetwork } from '../models/SocialNetwork.js';
 import { asyncHandler } from '../middleware/asyncHandler.js';
+import { trackPresence } from '../middleware/trackPresence.js';
 
 export const apiRouter = Router();
+
+/* Before anything else: note where this reader is, if they are signed in. It writes at most
+   once every half hour per account and never blocks the response. */
+apiRouter.use(trackPresence);
 
 apiRouter.use('/auth', authRouter);
 apiRouter.use('/uploads', uploadsRouter);

@@ -74,6 +74,51 @@ export interface IUser extends Document {
   registeredCountry?: string;
   visitedCountries: string[];
 
+  /**
+   * The two the client asks us to keep apart.
+   *
+   * `usual` is where they live. It only moves after 38 days in another country, and the one
+   * it moved from is never thrown away — `visitedCountries` above keeps every country this
+   * account has ever been seen in.
+   *
+   * `current` is where they were the last time they opened the app. It follows them at once,
+   * and going home puts `usual` back on the first day.
+   *
+   * Both are absent until an address places them; the `country` field near the top of this
+   * model is a different thing — what the person typed on the register form.
+   */
+  usual?: {
+    country: string;
+    region?: string | null;
+    /** when this became their usual country, so a move can be told from the original */
+    since?: Date | null;
+  } | null;
+  current?: {
+    country: string;
+    region?: string | null;
+    city?: string | null;
+    lat?: number | null;
+    lng?: number | null;
+    /** the last time an address put them here — how `current` is known to be current */
+    seenAt: Date;
+  } | null;
+  /**
+   * Every country that has been this account's usual one, oldest first, the one they hold now
+   * included. The client's rule needs the order, not just the set: "the OLD COUNTRY always
+   * appear at his 100%", while a home newly arrived at gives 74%. Without this we could not
+   * tell which of two homes was which.
+   */
+  usualHistory: { country: string; from: Date }[];
+  /**
+   * The rung of the ladder this account has reached in each country it has travelled to,
+   * worked out once and kept here rather than counted again for every post in every feed.
+   *
+   * Only the earned part lives here. What a home is worth is decided from `usual` and
+   * `usualHistory` above, which cost nothing to read. This is refreshed whenever a day of
+   * presence or a post from that country is added — the only two things that can move it.
+   */
+  earned: { country: string; percent: number }[];
+
   // Migration bookkeeping
   mysqlId?: number;
 
@@ -140,6 +185,35 @@ const userSchema = new Schema<IUser>(
     registeredIp: String,
     registeredCountry: String,
     visitedCountries: { type: [String], default: [] },
+    usual: {
+      type: {
+        _id: false,
+        country: { type: String, index: true },
+        region: { type: String, default: null },
+        since: { type: Date, default: null },
+      },
+      default: null,
+    },
+    current: {
+      type: {
+        _id: false,
+        country: { type: String, index: true },
+        region: { type: String, default: null },
+        city: { type: String, default: null },
+        lat: { type: Number, default: null },
+        lng: { type: Number, default: null },
+        seenAt: { type: Date },
+      },
+      default: null,
+    },
+    usualHistory: {
+      type: [{ _id: false, country: String, from: Date }],
+      default: [],
+    },
+    earned: {
+      type: [{ _id: false, country: String, percent: Number }],
+      default: [],
+    },
 
     mysqlId: { type: Number, unique: true, sparse: true },
   },

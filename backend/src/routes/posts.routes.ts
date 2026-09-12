@@ -16,6 +16,8 @@ import { Subscription } from '../models/Subscription.js';
 import { Followership } from '../models/Followership.js';
 import { uploadsDir } from '../services/storage.js';
 import { logger } from '../config/logger.js';
+import { placeFromRequest } from '../utils/geo.js';
+import { refreshEarned } from '../utils/reach.js';
 
 const execAsync = promisify(exec);
 
@@ -80,6 +82,12 @@ postsRouter.post(
       thumbnail = await generateThumbnail(req.file.path, req.file.filename);
     }
 
+    /* Where the poster is, taken now and kept with the post for good: the client's rule is
+       that a post lives in the WORLD of the country it was posted from, and it must not move
+       when its author travels. An address we cannot place leaves this null, and a post with
+       no place is shown everywhere. */
+    const place = await placeFromRequest(req);
+
     const post = await Post.create({
       influencer: req.auth!.userId,
       imageVideo: req.file.filename,
@@ -87,7 +95,20 @@ postsRouter.post(
       tags,
       taggedProfilePictures,
       visible: true,
+      place,
     });
+
+    /* a post from that country counts toward the ladder, so the rung may have moved with it */
+    /* Bookkeeping, not the upload: the post is already saved, and a reply of 500 here would
+       have the app retry and post it twice. */
+    if (place) {
+      try {
+        const author = await User.findById(req.auth!.userId, { earned: 1 });
+        if (author && (await refreshEarned(author, place.country))) await author.save();
+      } catch (err) {
+        logger.warn({ err }, 'reach bookkeeping after post failed');
+      }
+    }
 
     res.status(201).json({
       success: true,

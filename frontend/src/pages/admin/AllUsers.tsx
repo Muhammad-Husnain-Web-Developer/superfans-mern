@@ -506,6 +506,14 @@ export function AllUsers() {
         searchText={(u) => `${u.usernameUrl} ${u.email} ${u.role}`}
         numbered
         onSearch={setTerm}
+        /* The country lockers the client asked for beside this panel. Not btn-dark: the
+           site's own sheet restyles that class into the login page's outlined black button,
+           which would sit oddly among the panel's filled Bootstrap buttons. */
+        toolbar={
+          <a className="btn btn-primary btn-sm" href="/influencer/reach_locks">
+            Country Locker
+          </a>
+        }
       >
         {(pageRows) => (
           <table id="allUsersTable" className="table table-striped table-bordered dataTable no-footer">

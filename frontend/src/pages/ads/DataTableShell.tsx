@@ -11,10 +11,14 @@ export function DataTableShell<T>({
   children,
   numbered = false,
   onSearch,
+  toolbar,
 }: {
   rows: T[];
   searchText: (row: T) => string;
   children: (pageRows: T[]) => ReactNode;
+  /** Controls seated beside "Show [n] entries" — where DataTables' Buttons extension puts
+      its own, with the Search box keeping the far side of the row. */
+  toolbar?: ReactNode;
   /** Draw DataTables' numbered pager (Previous 1 2 3 … Next) instead of the
       plain Previous/Next pair. The admin panel blades show the numbers. */
   numbered?: boolean;
@@ -47,6 +51,7 @@ export function DataTableShell<T>({
   return (
     <>
       <div className="d-flex justify-content-between align-items-center flex-wrap mb-2">
+        <div className="d-flex align-items-center flex-wrap">
         <label className="mb-0">
           Show{' '}
           {/* the classes DataTables' Bootstrap 4 skin puts on this control, which
@@ -63,6 +68,8 @@ export function DataTableShell<T>({
           </select>{' '}
           entries
         </label>
+        {toolbar && <div className="ml-3">{toolbar}</div>}
+        </div>
         <label className="mb-0">
           Search:{' '}
           <input

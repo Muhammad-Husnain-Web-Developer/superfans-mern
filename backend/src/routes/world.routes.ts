@@ -11,6 +11,9 @@ import { Hate } from '../models/Hate.js';
 import { Followership } from '../models/Followership.js';
 import { Subscription } from '../models/Subscription.js';
 import { Ad } from '../models/Ad.js';
+import { currentLocks, postReachesCountry, type ReachUser, type ViewerPlace } from '../utils/worldReach.js';
+import { placeFromRequest } from '../utils/geo.js';
+import { logger } from '../config/logger.js';
 
 export const worldRouter = Router();
 
@@ -55,6 +58,23 @@ function shuffle<T>(arr: T[]): T[] {
  * 15 per page, 3 random ads injected after every 6th post.
  * (Laravel regenerates the pool on every request — same here.)
  */
+/**
+ * Which country's WORLD this reader is looking at — and the region, for the owner's lockers.
+ *
+ * Their last sighting first — it is what the rest of the feature is written in terms of, and a
+ * signed-in reader always has one. Otherwise the address in front of us, which is all a guest
+ * gives us. Null when neither says anything, and null means "show everything".
+ */
+async function placeOfViewer(req: Parameters<typeof placeFromRequest>[0]): Promise<ViewerPlace | null> {
+  const auth = (req as { auth?: { userId: string } }).auth;
+  if (auth?.userId) {
+    const me = await User.findById(auth.userId, { current: 1 }).lean();
+    if (me?.current?.country) return { country: me.current.country, region: me.current.region ?? null };
+  }
+  const here = await placeFromRequest(req);
+  return here ? { country: here.country, region: here.region } : null;
+}
+
 worldRouter.get(
   '/',
   optionalAuth,
@@ -94,6 +114,7 @@ worldRouter.get(
       tags: string[];
       taggedProfilePictures: string[];
       createdAt: Date;
+      place?: { country: string; region?: string | null } | null;
     }
     const pool: PoolPost[] = [];
     const usedPostIds = new Set<string>();
@@ -131,7 +152,51 @@ worldRouter.get(
       }
     }
 
-    const shuffledPool = shuffle(pool);
+    /**
+     * The country rule, applied to the pool before it is paged.
+     *
+     * A post belongs to the WORLD of the country it was made in; an author reaches beyond that
+     * only as far as their travelling has earned them. Posts with no place — everything made
+     * before any of this existed — are shown everywhere, which is the client's own answer for
+     * them, and so the wall does not empty on the day this ships.
+     *
+     * The reader's own country comes from where they were last seen, or from the address in
+     * front of us for someone not signed in. A reader we cannot place is shown everything.
+     *
+     * None of this may cost the feed. Should any part of it fail — the address database, the
+     * lock table, the authors' rows — the rule is simply not applied and the wall is what it
+     * was before the rule existed. And if the rule leaves nothing at all, the pool is shown
+     * unfiltered: an empty WORLD is the one outcome the client has never asked for, and a
+     * reader in a country nobody has reached yet is better served by everything than by
+     * nothing. That last fallback is ours, not his, and is here for the sake of the page.
+     */
+    let reachable = pool;
+    try {
+      const viewer = await placeOfViewer(req);
+      if (viewer) {
+        const ids = [...new Set(pool.map((p) => String(p.influencer)))];
+        const [rows, locks] = await Promise.all([
+          User.find({ _id: { $in: ids } }, { usual: 1, usualHistory: 1, earned: 1 }).lean(),
+          currentLocks(),
+        ]);
+        const authors = new Map(rows.map((r) => [String(r._id), r as ReachUser]));
+        const kept = pool.filter((p) =>
+          postReachesCountry(
+            String(p._id),
+            String(p.influencer),
+            p.place,
+            authors.get(String(p.influencer)),
+            viewer,
+            locks,
+          ),
+        );
+        if (kept.length > 0) reachable = kept;
+      }
+    } catch (err) {
+      logger.warn({ err }, 'country rule skipped for this WORLD page');
+    }
+
+    const shuffledPool = shuffle(reachable);
     const pagePosts = shuffledPool.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     // === enrichment (postUsers, hates, liked, following) ===
