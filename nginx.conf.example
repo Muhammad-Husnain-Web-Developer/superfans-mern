@@ -34,7 +34,26 @@ server {
     root /var/www/superfans/superfans-mern/frontend/dist;
     index index.html;
 
+    # Link-preview crawlers (WhatsApp, Facebook, Twitter, Slack, Discord, Telegram, …) never
+    # run this app's JavaScript — they just read whatever meta tags are already in the HTML
+    # they fetch. The static index.html below carries none, so every shared link (including a
+    # creator's own profile) previewed with no image at all. Those user agents get sent to the
+    # backend instead, which fills in the right og:title/og:image per profile (see
+    # backend/src/routes/og.routes.ts); every other visitor is untouched and still gets the
+    # SPA straight off disk.
+    set $is_crawler 0;
+    if ($http_user_agent ~* "facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|Discordbot|TelegramBot|SkypeUriPreview|vkShare|Pinterest|redditbot|Applebot") {
+        set $is_crawler 1;
+    }
+
     location / {
+        if ($is_crawler = 1) {
+            proxy_pass http://127.0.0.1:5000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
         try_files $uri $uri/ /index.html;   # client-side routing fallback
     }
 }

@@ -5,6 +5,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
 import { apiRouter } from './routes/index.js';
+import { ogRouter } from './routes/og.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/errors.js';
 import { uploadsDir } from './services/storage.js';
 
@@ -50,6 +51,11 @@ export function createApp() {
       app.use('/assets', express.static(legacyDir, { fallthrough: true }));
     }
   }
+
+  // Open Graph preview HTML for link-preview crawlers (WhatsApp, Facebook, Twitter, …).
+  // nginx only forwards crawler user-agents here; every real browser still gets the SPA
+  // straight from disk. See routes/og.routes.ts for why this exists.
+  app.use(ogRouter);
 
   app.use('/api', apiRouter);
 
