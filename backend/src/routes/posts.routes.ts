@@ -223,9 +223,12 @@ postsRouter.get(
     const influencer = await User.findById(post.influencer).lean();
     /* Newest first, the order the wall and the posts grid render. The viewer used
        to walk these ascending, so scrolling down — towards the post drawn below
-       the one you tapped — actually stepped backwards through the profile. */
+       the one you tapped — actually stepped backwards through the profile.
+       createdAt leads the sort, mysqlId only breaks a tie: a post made straight in this
+       app has no mysqlId at all, and sorting on that field first sank every such post below
+       every migrated one no matter how recent it actually was. */
     const siblings = await Post.find({ influencer: post.influencer }, { _id: 1 })
-      .sort({ mysqlId: -1, createdAt: -1 })
+      .sort({ createdAt: -1, mysqlId: -1 })
       .lean();
     const idx = siblings.findIndex((s) => String(s._id) === String(post._id));
     const prevId = idx > 0 ? String(siblings[idx - 1]._id) : null;

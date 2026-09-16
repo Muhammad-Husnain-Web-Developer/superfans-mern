@@ -268,9 +268,12 @@ adminRouter.get(
     if (!u) throw ApiError.notFound('User not found');
     /* the panel is the one place that should see everything, including the
        posts whose media went missing in the migration */
+    /* createdAt leads: a post made straight in this app has no mysqlId, and sorting on that
+       field first sank every such post below every migrated one regardless of recency — see
+       the same fix in profiles.routes.ts / posts.routes.ts. */
     const posts = await Post.find({ influencer: req.params.id })
       .select('mysqlId imageVideo noOfLikes likePercent likePercentManual createdAt')
-      .sort({ mysqlId: -1, createdAt: -1 })
+      .sort({ createdAt: -1, mysqlId: -1 })
       .setOptions({ withMissing: true })
       .lean();
 

@@ -199,7 +199,11 @@ profilesRouter.get(
     const user = await User.findOne({ usernameUrl: req.params.usernameUrl });
     if (!user) throw ApiError.notFound('Profile not found');
 
-    const posts = await Post.find({ influencer: user._id }).sort({ mysqlId: -1, createdAt: -1 }).lean();
+    /* createdAt leads: a post made straight in this app carries no mysqlId at all (that field
+       exists only on rows migrated from Laravel), and mysqlId first meant every such post sank
+       below every migrated one regardless of how recent it actually was — mysqlId now only
+       breaks a tie between migrated posts sharing the same timestamp. */
+    const posts = await Post.find({ influencer: user._id }).sort({ createdAt: -1, mysqlId: -1 }).lean();
     const taggedAvatars = await resolveTaggedAvatars(posts);
 
     /* the wall pill needs the real like/hate rows per post, and the viewer's own
