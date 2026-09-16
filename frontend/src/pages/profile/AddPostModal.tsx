@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from '../../components/SwalResult';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import type { ProfilePost } from '../../api/profiles';
@@ -99,6 +100,9 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
      by the arrow at its top left (layouts_direct_user/footer.blade.php:2542, and the pair of
      handlers at :5430 that swap one modal for the other). */
   const [allOpen, setAllOpen] = useState(false);
+  /* the bin icon's own confirm — id of the post pending confirmation, or null when closed */
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { t } = useTranslation('content');
   const { t: tUi } = useTranslation('ui');
   const { t: tNav } = useTranslation('nav');
@@ -148,8 +152,14 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
   }
 
   async function deletePost(id: string) {
-    await api.delete(`/posts/${id}`).catch(() => undefined);
-    onChanged();
+    setDeleting(true);
+    try {
+      await api.delete(`/posts/${id}`).catch(() => undefined);
+      onChanged();
+    } finally {
+      setDeleting(false);
+      setConfirmDeleteId(null);
+    }
   }
 
   async function toggleAll() {
@@ -392,7 +402,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
                     key={p.id}
                     post={p}
                     onToggle={() => void toggleVisibility(p.id)}
-                    onDelete={() => void deletePost(p.id)}
+                    onDelete={() => setConfirmDeleteId(p.id)}
                     toggleTitle={tUi('toggle_visibility')}
                     deleteTitle={tUi('delete')}
                   />
@@ -467,7 +477,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
                     key={p.id}
                     post={p}
                     onToggle={() => void toggleVisibility(p.id)}
-                    onDelete={() => void deletePost(p.id)}
+                    onDelete={() => setConfirmDeleteId(p.id)}
                     toggleTitle={tUi('toggle_visibility')}
                     deleteTitle={tUi('delete')}
                   />
@@ -476,6 +486,18 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
             </div>
           </div>
         </div>
+      )}
+
+      {confirmDeleteId && (
+        <ConfirmDialog
+          title={tUi('confirm_delete_post_title')}
+          text={tUi('confirm_delete_post_text')}
+          confirmText={tUi('confirm_delete_post_confirm')}
+          cancelText={tUi('cancel')}
+          busy={deleting}
+          onConfirm={() => void deletePost(confirmDeleteId)}
+          onCancel={() => setConfirmDeleteId(null)}
+        />
       )}
     </div>
   );

@@ -1,0 +1,33 @@
+/*
+ * ConfirmDialog's two buttons, colour- and hover-matched to the classic-sweetalert
+ * `dangerMode` override that skins them in Laravel (layouts_influencer/main.blade.php:611-634
+ * — `.swal-button--defeat` is "Yes, delete it!", `.swal-button--cancel` is "Cancel"):
+ * square corners, and each swaps to a solid colour on hover over a 0.3s transition rather
+ * than sitting flat. Inline styles can't express `:hover`, hence a real stylesheet here.
+ */
+.confirm-dialog-btn {
+  border: 0;
+  border-radius: 0;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 7.5px 13.2px;
+  transition: 0.3s;
+}
+
+.confirm-dialog-confirm {
+  background: #fff;
+  color: #000;
+}
+.confirm-dialog-confirm:hover:not(:disabled) {
+  background: #000;
+  color: #fff;
+}
+
+.confirm-dialog-cancel {
+  background: red;
+  color: #fff;
+}
+.confirm-dialog-cancel:hover:not(:disabled) {
+  background: #ed0c0c;
+  color: #fff;
+}
