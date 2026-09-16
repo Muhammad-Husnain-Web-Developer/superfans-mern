@@ -345,18 +345,37 @@ export function PostFullscreen() {
   }, [post?.id]);
 
   useEffect(() => {
-    const onChange = () => setExpanded(Boolean(document.fullscreenElement));
+    /* Escape, the phone's back gesture, or the browser's own exit — follow the browser's
+       state, but only where the browser has one; where it does not, `expanded` is ours */
+    const onChange = () => {
+      if (document.fullscreenEnabled) setExpanded(Boolean(document.fullscreenElement));
+    };
     document.addEventListener('fullscreenchange', onChange);
     return () => document.removeEventListener('fullscreenchange', onChange);
   }, []);
 
+  /**
+   * The iPhone has no Fullscreen API for a page — only a video can go full screen there —
+   * so `document.documentElement.requestFullscreen` does not exist on it. Calling it threw
+   * synchronously, which the `.catch` below never saw, and the tap did nothing: the report
+   * from the client's iPhone users. Where the API is missing the control simply clears the
+   * screen itself, and the same tap brings everything back.
+   */
   function toggleExpanded() {
-    if (document.fullscreenElement) {
-      void document.exitFullscreen().catch(() => {});
+    const root = document.documentElement;
+    const canFullscreen = typeof root.requestFullscreen === 'function' && document.fullscreenEnabled;
+
+    if (expanded || document.fullscreenElement) {
+      if (document.fullscreenElement) void document.exitFullscreen().catch(() => {});
+      setExpanded(false);
+      return;
+    }
+    if (!canFullscreen) {
+      setExpanded(true);
       return;
     }
     /* if the browser refuses, still clear the controls so the tap does something */
-    void document.documentElement.requestFullscreen().catch(() => setExpanded(true));
+    void root.requestFullscreen().then(() => setExpanded(true)).catch(() => setExpanded(true));
   }
 
   /* The viewer used to hold its own two <audio> elements. The like sound is now a run of
