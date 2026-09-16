@@ -47,12 +47,17 @@ server {
     }
 
     location / {
+        # nginx only allows `proxy_pass` itself inside an `if` block — not try_files, not
+        # proxy_set_header/proxy_http_version — so those sit here unconditionally; they are
+        # simply inert on any request that never reaches proxy_pass below.
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
         if ($is_crawler = 1) {
             proxy_pass http://127.0.0.1:5000;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
         }
         try_files $uri $uri/ /index.html;   # client-side routing fallback
     }
