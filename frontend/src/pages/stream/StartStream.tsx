@@ -236,7 +236,7 @@ export function StartStream() {
                 dangerouslySetInnerHTML={{ __html: t('stream_form_band4') }} />
             </div>
 
-            <a href="mailto:hello@superfanss.app" className="sm-contact"
+            <a href="mailto:superfansworldapp@gmail.com" className="sm-contact"
               dangerouslySetInnerHTML={{ __html: t('stream_moreForm_band') }} />
             <p className="sm-footer" dangerouslySetInnerHTML={{ __html: t('stream_footer_band') }} />
           </div>

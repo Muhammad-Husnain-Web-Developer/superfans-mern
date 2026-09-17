@@ -697,7 +697,7 @@ export function InfluencerControlPanelModal({
             <h3 style={{ ...H3, textAlign: 'center' }}>{t('instagram_growth')}</h3>
             <center>
               <a
-                href={`mailto:marketing@superfanss.app?subject=Hire%20a%20Manager&body=Hi,%20I'm%20${profile.usernameUrl}%20and%20I%20want%20to%20hire%20a%20Manager%20of%20Social%20Networks%20that%20help%20me%20to%20fix%20my%20Influencer%20Career%20and%20help%20me%20to%20be%20famous.`}
+                href={`mailto:superfansworldapp@gmail.com?subject=Hire%20a%20Manager&body=Hi,%20I'm%20${profile.usernameUrl}%20and%20I%20want%20to%20hire%20a%20Manager%20of%20Social%20Networks%20that%20help%20me%20to%20fix%20my%20Influencer%20Career%20and%20help%20me%20to%20be%20famous.`}
                 className="btn save_btn"
                 style={{ background: 'transparent', color: 'white', border: '2px solid white' }}
               >

@@ -93,7 +93,7 @@ function AdsModal({
               <div className="modal-body" style={{ textAlign: 'center' }}>
                 <h5 style={{ marginBottom: 20 }}>📞 Contact Support</h5>
                 <div style={{ background: '#f8f9fa', padding: 20, borderRadius: 5, textAlign: 'left' }}>
-                  <p style={{ marginBottom: 15 }}><strong>📧 Email:</strong> <a href="mailto:support-ads@superfanss.app">support-ads@superfanss.app</a></p>
+                  <p style={{ marginBottom: 15 }}><strong>📧 Email:</strong> <a href="mailto:superfansworldapp@gmail.com">superfansworldapp@gmail.com</a></p>
                   <p style={{ marginBottom: 15 }}><strong>📞 Phone:</strong> +34 610 607 896</p>
                   <hr />
                   <p style={{ marginBottom: 10 }}><strong>🕐 Office Hours:</strong></p>

@@ -258,7 +258,7 @@ export function priceIncrease(a: { subscriberName: string; subscriptionPrice: nu
 <div style="display: block">
     <b>SUPERFANS WORLD S.L</b>
     <br />
-    <i>Mail: hello@superfanss.app</i>
+    <i>Mail: superfansworldapp@gmail.com</i>
     <br />
     <i>Instagram: @superfansworld</i>
     <br>

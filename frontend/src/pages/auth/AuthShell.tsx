@@ -140,7 +140,7 @@ export function AuthShell({
       {variant === 'login' && (
         <div className="cazarrecompensas">
           <span>
-            <a href="mailto:hello@superfanss.app?subject=Solicitud:%20Cuenta%20de%20Cazarrecompensas&body=Solicito%20una%20cuenta%20de%20🕵🏽Cazarrecompensas%20para%20obtener%20ingresos">
+            <a href="mailto:superfansworldapp@gmail.com?subject=Solicitud:%20Cuenta%20de%20Cazarrecompensas&body=Solicito%20una%20cuenta%20de%20🕵🏽Cazarrecompensas%20para%20obtener%20ingresos">
               🕵🏽
             </a>
           </span>

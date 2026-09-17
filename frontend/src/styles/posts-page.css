@@ -40,7 +40,7 @@
   transform: translate(-50%, -50%) scale(0);
   width: 100px;
   height: 100px; 
-  background-image: url('https://live.superfanss.app/assets/images/love.png');
+  background-image: url('/assets/images/love.png');
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;

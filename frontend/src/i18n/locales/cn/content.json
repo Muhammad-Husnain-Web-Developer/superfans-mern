@@ -99,7 +99,7 @@
     "buttonpay_premium_fan": "✨ 支付 10€",
     "tourModalTitle": "全球巡游",
     "tourModalDescription": "如果你想变得更有名，就买一张机票吧！<br> 是的，这很遗憾，但如果你不旅行，你只会在自己的国家出名，<br>这就是游戏规则！<br><br>我们有不同的旅游行程：",
-    "rank_msg": "Super World 的算法按喜好分为：<br><br>🎶抖音视频、潮流、舞蹈、娱乐...<br> 🎥游戏主播、娱乐、新闻、幽默...<br> 🏫💡📚教学、生产性活动<br>🌋🐯风景和动物、大自然...<br>👑💎✨奢华专区<br>🚗️🏍️汽车、摩托车、引擎...<br>⚽🏀🥊🎾 體育<br><br>✨🤳🏻优先推荐在其他社交网络（Instagram、抖音、YouTube 或 Twitch）已经很有名的人。知名网红将在算法中获得更高的曝光率。🙏🏻 有时我们没看到你：<a href=\"mailto:hello@superfanss.app?subject=申请%20Super%20World%20认证&body=我申请在%20Super%20World🦸🏻‍♀️%20中获得认证，当前我在我的社交网络上已有超过50k粉丝.................%20请务必尊重我并在算法中给予奖励。我申请审核以获得合作伙伴关系，谢谢。此致，.......................%20或代理机构%20......................%20敬礼\">请求尊重</a><br><br>✈️ 如果你不去旅行，你只會出名於你的國家！ 在不同国家发布内容。如果你旅行并从另一个国家发布内容，你将在该国获得更多曝光，传播更广，并在其他地区更有名！当你回到家时，算法不会被破坏。你回国后依然会出现在其他国家粉丝的手机上。<br>🎫机票优惠：<a href=\"javascript:void(0)\" onclick=\"openTourModal()\">查看行程</a> <br><br>🏢 如果你点击广告，我们会在算法中给你更高的评分。但不要试图作弊，只点击你认为相关的广告。<br><br>❤️ 你的活跃度很重要！<br> 如果你喜歡其他使用者的貼文、追蹤或訂閱他們，你的帳號就會在全世界變得更容易被看見，並且獲得更多追隨者。所以別吝嗇你的「按讚」和「追蹤」吧! <br><br>🔷拥有 VERIFIED BLUE 的用户将在算法中获得更多曝光：<form id=\"verifiedForm\" action=\"http://127.0.0.1:8000/pay/now\" method=\"POST\" style=\"display:inline;\"><input type=\"hidden\" name=\"_token\" value=\"\"><input type=\"hidden\" name=\"amount\" value=\"37\">\n<input type=\"hidden\" name=\"verified\" value=\"1\">\n</form>\n<a href=\"#\" style=\"color: #007bff; cursor: pointer;\" \n   onclick=\"event.preventDefault(); document.getElementById('verifiedForm').submit();\">\n   申请你的 Verified\n</a>",
+    "rank_msg": "Super World 的算法按喜好分为：<br><br>🎶抖音视频、潮流、舞蹈、娱乐...<br> 🎥游戏主播、娱乐、新闻、幽默...<br> 🏫💡📚教学、生产性活动<br>🌋🐯风景和动物、大自然...<br>👑💎✨奢华专区<br>🚗️🏍️汽车、摩托车、引擎...<br>⚽🏀🥊🎾 體育<br><br>✨🤳🏻优先推荐在其他社交网络（Instagram、抖音、YouTube 或 Twitch）已经很有名的人。知名网红将在算法中获得更高的曝光率。🙏🏻 有时我们没看到你：<a href=\"mailto:superfansworldapp@gmail.com?subject=申请%20Super%20World%20认证&body=我申请在%20Super%20World🦸🏻‍♀️%20中获得认证，当前我在我的社交网络上已有超过50k粉丝.................%20请务必尊重我并在算法中给予奖励。我申请审核以获得合作伙伴关系，谢谢。此致，.......................%20或代理机构%20......................%20敬礼\">请求尊重</a><br><br>✈️ 如果你不去旅行，你只會出名於你的國家！ 在不同国家发布内容。如果你旅行并从另一个国家发布内容，你将在该国获得更多曝光，传播更广，并在其他地区更有名！当你回到家时，算法不会被破坏。你回国后依然会出现在其他国家粉丝的手机上。<br>🎫机票优惠：<a href=\"javascript:void(0)\" onclick=\"openTourModal()\">查看行程</a> <br><br>🏢 如果你点击广告，我们会在算法中给你更高的评分。但不要试图作弊，只点击你认为相关的广告。<br><br>❤️ 你的活跃度很重要！<br> 如果你喜歡其他使用者的貼文、追蹤或訂閱他們，你的帳號就會在全世界變得更容易被看見，並且獲得更多追隨者。所以別吝嗇你的「按讚」和「追蹤」吧! <br><br>🔷拥有 VERIFIED BLUE 的用户将在算法中获得更多曝光：<a href=\"/user\" style=\"color: #007bff; cursor: pointer;\">申请你的 Verified</a>",
     "suspended": "该用户账号因违反 Super World 的<br> 规则已被暂停。",
     "deleted": "网红账户已被永久删除。那个女巫再也无法进入这座宫殿！",
     "default": "⚠️ 未找到该用户账户，或其已被限制访问。",
@@ -125,5 +125,5 @@
     "creator_info": "当你达到1万粉丝时，你可以将普通账号转换为创作者账号，通过广告和订阅来获得收入。",
     "request_creator": "申请创作者账号",
     "go_to": "前往",
-    "tourModalImage": "https://live.superfanss.app/assets/images/Superworld-13.svg"
+    "tourModalImage": "/brand/logos/Superworld-13.svg"
 }
