@@ -57,6 +57,15 @@ export interface PaymentProvider {
   /** verify a completed checkout on the success redirect (belt-and-braces with the webhook) */
   verifyCheckout(reference: string): Promise<{ paid: boolean; metadata: Record<string, string> }>;
   cancelSubscription(externalId: string): Promise<void>;
+  /**
+   * Changes a running subscription's recurring price with no proration and no charge
+   * right now — the new amount is simply what the *next* renewal bills. Used when a
+   * creator changes their price and every current subscriber is meant to move to it
+   * from their next payment on, per the client's explicit request (David, 16 Sep 2026):
+   * Laravel's own design kept old subscribers at their old price forever; he asked for
+   * the opposite.
+   */
+  updateSubscriptionPrice(externalId: string, amount: number, currency: string): Promise<void>;
   /** parse + verify an incoming webhook; throws on a bad signature */
   parseWebhook(rawBody: Buffer, signature: string | undefined): WebhookEvent;
 }

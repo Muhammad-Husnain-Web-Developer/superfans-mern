@@ -11,6 +11,8 @@ import { Hate } from '../models/Hate.js';
 import { sendMail } from '../services/mailer.js';
 import { renderEmail } from '../services/emailTemplate.js';
 import { priceIncrease } from '../services/adEmails.js';
+import { paymentProvider } from '../services/payments/index.js';
+import { logger } from '../config/logger.js';
 
 const ADMIN_PAYOUT_EMAIL = 'dmartinherrada@gmail.com';
 import { Like } from '../models/Like.js';
@@ -93,8 +95,10 @@ meRouter.patch(
        when it drops or stays put. The old price is read before it is replaced. */
     const previousPrice = user.priceOfSubscription ?? 0;
     let priceRose = false;
+    let priceChanged = false;
     if (input.priceOfSubscription !== undefined) {
       priceRose = input.priceOfSubscription > previousPrice;
+      priceChanged = input.priceOfSubscription !== previousPrice;
       user.priceOfSubscription = input.priceOfSubscription;
     }
     if (input.earnings !== undefined) user.earnings = input.earnings;
@@ -108,7 +112,14 @@ meRouter.patch(
     }
 
     await user.save();
-    if (priceRose) void notifyFollowersOfPriceRise(String(user._id), user.priceOfSubscription ?? 0);
+    if (priceRose) void notifySubscribersOfPriceRise(String(user._id), user.priceOfSubscription ?? 0);
+    /* David, 16 Sep 2026: every current subscriber moves to the new price too, from their
+       next payment — not just new sign-ups. Runs both directions (a price drop should reach
+       subscribers too), fire-and-forget so a popular creator's settings save isn't held on
+       a run of Stripe calls. */
+    if (priceChanged) {
+      void syncSubscriberPrices(String(user._id), user.priceOfSubscription ?? 0);
+    }
     res.json({
       success: true,
       message: 'Updated successfully',
@@ -531,24 +542,66 @@ meRouter.post(
 );
 
 /**
- * Tells every follower that a creator's fee has gone up — InfluencerController:1019.
+ * Tells every PAID subscriber that a creator's fee has gone up.
  *
- * The blade pauses five seconds after each ten mails so the provider is not hit
- * all at once; the same pacing is kept. Run detached from the request, since a
- * creator with many followers would otherwise wait on it.
+ * Laravel wrote a job for this — `SendEmailPriceIncreaseToSubscribers`, which mails
+ * `$influencer->subscribers` (the `subscriptions` table, i.e. actual paying subscribers) —
+ * but never dispatches it anywhere. The code that actually runs on the live site
+ * (InfluencerController:1019) instead loops the `followerships` table, so in production this
+ * mail has only ever reached free followers, never a paying subscriber. David asked (16 Sep
+ * 2026) for the email to reach "the client subscriber" specifically, which is what the dead
+ * job intended and what belongs beside `syncSubscriberPrices` below — both now walk the same
+ * `subscriptions` rows.
+ *
+ * The five-second pause after each ten mails is the one part of the live Laravel loop worth
+ * keeping: the provider is not hit all at once. Run detached from the request, since a
+ * creator with many subscribers would otherwise wait on it.
  */
-async function notifyFollowersOfPriceRise(influencerId: string, price: number): Promise<void> {
-  const links = await Followership.find({ followerUser: influencerId }, { followedUser: 1 }).lean();
+async function notifySubscribersOfPriceRise(influencerId: string, price: number): Promise<void> {
+  const subs = await Subscription.find({ influencer: influencerId }, { user: 1 }).lean();
   let sent = 0;
-  for (const link of links) {
-    const follower = await User.findById(link.followedUser, { name: 1, email: 1 }).lean();
-    if (!follower?.email) continue;
+  for (const sub of subs) {
+    const subscriber = await User.findById(sub.user, { name: 1, email: 1 }).lean();
+    if (!subscriber?.email) continue;
     if (sent === 10) {
       await new Promise((r) => setTimeout(r, 5000));
       sent = 0;
     }
-    const mail = priceIncrease({ subscriberName: follower.name ?? '', subscriptionPrice: price });
-    await sendMail(follower.email, mail.subject, mail.html).catch(() => undefined);
+    const mail = priceIncrease({ subscriberName: subscriber.name ?? '', subscriptionPrice: price });
+    await sendMail(subscriber.email, mail.subject, mail.html).catch(() => undefined);
     sent++;
+  }
+}
+
+/**
+ * Moves every current paid subscriber of this creator onto their new price, effective at
+ * each subscriber's own next renewal — not charged today, and not a fixed calendar date.
+ * `updateSubscriptionPrice`'s `proration_behavior: 'none'` is what guarantees no charge or
+ * credit happens right now; only the amount the *next* invoice bills changes.
+ *
+ * A subscriber whose gateway call fails (a card gone, a subscription already cancelled at
+ * Stripe but not yet reconciled here, a network blip) is logged and skipped — one failure
+ * must not stop the rest of the creator's subscribers from being updated.
+ */
+async function syncSubscriberPrices(influencerId: string, newAmount: number): Promise<void> {
+  if (!paymentProvider.ready) return;
+  const subs = await Subscription.find({
+    influencer: influencerId,
+    status: 'active',
+    externalId: { $exists: true, $ne: null },
+  });
+  const results = await Promise.allSettled(
+    subs.map(async (sub) => {
+      await paymentProvider.updateSubscriptionPrice(sub.externalId!, newAmount, 'eur');
+      sub.amount = newAmount;
+      await sub.save();
+    }),
+  );
+  const failed = results.filter((r) => r.status === 'rejected');
+  if (failed.length) {
+    logger.warn(
+      { influencerId, failed: failed.length, total: subs.length, errors: failed.map((f) => String((f as PromiseRejectedResult).reason)) },
+      'price sync: some subscribers could not be moved to the new price',
+    );
   }
 }

@@ -59,6 +59,38 @@ export class StripeProvider implements PaymentProvider {
     await this.stripe.subscriptions.cancel(externalId);
   }
 
+  /**
+   * `proration_behavior: 'none'` is what makes this take effect on the *next* invoice only:
+   * Stripe swaps the subscription item's price but neither charges nor credits anything for
+   * the time already elapsed in the current period, so nothing is billed today.
+   *
+   * Unlike a Checkout Session's line item, a subscription item's `price_data` cannot create
+   * a Product inline — it takes an existing product id. The one made when this subscription
+   * was first checked out is still sitting on the item's current price, so it is reused
+   * rather than standing up a Stripe Product/Price catalogue just for this.
+   */
+  async updateSubscriptionPrice(externalId: string, amount: number, currency: string): Promise<void> {
+    if (!this.stripe) throw new Error('Stripe is not configured');
+    const sub = await this.stripe.subscriptions.retrieve(externalId);
+    const item = sub.items.data[0];
+    if (!item) return;
+    const productId = typeof item.price.product === 'string' ? item.price.product : item.price.product.id;
+    await this.stripe.subscriptions.update(externalId, {
+      items: [
+        {
+          id: item.id,
+          price_data: {
+            currency: currency.toLowerCase(),
+            unit_amount: Math.round(amount * 100),
+            recurring: { interval: 'month' },
+            product: productId,
+          },
+        },
+      ],
+      proration_behavior: 'none',
+    });
+  }
+
   parseWebhook(rawBody: Buffer, signature: string | undefined): WebhookEvent {
     if (!this.stripe) throw new Error('Stripe is not configured');
     if (!env.STRIPE_WEBHOOK_SECRET || !signature) {
