@@ -50,13 +50,120 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+interface PoolPost {
+  _id: Types.ObjectId;
+  influencer: Types.ObjectId;
+  imageVideo?: string;
+  thumbnail?: string;
+  noOfLikes: number;
+  likePercent?: number | null;
+  tags: string[];
+  taggedProfilePictures: string[];
+  createdAt: Date;
+  place?: { country: string; region?: string | null } | null;
+}
+
+/**
+ * How long one built pool is handed to every viewer paging through it before a fresh one is
+ * drawn. This is what Laravel's own 5-minute `Cache::remember` was meant to do — its cache key
+ * baked a fresh random number into itself on every request, so it never once actually served a
+ * cached pool, and that flaw carried over here too ("Laravel regenerates the pool on every
+ * request — same here"): a later page reran the whole build with a fresh shuffle, so it usually
+ * hands back posts the viewer had already scrolled past. The reel's own dedup
+ * (worldSequence.ts's appendSteps) then has nothing new to add and stalls — the client's "loops
+ * / shows the same posts" report. The wall's own infinite scroll (World.tsx) has no such guard
+ * at all and renders the duplicates outright.
+ *
+ * A real cache — one key, no randomness in it — is what actually gives a paging viewer a stable
+ * run: page 2 is what comes after page 1 rather than an unrelated fresh draw, for as long as the
+ * pool stays cached. Global rather than per-viewer, matching the client's stated design (the
+ * pool "auto-refreshes" on a timer) and because the country rule below is applied downstream,
+ * per request, without needing its own copy of the pool.
+ */
+const POOL_TTL_MS = 5 * 60 * 1000;
+let poolCache: { builtAt: number; pool: PoolPost[] } | null = null;
+
+/**
+ * Builds the tier-bucketed, per-creator-capped pool from scratch and shuffles it once. Shuffled
+ * here, at build time, rather than per request — a later page slices further into this same
+ * order instead of a fresh one, which is what keeps a viewer's run stable while the pool is
+ * cached below.
+ */
+async function buildPool(cutoff: Date): Promise<PoolPost[]> {
+  // === tier assignment (SUM of likes over visible posts of active users) ===
+  const usersByViews = await Post.aggregate<{ _id: Types.ObjectId; totalViews: number }>([
+    { $match: { visible: true } },
+    { $group: { _id: '$influencer', totalViews: { $sum: '$noOfLikes' } } },
+    { $match: { totalViews: { $gte: 1000 } } },
+    { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+    { $match: { 'user.status': 'active' } },
+    { $project: { totalViews: 1 } },
+  ]);
+
+  const tiers: Types.ObjectId[][] = [[], [], [], [], []];
+  for (const u of usersByViews) {
+    if (u.totalViews >= 50000) tiers[0].push(u._id);
+    else if (u.totalViews >= 5000) tiers[1].push(u._id);
+    else if (u.totalViews >= 1000) tiers[2].push(u._id);
+    else if (u.totalViews >= 500) tiers[3].push(u._id);
+    else tiers[4].push(u._id);
+  }
+
+  // === pool building with per-user cap ===
+  const pool: PoolPost[] = [];
+  const usedPostIds = new Set<string>();
+  const userPostCount = new Map<string, number>();
+
+  for (const tierUserIds of tiers) {
+    if (tierUserIds.length === 0) continue;
+    let collected = 0;
+    for (const userId of shuffle(tierUserIds)) {
+      if (collected >= TIER_NEEDED || pool.length >= MAX_FEED_POSTS) break;
+      const key = String(userId);
+      const current = userPostCount.get(key) ?? 0;
+      if (current >= PER_USER_CAP) continue;
+
+      const userPosts = await Post.aggregate<PoolPost>([
+        {
+          $match: {
+            influencer: userId,
+            visible: true,
+            noOfLikes: { $gte: MIN_POST_LIKES },
+            createdAt: { $gte: cutoff },
+            _id: { $nin: [...usedPostIds].map((id) => new Types.ObjectId(id)) },
+          },
+        },
+        { $sample: { size: PER_USER_CAP - current } },
+      ]);
+
+      for (const post of userPosts) {
+        if (collected >= TIER_NEEDED || pool.length >= MAX_FEED_POSTS) break;
+        pool.push(post);
+        usedPostIds.add(String(post._id));
+        userPostCount.set(key, (userPostCount.get(key) ?? 0) + 1);
+        collected++;
+      }
+    }
+  }
+
+  return shuffle(pool);
+}
+
+/** The pool currently on offer — reused for POOL_TTL_MS, rebuilt once that window passes. */
+async function currentPool(cutoff: Date): Promise<PoolPost[]> {
+  if (poolCache && Date.now() - poolCache.builtAt < POOL_TTL_MS) return poolCache.pool;
+  const pool = await buildPool(cutoff);
+  poolCache = { builtAt: Date.now(), pool };
+  return pool;
+}
+
 /**
  * World discovery feed — exact port of WorldController@world:
  * users bucketed into 5 mutually-exclusive tiers by lifetime post likes
  * (50k/5k/1k/500/1), per tier up to 60 posts, max 2 per creator, posts must be
  * visible, ≥1000 likes, younger than RECENT_DAYS days; pool capped at 300, shuffled,
  * 15 per page, 3 random ads injected after every 6th post.
- * (Laravel regenerates the pool on every request — same here.)
+ * (Laravel's cache never actually holds — see POOL_TTL_MS above for the real one used here.)
  */
 /**
  * Which country's WORLD this reader is looking at — and the region, for the owner's lockers.
@@ -82,75 +189,7 @@ worldRouter.get(
     const currentPage = Math.max(1, Number(req.query.page) || 1);
     const cutoff = new Date(Date.now() - RECENT_DAYS * 24 * 3600 * 1000);
 
-    // === tier assignment (SUM of likes over visible posts of active users) ===
-    const usersByViews = await Post.aggregate<{ _id: Types.ObjectId; totalViews: number }>([
-      { $match: { visible: true } },
-      { $group: { _id: '$influencer', totalViews: { $sum: '$noOfLikes' } } },
-      { $match: { totalViews: { $gte: 1000 } } },
-      {
-        $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' },
-      },
-      { $match: { 'user.status': 'active' } },
-      { $project: { totalViews: 1 } },
-    ]);
-
-    const tiers: Types.ObjectId[][] = [[], [], [], [], []];
-    for (const u of usersByViews) {
-      if (u.totalViews >= 50000) tiers[0].push(u._id);
-      else if (u.totalViews >= 5000) tiers[1].push(u._id);
-      else if (u.totalViews >= 1000) tiers[2].push(u._id);
-      else if (u.totalViews >= 500) tiers[3].push(u._id);
-      else tiers[4].push(u._id);
-    }
-
-    // === pool building with per-user cap ===
-    interface PoolPost {
-      _id: Types.ObjectId;
-      influencer: Types.ObjectId;
-      imageVideo?: string;
-      thumbnail?: string;
-      noOfLikes: number;
-      likePercent?: number | null;
-      tags: string[];
-      taggedProfilePictures: string[];
-      createdAt: Date;
-      place?: { country: string; region?: string | null } | null;
-    }
-    const pool: PoolPost[] = [];
-    const usedPostIds = new Set<string>();
-    const userPostCount = new Map<string, number>();
-
-    for (const tierUserIds of tiers) {
-      if (tierUserIds.length === 0) continue;
-      let collected = 0;
-      for (const userId of shuffle(tierUserIds)) {
-        if (collected >= TIER_NEEDED || pool.length >= MAX_FEED_POSTS) break;
-        const key = String(userId);
-        const current = userPostCount.get(key) ?? 0;
-        if (current >= PER_USER_CAP) continue;
-
-        const userPosts = await Post.aggregate<PoolPost>([
-          {
-            $match: {
-              influencer: userId,
-              visible: true,
-              noOfLikes: { $gte: MIN_POST_LIKES },
-              createdAt: { $gte: cutoff },
-              _id: { $nin: [...usedPostIds].map((id) => new Types.ObjectId(id)) },
-            },
-          },
-          { $sample: { size: PER_USER_CAP - current } },
-        ]);
-
-        for (const post of userPosts) {
-          if (collected >= TIER_NEEDED || pool.length >= MAX_FEED_POSTS) break;
-          pool.push(post);
-          usedPostIds.add(String(post._id));
-          userPostCount.set(key, (userPostCount.get(key) ?? 0) + 1);
-          collected++;
-        }
-      }
-    }
+    const pool = await currentPool(cutoff);
 
     /**
      * The country rule, applied to the pool before it is paged.
@@ -196,8 +235,12 @@ worldRouter.get(
       logger.warn({ err }, 'country rule skipped for this WORLD page');
     }
 
-    const shuffledPool = shuffle(reachable);
-    const pagePosts = shuffledPool.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+    /* Already shuffled once, at build time (buildPool) — reshuffling again here on every
+       request is exactly what broke pagination: page 2 would be a fresh, unrelated draw
+       rather than a continuation of page 1, so the viewer kept being handed posts they had
+       already scrolled past. `reachable` keeps the cached pool's order, just with anything
+       this viewer may not see filtered out. */
+    const pagePosts = reachable.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     // === enrichment (postUsers, hates, liked, following) ===
     const influencerIds = [...new Set(pagePosts.map((p) => String(p.influencer)))];
@@ -390,10 +433,10 @@ worldRouter.get(
       success: true,
       data: {
         items,
-        total: shuffledPool.length,
+        total: reachable.length,
         perPage: PER_PAGE,
         currentPage,
-        lastPage: Math.max(1, Math.ceil(shuffledPool.length / PER_PAGE)),
+        lastPage: Math.max(1, Math.ceil(reachable.length / PER_PAGE)),
       },
     });
   }),

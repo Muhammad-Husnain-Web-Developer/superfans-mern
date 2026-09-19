@@ -706,7 +706,16 @@ export function World() {
     api
       .get<{ success: boolean; data: { items: WorldItem[]; lastPage: number } }>(`/world?page=${p}`)
       .then((r) => {
-        setItems((prev) => [...prev, ...r.data.data.items]);
+        /* Defence in depth: the backend now hands out one stable, cached pool per five-minute
+           window (world.routes.ts) so a later page should never repeat an earlier one's posts,
+           but the 3 ads on each page are still sampled fresh every request and can coincide.
+           Without this an id appearing twice rendered two identical cards — the same glitch
+           the full-screen reel guards against in worldSequence.ts's appendSteps. */
+        setItems((prev) => {
+          const seen = new Set(prev.map((it) => it.id));
+          const fresh = r.data.data.items.filter((it) => !seen.has(it.id));
+          return [...prev, ...fresh];
+        });
         setLastPage(r.data.data.lastPage);
       })
       .catch(() => undefined)
