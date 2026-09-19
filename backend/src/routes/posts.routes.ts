@@ -220,26 +220,35 @@ postsRouter.get(
     const post = await Post.findById(req.params.id).lean();
     if (!post) throw ApiError.notFound('Post not found');
 
-    const influencer = await User.findById(post.influencer).lean();
-    /* Newest first, the order the wall and the posts grid render. The viewer used
-       to walk these ascending, so scrolling down — towards the post drawn below
-       the one you tapped — actually stepped backwards through the profile.
-       createdAt leads the sort, mysqlId only breaks a tie: a post made straight in this
-       app has no mysqlId at all, and sorting on that field first sank every such post below
-       every migrated one no matter how recent it actually was. */
-    const siblings = await Post.find({ influencer: post.influencer }, { _id: 1 })
-      .sort({ createdAt: -1, mysqlId: -1 })
-      .lean();
-    const idx = siblings.findIndex((s) => String(s._id) === String(post._id));
-    const prevId = idx > 0 ? String(siblings[idx - 1]._id) : null;
-    const nextId = idx >= 0 && idx < siblings.length - 1 ? String(siblings[idx + 1]._id) : null;
+    /* Only a viewer walking their own profile/the posts grid needs prevId/nextId from here —
+       the full-screen reel gets its prev/next from the WORLD sequence it already carries
+       (PostFullscreen.tsx's worldRun) and passes siblings=0, so this whole query — every post
+       id the creator has, sorted — is skipped for it. Fetching it unconditionally, and after
+       the influencer lookup rather than alongside it, was dead weight on exactly the path the
+       client reported as slow: swiping fast through the WORLD reel threw a 2-3s wait on every
+       post that had not already been prefetched. */
+    const wantSiblings = req.query.siblings !== '0';
 
-    const [likeRows, hateRows, viewerLiked, viewerHated] = await Promise.all([
+    const [influencer, siblings, likeRows, hateRows, viewerLiked, viewerHated] = await Promise.all([
+      User.findById(post.influencer).lean(),
+      /* Newest first, the order the wall and the posts grid render. The viewer used
+         to walk these ascending, so scrolling down — towards the post drawn below
+         the one you tapped — actually stepped backwards through the profile.
+         createdAt leads the sort, mysqlId only breaks a tie: a post made straight in this
+         app has no mysqlId at all, and sorting on that field first sank every such post below
+         every migrated one no matter how recent it actually was. */
+      wantSiblings
+        ? Post.find({ influencer: post.influencer }, { _id: 1 }).sort({ createdAt: -1, mysqlId: -1 }).lean()
+        : Promise.resolve([]),
       Like.countDocuments({ post: post._id }),
       Hate.countDocuments({ post: post._id }),
       req.auth ? Like.exists({ post: post._id, user: req.auth.userId }).then(Boolean) : false,
       req.auth ? Hate.exists({ post: post._id, user: req.auth.userId }).then(Boolean) : false,
     ]);
+
+    const idx = siblings.findIndex((s) => String(s._id) === String(post._id));
+    const prevId = idx > 0 ? String(siblings[idx - 1]._id) : null;
+    const nextId = idx >= 0 && idx < siblings.length - 1 ? String(siblings[idx + 1]._id) : null;
 
     /* A post the grids show to everyone must not turn into a lock the moment it
        is opened. post_detail.blade.php renders its media unconditionally — the

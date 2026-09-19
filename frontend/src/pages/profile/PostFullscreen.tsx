@@ -222,8 +222,11 @@ export function PostFullscreen() {
       return;
     }
     setState('loading');
+    /* In world context prev/next come from the WORLD sequence itself (targetId below), not
+       from the server's own siblings walk — asking for it anyway was the slow, wasted query
+       that turned a fast swipe into a multi-second wait. */
     api
-      .get<{ success: boolean; data: FsPost }>(`/posts/${id}`)
+      .get<{ success: boolean; data: FsPost }>(`/posts/${id}${worldRun ? '?siblings=0' : ''}`)
       .then((r) => {
         if (cancelled) return;
         const d = r.data.data;
@@ -282,7 +285,7 @@ export function PostFullscreen() {
     for (const nid of ids) {
       if (!nid || cache.current.has(nid)) continue;
       api
-        .get<{ success: boolean; data: FsPost }>(`/posts/${nid}`)
+        .get<{ success: boolean; data: FsPost }>(`/posts/${nid}${worldRun ? '?siblings=0' : ''}`)
         .then((r) => {
           const d = r.data.data;
           cache.current.set(d.id, d);
@@ -705,7 +708,32 @@ function doHate() {
     );
   }
 
-  if (state === 'loading') return null;
+  /*
+   * A swipe/wheel/arrow that lands on a post outside the two neighbours already warmed by the
+   * prefetch effect above (a fast swiper going two or more steps before it catches up, or a
+   * direct link) has to fetch that post's JSON cold. Returning null here for that stretch
+   * unmounted the whole black `.post-fullscreen-wrap`, so the page behind it — plain white —
+   * showed through for however long the fetch took: the client's "blank white screen for 2-3
+   * seconds while swiping quickly". The reel is black end to end, so the wait belongs on that
+   * same black field with the site's own spinner, not on the page's white underneath.
+   */
+  if (state === 'loading') {
+    return (
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          background: '#000',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <img src={assetImage('spinner.gif')} alt={tUi('loading')} style={{ width: 50 }} />
+      </div>
+    );
+  }
   if (state === 'notfound' || !post) {
     return (
       <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
