@@ -159,6 +159,12 @@
     font-size: 11px;
     font-weight: bold;
     white-space: nowrap;
+    /* .is-hated below gives this a min-width; without a transition on it here too, undoing
+       a hate dropped that min-width instantly while .liked-segment's own min-width (--sf-fill)
+       was still 0.3s into animating toward its new one, so for that fifth of a second the two
+       segments no longer summed to the pill's own width and it read as disfigured — the
+       client's report. Matching the same transition keeps both segments moving together. */
+    transition: min-width 0.3s ease;
 }
 
 /* Once a vote has been cast either way, the 👎 half stands up on two lines — 👎 over its
