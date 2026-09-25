@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { SwAdsLoader } from '../../components/SwAdsLoader';
+import { SuperAdsMobileNotice } from '../../components/SuperAdsMobileNotice';
 
 /** Fixed left nav for the Super-Ads area — port of resources/views/ads/sidebar.blade.php. */
 export function AdsSidebar({ active }: { active?: 'center' | 'my-ads' | 'clients' | 'info' }) {
@@ -38,6 +39,11 @@ export function AdsSidebar({ active }: { active?: 'center' | 'my-ads' | 'clients
       </div>
 
       {modal && <AdsModal type={modal} user={user} onClose={() => setModal(null)} />}
+
+      {/* The purple "use a computer" notice the client asked for — shown once per
+          browser session on any Super Ads page when the screen is a phone. It
+          portals to <body> itself, so its place here is only for readability. */}
+      <SuperAdsMobileNotice />
     </div>
   );
 }

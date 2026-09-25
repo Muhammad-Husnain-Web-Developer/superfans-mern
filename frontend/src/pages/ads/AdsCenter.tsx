@@ -302,8 +302,11 @@ export function AdsCenter() {
                 </p>
               ) : (
                 <>
+                  {/* the app's own business button, per the client's note — see
+                      .superads-verify-btn in ads-center.css */}
                   <button
-                    style={{ background: 'white', color: '#000', fontWeight: 900, border: 'none', padding: '10px 28px', fontSize: 18, borderRadius: 7, cursor: vipBusy ? 'default' : 'pointer', opacity: vipBusy ? 0.65 : 1 }}
+                    type="button"
+                    className="superads-verify-btn"
                     disabled={vipBusy}
                     onClick={() => void requestVip()}
                   >

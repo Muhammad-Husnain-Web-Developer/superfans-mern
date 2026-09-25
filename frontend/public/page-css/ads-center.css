@@ -69,7 +69,7 @@ a { text-decoration: none !important; }
 
 .ads-modal-box { position: relative; width: 100%; max-width: 800px; margin: auto; }
 .close-modal-btn {
-  position: absolute; top: 12px; right: 16px; font-size: 26px; color: #aaa;
+  position: absolute; top: 2px; right: 5px; font-size: 26px; color: #aaa;
   background: none; border: none; cursor: pointer; z-index: 1000; transition: .2s;
 }
 /* .close-modal-btn:hover { color: #fff; transform: scale(1.12); } */
@@ -279,4 +279,40 @@ input[type='submit']:focus-visible,
 .ads-modal-box a:focus-visible,
 .ads-modal-box input[type='submit']:focus-visible {
   outline-color: #fff;
+}
+/* ===== Super Video Ads — VERIFICATE button =====
+   Matches the app's own business button (.btn-business in auth.css, used on the
+   "Somos una Empresa" button and the business login form): gray fill, a darker
+   gray border, white lettering in the system UI face, square corners. The
+   client spotted the old one was white-on-black and did not belong to the
+   design system. */
+.superads-verify-btn {
+  padding: 0.375rem 22px;
+  background: #999;
+  color: #fff;
+  border: 3px solid #666;
+  border-radius: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 16px !important;
+  /* font-weight: 400; */
+  line-height: 1.5;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.superads-verify-btn:hover:not(:disabled) {
+  background: #666;
+  border-color: #666;
+  color: #fff;
+}
+
+.superads-verify-btn:focus,
+.superads-verify-btn:active {
+  outline: none;
+  box-shadow: none;
+}
+
+.superads-verify-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
 }
