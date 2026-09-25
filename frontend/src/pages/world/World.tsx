@@ -124,7 +124,9 @@ export function WorldSidebar({
             verticalAlign: 'middle',
           }}
         ></span>{' '}
-        <span style={{ display: 'inline-block' }} className="arrow">
+        {/* `transform: translateX(55%)` inline, as the blade has it — the piece
+            that makes the animation start from the right. */}
+        <span style={{ display: 'inline-block', transform: 'translateX(55%)' }} className="arrow">
           {authUser ? `@${authUser.usernameUrl ?? ''}` : t('superfans_world', { defaultValue: 'SUPER WORLD' })}
         </span>
       </p>

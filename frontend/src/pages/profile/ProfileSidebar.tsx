@@ -600,7 +600,13 @@ export function ProfileSidebar({
             verticalAlign: 'middle',
           }}
         ></span>{' '}
-        <span style={{ display: 'inline-block' }} className={longUsername ? 'arrow' : 'arrow_small_username'}>
+        {/* `transform: translateX(55%)` inline, as the blade has it — the piece
+            that makes the animation start from the right, and the fallback the
+            span shows if the animation is ever off (prefers-reduced-motion). */}
+        <span
+          style={{ display: 'inline-block', transform: 'translateX(55%)' }}
+          className={longUsername ? 'arrow' : 'arrow_small_username'}
+        >
           <span>@</span>
           {usernameUrl}
         </span>

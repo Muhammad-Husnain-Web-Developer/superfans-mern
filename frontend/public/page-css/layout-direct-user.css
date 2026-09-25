@@ -1423,30 +1423,33 @@ font-weight: 100 !important;
 		position: absolute;
 		height: 2em;
 		animation-duration: 7s;
-		animation-timing-function: ease;
-		animation-delay: 1.1s;
+		animation-timing-function: linear;
+		animation-delay: 0.3s;
 		animation-iteration-count: infinite;
 		animation-direction: normal;
 		animation-play-state: running;
 		animation-name: arrows_animation;
-		/* transform: translateX(55%); */
-		transform: translateX(0%);
+		/* 55% — same value the blade's own JS sets 7s after load
+		   ($('.arrow').css("transform","translateX(55%)")). Written here directly
+		   so the FIRST cycle already starts from the right, not the second. */
+		transform: translateX(55%);
 	}
 
 	.arrow_small_username {
 		position: absolute;
 		height: 2em;
 		animation-duration: 7s;
-		animation-timing-function: ease;
-		animation-delay: 1.1s;
+		animation-timing-function: linear;
+		animation-delay: 0.3s;
 		animation-iteration-count: infinite;
 		animation-direction: normal;
 		animation-play-state: running;
 		animation-name: arrows_animation;
-		/* transform: translateX(55%); */
-		transform: translateX(0%);
+		/* 100%, not 55% — the blade's JS uses a different value for the short
+		   handle ($('.arrow_small_username').css("transform","translateX(100%)"))
+		   because a short string has further to travel to clear the pill. */
+		transform: translateX(100%);
 	}
-	
 .simplebar-track.simplebar-vertical {
   opacity: 1 !important;
   visibility: visible !important;
@@ -1463,15 +1466,12 @@ font-weight: 100 !important;
 
   
 	@keyframes arrows_animation {
-		0% {
-			animation-timing-function: ease-out;
-		padding-left: 14px !important;
-		}
-  
+		/* Only 100%. A missing 0% means the browser falls back to the element's own
+		   `transform` — which is the 55%/100% the blade's JS patches in after 7s.
+		   Spelling a transform here would override that and start the text in
+		   place, which is why the earlier attempt looked wrong. */
 		100% {
-			
 			transform: translateX(-110%);
-		padding-left: 14px !important;
 		}
 	}
 	
@@ -1555,10 +1555,10 @@ font-weight: 100 !important;
    .feed_posts_heading_p; the sidebar handle inherited the layout's 300. Both
    classes are the same element — .arrow is only swapped in for long handles,
    which get the marquee treatment. */
-#fh5co-aside .arrow_small_username,
+/* #fh5co-aside .arrow_small_username,
 #fh5co-aside .arrow {
   font-weight: 700;
-}
+} */
 /* ===== Sidebar overflow bar =====
    Verbatim from layouts_direct_user/main.blade.php:98 (.js-fullheight): an 11px
    classic bar, #f1f1f1 track, #777 thumb rounded 20px with a 4px blueviolet
