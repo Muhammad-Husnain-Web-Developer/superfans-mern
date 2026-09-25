@@ -336,10 +336,20 @@ function WorldPostCard({
      the card to do that, since an ancestor's transform would otherwise become
      the containing block for `position: fixed` */
   const onPhone = typeof window !== 'undefined' && window.innerWidth <= 768;
-  const renderReportMenu = (node: React.ReactNode) => (onPhone ? createPortal(node, document.body) : node);
+  /* The list, its close-out sheet and the ✕ all leave the card: an ancestor of the feed
+     card carries a transform, which would otherwise become the containing block for
+     `position: fixed` and pin them to the card instead of the viewport. */
+  const renderReportMenu = (node: React.ReactNode) => createPortal(node, document.body);
   const registerModal = useRegisterModal();
   const navigate = useNavigate();
-  const [reportOpen, setReportOpen] = useState(false);
+   const [reportOpen, setReportOpen] = useState(false);
+  /* the share row's confirmation — same dialog the wall and full-screen viewer use */
+  const [shareSwal, setShareSwal] = useState<{ icon: 'success' | 'error'; title: string } | null>(null);
+  /* the arrow, so the list pins to it in viewport coordinates */
+  const reportBtnRef = useRef<HTMLButtonElement>(null);
+  /* the post card itself, so the list can be aligned to the post's own edges */
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [liked, setLiked] = useState(item.viewerLiked ?? false);
   const [hated, setHated] = useState(item.viewerHated ?? false);
   const [likesTotal, setLikesTotal] = useState(item.likesTotal ?? item.noOfLikes ?? 0);
@@ -353,8 +363,55 @@ function WorldPostCard({
   const username = item.influencer?.usernameUrl ?? 'unknown';
   const profilePicture = item.influencer?.profilePicture || 'output-onlinepngtools (2).png';
   const media = item.imageVideo ?? '';
-  const taggedUsers = (item.tags ?? []).map((s) => s.trim()).filter(Boolean);
+    const taggedUsers = (item.tags ?? []).map((s) => s.trim()).filter(Boolean);
   const taggedPics = item.taggedProfilePictures ?? [];
+
+  /* pin the list to the arrow it opened from: measured at open time and again on
+     scroll/resize, because the arrow travels with the wall as the reader scrolls */
+  useEffect(() => {
+    if (!reportOpen) return;
+    const place = () => {
+      /* the arrow gives the top (just under the heading strip), the card gives the
+         left edge and the width — so the list sits exactly over the post, at the
+         post's own size, rather than hanging off the arrow's right corner. */
+      const btn = reportBtnRef.current?.getBoundingClientRect();
+      /* cardRef sits on the media wrapper itself, so its own rect is the post's own
+         rect — no need to reach inside it for a nested element */
+      const card = cardRef.current?.getBoundingClientRect();
+      if (!btn || !card) return;
+      setMenuPos({
+        top: btn.bottom + 6,
+        left: card.left,
+        width: card.width,
+      });
+    };
+    place();
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [reportOpen]);
+
+  /* 📤 Share post, first row, exactly as the full-screen viewer leads with it — same
+     wording (report.share.post), same address (/user/post_detail/<id>), same
+     confirmation (report.share.copied / .failed). */
+  function copyPostLink() {
+    setReportOpen(false);
+    const write = navigator.clipboard?.writeText(
+      `${window.location.origin}/user/post_detail/${item.id}`,
+    );
+    if (!write) {
+      setShareSwal({ icon: 'error', title: tReport('share.failed') });
+      return;
+    }
+    void write
+      .then(() => setShareSwal({ icon: 'success', title: tReport('share.copied') }))
+      .catch(() => setShareSwal({ icon: 'error', title: tReport('share.failed') }));
+  }
+
+  /** blade like_dislike_post: toggles the like and updates the count optimistically. */
 
 
   /** blade like_dislike_post: toggles the like and updates the count optimistically. */
@@ -539,6 +596,7 @@ function toggleHate() {
         tagged={taggedUsers.map((name, i) => ({ usernameUrl: name, profilePicture: taggedPics[i]?.trim() || null }))}
         right={
           <button
+            ref={reportBtnRef}
             className="report-button-inline report-mobile"
             onClick={(e) => {
               e.stopPropagation();
@@ -555,7 +613,7 @@ function toggleHate() {
         }
       />
 
-      <div className="image-hover-wrapper" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+      <div ref={cardRef} className="image-hover-wrapper" style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
         {isVideoFile(media) ? (
           <div className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
             {/* No native control bar: the mute button beside it is the control, and two of
@@ -593,25 +651,23 @@ function toggleHate() {
           </a>
         )}
 
+        {/* close-out sheet — dims the page and takes the click that closes the menu */}
+        {reportOpen && renderReportMenu(
+          <div className="report-menu-backdrop" onClick={() => setReportOpen(false)} />
+        )}
+
+
         {reportOpen && renderReportMenu(
           <div
             className="report-menu"
             onClick={(e) => e.stopPropagation()}
-            style={
-              onPhone
-                ? { background: 'white', border: '1px solid #ccc', borderRadius: 6 }
-                : {
-                    position: 'absolute',
-                    bottom: 45,
-                    left: '50%',
-                    transform: 'translateX(-50%)',
-                    background: 'white',
-                    border: '1px solid #ccc',
-                    borderRadius: 6,
-                    width: '90%',
-                    zIndex: 10,
-                  }
-            }
+                       style={{
+              position: 'fixed',
+              top: menuPos?.top,
+              left: menuPos?.left,
+              width: menuPos?.width,
+              zIndex: 100000,
+            }}
           >
             <ul
               style={{
@@ -627,6 +683,19 @@ function toggleHate() {
                 fontSize: onPhone ? 14 : 11,
               }}
             >
+              <li style={{ borderBottom: '1px solid #eee' }}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    copyPostLink();
+                  }}
+                  style={{ display: 'block', padding: '10px 15px', textDecoration: 'none', color: '#333' }}
+                >
+                  📤 {tReport('share.post')}
+                </a>
+              </li>
               {REPORT_REASONS.map(([reason, key]) => (
                 <li key={reason} style={{ borderBottom: '1px solid #eee' }}>
                   <a
@@ -646,6 +715,8 @@ function toggleHate() {
             </ul>
           </div>
         )}
+
+        {shareSwal && <SwalResult {...shareSwal} onClose={() => setShareSwal(null)} />}
       </div>
 
       <div className="stats-wrapper has-actions">

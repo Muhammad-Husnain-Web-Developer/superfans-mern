@@ -1,28 +1,22 @@
 /* Report-reasons dropdown.
 
-   On a phone the reasons are full sentences, so the menu is tall — anchored to
-   the little arrow it opened from, it ran off the bottom of the screen. Below
-   768px it is pinned to the top of the viewport instead, as the client asked,
-   and scrolls internally if the language makes it taller still. */
+   The list is pinned to the arrow it opened from, in viewport coordinates
+   (measured by the calling component). A dimmed sheet sits behind it and is
+   the only way out — a tap anywhere outside closes it. No ✕ button: the
+   client asked for the backdrop alone. */
 
-@media (max-width: 768px) {
-  .report-menu,
-  .post-fs-report-menu {
-    position: fixed !important;
-    top: 12px !important;
-    left: 12px !important;
-    right: 12px !important;
-    bottom: auto !important;
-    width: auto !important;
-    max-width: none !important;
-    transform: none !important;
-    max-height: 70vh;
-    overflow-y: auto;
-    z-index: 100000 !important;
-  }
+/* The close-out sheet. A dimmed layer covering everything behind the open list:
+   it is what the reader sees, and it is the only thing the pointer can reach, so
+   a tap anywhere outside the list closes it and nothing underneath is clicked by
+   accident. */
+.report-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.45);
+}
 
-  /* the wrapper the menu is positioned inside must not clip or offset it */
-  .report-menu-anchor {
-    position: static !important;
-  }
+/* keep the portalled list inside the window on a narrow screen */
+.report-menu {
+  max-width: calc(100vw - 16px);
 }
