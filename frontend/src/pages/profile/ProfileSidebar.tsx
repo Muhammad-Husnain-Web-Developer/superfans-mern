@@ -50,11 +50,21 @@ export function InfluencerSearch({
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
-      if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false);
+      if (!boxRef.current || boxRef.current.contains(e.target as Node)) return;
+      setOpen(false);
+      /* The sidebar search is a passing act — the client asked that closing it by
+         clicking anywhere outside also clears whatever was typed. The form-field
+         variant is left alone: there the text is a value the form owns, and a
+         click on the rest of the page must not wipe it. */
+      if (variant === 'sidebar') {
+        if (timer.current) clearTimeout(timer.current);
+        setQuery('');
+        setHits([]);
+      }
     };
     document.addEventListener('mousedown', close);
     return () => document.removeEventListener('mousedown', close);
-  }, []);
+  }, [variant]);
 
   function type(value: string) {
     setQuery(value);
@@ -82,6 +92,18 @@ export function InfluencerSearch({
     }, 200);
   }
 
+    /**
+   * The ✕ in the input's right edge, and the outside-click path, both land here:
+   * clear what was typed, drop the hits, and close the list. The `onChange?.('')`
+   * is for the controlled field variant, whose value lives in the caller.
+   */
+  function clear() {
+    if (timer.current) clearTimeout(timer.current);
+    setQuery('');
+    onChange?.('');
+    setHits([]);
+    setOpen(false);
+  }
   return (
     <div
       className={variant === 'field' ? 'wrapper influencer-search-field' : 'wrapper'}
@@ -95,8 +117,28 @@ export function InfluencerSearch({
         value={text}
         onChange={(e) => type(e.target.value)}
         onFocus={() => hits.length > 0 && setOpen(true)}
+        /* reserve room for the ✕ when it is showing, so a long query never
+           runs underneath it */
+        style={text ? { paddingRight: 26 } : undefined}
       />
       {variant === 'sidebar' && <div className="wrapper_span">🔎</div>}
+      {text && (
+        <button
+          type="button"
+          className="search-clear"
+          /* stopPropagation so this click is not also read as a click outside the
+             wrapper (the two would race, and the mousedown would close the field
+             before the click could clear it) */
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={(e) => {
+            e.stopPropagation();
+            clear();
+          }}
+          aria-label={tUi('close')}
+        >
+          ✕
+        </button>
+      )}
       {open && hits.length > 0 && (
         <ul
           className="typeahead dropdown-menu"

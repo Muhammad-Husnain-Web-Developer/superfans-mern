@@ -774,3 +774,33 @@ input.login-modal-input:focus {
     border-bottom: none;
   }
 }
+/* ===== Mobile footer search — the ✕ =====
+   Same control the sidebar's search carries (influencer-search.css), placed on
+   the footer bar's own field. Positioned inside .mobile-search-container, which
+   is already position:relative, so it never pushes the input wider or moves the
+   bar's other buttons. Hidden when the field is empty. */
+.mobile-search-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #d8d8d8;
+  color: #555;
+  font: 700 12px/1 Arial, sans-serif;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.mobile-search-clear:hover,
+.mobile-search-clear:active {
+  background: #c8c8c8;
+  color: #222;
+}

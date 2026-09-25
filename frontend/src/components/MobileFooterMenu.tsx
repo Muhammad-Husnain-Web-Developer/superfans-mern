@@ -58,10 +58,44 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
         .catch(() => setHits([]));
     }, 200);
   }, [query]);
+  /**
+   * The ✕ inside the search field — the client asked for the same control the
+   * sidebar carries. Clears what was typed and drops the suggestions, so the
+   * next tap starts fresh.
+   */
+  function clearSearch() {
+    if (timer.current) clearTimeout(timer.current);
+    setQuery('');
+    setHits([]);
+    /* Same effect as an outside click: the bar's is-searching state is what
+       expands the field and hides the other buttons, and collapsing it is what
+       "close" means on this bar. Without this, the ✕ cleared the text but left
+       the bar wide open — which is what the client noticed. */
+    setSearching(false);
+  }
 
+  /**
+   * Clicking anywhere outside the search container clears the field, same rule
+   * the sidebar follows — a half-typed name is a passing act and leaving it
+   * behind in the bar is what the client reported.
+   *
+   * The listener is attached once and reads the current ref, so the query state
+   * does not have to be a dependency of the effect.
+   */
+  const searchBoxRef = useRef<HTMLDivElement>(null);
+  const clearRef = useRef(clearSearch);
+  clearRef.current = clearSearch;
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!searchBoxRef.current || searchBoxRef.current.contains(e.target as Node)) return;
+      clearRef.current();
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, []);
   return (
     <div className={`mobile-footer-menu${authUser ? '' : ' is-guest'}${searching ? ' is-searching' : ''}`}>
-      <div className="mobile-search-container">
+      <div className="mobile-search-container" ref={searchBoxRef}>
         <input
           type="text"
           className="footer-search-input influencer_search"
@@ -71,7 +105,27 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setSearching(true)}
           onBlur={() => setSearching(false)}
+          /* reserve room for the ✕ when it shows, so a long query does not run
+             underneath it */
+          style={query ? { paddingRight: 26 } : undefined}
         />
+        {query && (
+          <button
+            type="button"
+            className="mobile-search-clear"
+            /* No preventDefault: the input's own onBlur collapses the bar, and
+               that is exactly the behaviour the client wants on the ✕ — the same
+               as tapping outside. clearSearch also sets searching=false, so the
+               two paths arrive at the same state even if the order differs. */
+            onClick={(e) => {
+              e.stopPropagation();
+              clearSearch();
+            }}
+            aria-label={tUi('close')}
+          >
+            ✕
+          </button>
+        )}
         <ul className="mobile-suggestions-list" style={{ display: hits.length ? 'flex' : 'none' }}>
           {hits.map((h) => (
             <li
