@@ -1,0 +1,71 @@
+/* The sidebar's logo card — Superheroina artwork on the front, the profile
+ * picture on the back.
+ *
+ * The client asked for a "paper flip": the front turns a half circle on its own
+ * vertical axis and the picture arrives, and it stays turned until the sidebar
+ * is closed again. Y-axis only — a card spinning, not a body wobbling.
+ *
+ * Two faces, both absolutely positioned, both with backface-visibility: hidden,
+ * and the back is pre-rotated by 180° so the picture is what comes into view at
+ * the halfway point.
+ *
+ * Square frame, 4px white ring, soft shadow — same proportions as the
+ * Superheroina SVG the sidebar used to hold (54% of the column), so nothing
+ * around it moves. */
+
+.logo-flip {
+  display: inline-block;
+  /* the artwork's own footprint, as before the frame was added */
+  width: 54%;
+  aspect-ratio: 1 / 1;
+  perspective: 900px;
+}
+
+.logo-flip-inner {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  /* 0° — the artwork faces the reader. The class below turns it. */
+  transform: rotateY(0deg);
+  /* one full turn, on the same curve the modals arrive on, so it reads as a
+     card being laid down rather than a snap */
+  transition: transform 1.4s cubic-bezier(0.21, 1.02, 0.32, 1);
+}
+
+.logo-flip.is-flipped .logo-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.logo-flip-face {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* no frame at all — the client asked the square off the logo */
+  border-radius: 0;
+  /* each face is drawn only while it is turned toward the reader */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: transparent;
+}
+
+/* the reverse side: the same card, turned to face the other way */
+.logo-flip-back {
+  transform: rotateY(180deg);
+}
+
+/* the artwork carries its own transparent padding; keep it from cropping when
+   it lands inside the card's frame */
+.logo-flip-front {
+  object-fit: contain;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-flip-inner {
+    transition: none;
+  }
+}

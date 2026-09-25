@@ -25,11 +25,12 @@ import '../../styles/profile-page.css';
 import '../../styles/world-page.css';
 import { toSteps, type WorldStep } from '../../utils/worldSequence';
 import '../../styles/report-menu.css';
+import '../../styles/logo-spin.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
 import { ControlPanelHost } from '../profile/ControlPanelHost';
 import { AddPostHost } from '../profile/AddPostHost';
 import { StreamModal } from '../../components/StreamModal';
-
+import { FlipLogo } from '../../components/FlipLogo';
 /* The hardcoded network slider of world.blade.php (11 items, per-item icon styles) */
 const WORLD_NETWORKS: { name: string; href: string; img: string }[] = [
   { name: 'TikTok', href: 'https://www.tiktok.com/', img: 'b05db292060a4b42799ad7abaf5d6130.png' },
@@ -73,7 +74,9 @@ export function WorldSidebar({
     <aside id="fh5co-aside" role="complementary" className="border js-fullheight">
       <h1 id="fh5co-logo" style={{ marginBottom: 0 }}>
         <a href={authUser ? '/user' : '/'}>
-          <img src="/assets/images/SUPERHEROINA.svg" style={{ width: '54%' }} alt="" />
+          {/* the artwork on the front, this account's picture on the back —
+              turns when the sidebar opens (see FlipLogo) */}
+          <FlipLogo picture={authUser?.profilePicture ?? null} />
         </a>
       </h1>
 

@@ -8,6 +8,8 @@ import { api } from '../../api/client';
 import { NetworkSlider } from '../../components/NetworkSlider';
 import { networkLogo } from '../../utils/networkLogo';
 import '../../styles/influencer-search.css';
+import { FlipLogo } from '../../components/FlipLogo';
+import '../../styles/logo-spin.css';
 import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
 
@@ -501,7 +503,9 @@ export function ProfileSidebar({
     <aside id="fh5co-aside" role="complementary" className="border js-fullheight">
       <h1 id="fh5co-logo" style={{ marginBottom: 0 }}>
         <a href={homeHref}>
-          <img src="/assets/images/SUPERHEROINA.svg" style={{ width: '54%' }} alt="" />
+          {/* the artwork on the front, this profile's picture on the back —
+              turns when the sidebar opens (see FlipLogo) */}
+          <FlipLogo picture={profile.profilePicture} />
         </a>
       </h1>
 
