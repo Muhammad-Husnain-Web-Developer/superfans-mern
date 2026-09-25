@@ -175,6 +175,11 @@ export function PostFullscreen() {
   const touchStart = useRef({ x: 0, y: 0 });
   const wheelLock = useRef(false);
   const [pops, setPops] = useState<{ id: number; x: number; y: number }[]>([]);
+  /* the transparent speaker icon shown for half a second whenever the volume is
+     toggled — the client asked for it in the middle of the screen, YouTube-style.
+     `null` when nothing is showing. */
+  const [volumeNotice, setVolumeNotice] = useState<'muted' | 'unmuted' | null>(null);
+  const volumeNoticeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mediaWrapRef = useRef<HTMLDivElement>(null);
   /* Reels behaviour: neighbours are fetched and their media warmed while the
      current post is on screen, so moving to one swaps instantly instead of
@@ -391,131 +396,100 @@ export function PostFullscreen() {
     playHateSound();
   }
 
-  // function doLike(skipSound?: boolean) {
-  //   if (!post) return;
-  //   api
-  //     .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
-  //       `/posts/${post.id}/like-toggle`,
-  //     )
-  //     .then((r) => {
-  //       const nowLiked = r.data.data.status === 'post liked';
-  //       setLiked(nowLiked);
-  //       if (nowLiked) setHated(false);
-  //       setLikes(r.data.data.likesCount);
-  //       setHates(r.data.data.hatesCount);
-  //       if (!skipSound) playLike();
-  //     })
-  //     .catch(() => undefined);
-  // }
+  function doLike(skipSound?: boolean) {
+    if (!post) return;
+    if (!skipSound) playLike();
 
-  // function doHate() {
-  //   if (!post) return;
-  //   api
-  //     .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
-  //       `/me/hate/${post.id}`,
-  //     )
-  //     .then((r) => {
-  //       const nowHated = r.data.data.status === 'post hated';
-  //       setHated(nowHated);
-  //       if (nowHated) setLiked(false);
-  //       setLikes(r.data.data.likesCount);
-  //       setHates(r.data.data.hatesCount);
-  //       playHate();
-  //     })
-  //     .catch(() => undefined);
-  // }
-function doLike(skipSound?: boolean) {
-  if (!post) return;
-  if (!skipSound) playLike();
+    const willBeLiked = !liked;
+    setLiked(willBeLiked);
+    if (willBeLiked) {
+      setHated(false);
+      setLikes((prev) => prev + 1);
+      if (hated) setHates((prev) => prev - 1);
+    } else {
+      setLikes((prev) => prev - 1);
+    }
+    keepVote({ liked: willBeLiked, hated: willBeLiked ? false : hated });
 
-  const willBeLiked = !liked;
-  setLiked(willBeLiked);
-  if (willBeLiked) {
-    setHated(false);
-    setLikes((prev) => prev + 1);
-    if (hated) setHates((prev) => prev - 1);
-  } else {
-    setLikes((prev) => prev - 1);
+    api
+      .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+        `/posts/${post.id}/like-toggle`,
+      )
+      .then((r) => {
+        const nowLiked = r.data.data.status === 'post liked';
+        setLiked(nowLiked);
+        if (nowLiked) setHated(false);
+        setLikes(r.data.data.likesCount);
+        setHates(r.data.data.hatesCount);
+        keepVote(
+          { liked: nowLiked, hated: nowLiked ? false : hated },
+          { likes: r.data.data.likesCount, hates: r.data.data.hatesCount },
+        );
+      })
+      .catch((err) => {
+          // If 401, keep the optimistic state – interceptor will retry
+        if (err?.response?.status === 401) {
+          console.log('🔄 Token expired – keeping optimistic state');
+          return;
+        }
+        setLiked(!willBeLiked);
+        if (willBeLiked) {
+          setLikes((prev) => prev - 1);
+          if (hated) setHates((prev) => prev + 1);
+        } else {
+          setLikes((prev) => prev + 1);
+        }
+        keepVote({ liked: !willBeLiked, hated });
+      });
   }
-  keepVote({ liked: willBeLiked, hated: willBeLiked ? false : hated });
 
-  api
-    .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
-      `/posts/${post.id}/like-toggle`,
-    )
-    .then((r) => {
-      const nowLiked = r.data.data.status === 'post liked';
-      setLiked(nowLiked);
-      if (nowLiked) setHated(false);
-      setLikes(r.data.data.likesCount);
-      setHates(r.data.data.hatesCount);
-      keepVote(
-        { liked: nowLiked, hated: nowLiked ? false : hated },
-        { likes: r.data.data.likesCount, hates: r.data.data.hatesCount },
-      );
-    })
-    .catch((err) => {
-        // If 401, keep the optimistic state – interceptor will retry
-      if (err?.response?.status === 401) {
-        console.log('🔄 Token expired – keeping optimistic state');
-        return;
-      }
-      setLiked(!willBeLiked);
-      if (willBeLiked) {
-        setLikes((prev) => prev - 1);
-        if (hated) setHates((prev) => prev + 1);
-      } else {
-        setLikes((prev) => prev + 1);
-      }
-      keepVote({ liked: !willBeLiked, hated });
-    });
-}
-function doHate() {
-  if (!post) return;
-  playHate();
+  function doHate() {
+    if (!post) return;
+    playHate();
 
-  const willBeHated = !hated;
-  setHated(willBeHated);
-  if (willBeHated) {
-    setLiked(false);
-    setHates((prev) => prev + 1);
-    if (liked) setLikes((prev) => prev - 1);
-  } else {
-    setHates((prev) => prev - 1);
+    const willBeHated = !hated;
+    setHated(willBeHated);
+    if (willBeHated) {
+      setLiked(false);
+      setHates((prev) => prev + 1);
+      if (liked) setLikes((prev) => prev - 1);
+    } else {
+      setHates((prev) => prev - 1);
+    }
+    keepVote({ liked: willBeHated ? false : liked, hated: willBeHated });
+
+    api
+      .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
+        `/me/hate/${post.id}`,
+      )
+      .then((r) => {
+        const nowHated = r.data.data.status === 'post hated';
+        setHated(nowHated);
+        if (nowHated) setLiked(false);
+        setLikes(r.data.data.likesCount);
+        setHates(r.data.data.hatesCount);
+        keepVote(
+          { liked: nowHated ? false : liked, hated: nowHated },
+          { likes: r.data.data.likesCount, hates: r.data.data.hatesCount },
+        );
+      })
+      .catch((err) => {
+          // If 401, keep the optimistic state – interceptor will retry
+        if (err?.response?.status === 401) {
+          console.log('🔄 Token expired – keeping optimistic state');
+          return;
+        }
+        setHated(!willBeHated);
+        if (willBeHated) {
+          setHates((prev) => prev - 1);
+          if (liked) setLikes((prev) => prev + 1);
+        } else {
+          setHates((prev) => prev + 1);
+        }
+        keepVote({ liked, hated: !willBeHated });
+      });
   }
-  keepVote({ liked: willBeHated ? false : liked, hated: willBeHated });
 
-  api
-    .post<{ success: boolean; data: { status: string; likesCount: number; hatesCount: number } }>(
-      `/me/hate/${post.id}`,
-    )
-    .then((r) => {
-      const nowHated = r.data.data.status === 'post hated';
-      setHated(nowHated);
-      if (nowHated) setLiked(false);
-      setLikes(r.data.data.likesCount);
-      setHates(r.data.data.hatesCount);
-      keepVote(
-        { liked: nowHated ? false : liked, hated: nowHated },
-        { likes: r.data.data.likesCount, hates: r.data.data.hatesCount },
-      );
-    })
-    .catch((err) => {
-        // If 401, keep the optimistic state – interceptor will retry
-      if (err?.response?.status === 401) {
-        console.log('🔄 Token expired – keeping optimistic state');
-        return;
-      }
-      setHated(!willBeHated);
-      if (willBeHated) {
-        setHates((prev) => prev - 1);
-        if (liked) setLikes((prev) => prev + 1);
-      } else {
-        setHates((prev) => prev + 1);
-      }
-      keepVote({ liked, hated: !willBeHated });
-    });
-}
   /* Straight to the same Stripe checkout the profile's own Follow opens
      (Profile.tsx:1199); the modal in front of it is the same one too. */
   function subscribe() {
@@ -570,6 +544,18 @@ function doHate() {
       .catch(() => setSwal({ icon: 'error', title: tReport('failed_title'), text: tReport('failed_message') }));
   }
 
+  /**
+   * The transparent speaker icon the client asked for: half a second in the middle
+   * of the screen, then gone. Pressed again before that, it restarts from the
+   * beginning rather than stacking — a second tap should read as one confident
+   * "now muted", not two icons on top of each other.
+   */
+  function showVolumeNotice(muted: boolean) {
+    setVolumeNotice(muted ? 'muted' : 'unmuted');
+    if (volumeNoticeTimer.current) clearTimeout(volumeNoticeTimer.current);
+    volumeNoticeTimer.current = setTimeout(() => setVolumeNotice(null), 500);
+  }
+
   function showHeartPop(clientX: number, clientY: number) {
     const rect = mediaWrapRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -599,6 +585,9 @@ function doHate() {
         v.muted = !v.muted;
         /* remembered, so the next clip in the reel opens the way they left this one */
         mutePref.current = v.muted;
+        /* the client asked for a transparent speaker icon in the middle of the
+           screen for half a second on every toggle — see showVolumeNotice */
+        showVolumeNotice(v.muted);
       }, 400);
     }
     lastTap.current = now;
@@ -829,6 +818,14 @@ function doHate() {
         .post-fs-heart-pop-wrap{position:absolute;inset:0;pointer-events:none;z-index:7}
         .post-fs-heart-pop{position:absolute;transform:translate(-50%,-50%);font-size:80px;line-height:1;color:#e32626;text-shadow:0 0 30px rgba(227,38,38,.8);animation:postFsHeartPop .8s ease-out forwards}
         @keyframes postFsHeartPop{0%{transform:translate(-50%,-50%) scale(0);opacity:.8}15%{transform:translate(-50%,-50%) scale(1.4);opacity:1}30%{transform:translate(-50%,-50%) scale(1.1);opacity:1}100%{transform:translate(-50%,-50%) scale(1.2);opacity:0}}
+        /* The transparent speaker icon the client asked for: a soft dark disc in
+           the middle of the screen on every volume toggle, so it is legible over
+           both a bright and a dark picture — a fully see-through icon vanished
+           against a busy frame. 500ms, then gone — the timing lives in the
+           component, not here. */
+        .post-fs-volume-notice{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:96px;height:96px;border-radius:50%;background:rgba(0,0,0,0.4);color:rgba(255,255,255,0.9);display:flex;align-items:center;justify-content:center;font-size:44px;z-index:8;pointer-events:none;animation:fsVolumeFade .5s ease-out forwards}
+        @keyframes fsVolumeFade{0%{opacity:0;transform:translate(-50%,-50%) scale(0.85)}20%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+        @media (prefers-reduced-motion:reduce){.post-fs-volume-notice{animation:none}}
         .post-fs-report-wrap{position:relative}
         .post-fs-report-btn{background:none;border:none;color:rgba(255,255,255,.9);width:28px;height:28px;padding:0;line-height:1;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
         .post-fs-report-menu{position:absolute;top:100%;right:0;margin-top:8px;background:#fff;border:1px solid #ccc;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);min-width:180px;z-index:20;list-style:none;margin:0;padding:0;font-size:13px}
@@ -984,6 +981,15 @@ function doHate() {
             </div>
           ))}
         </div>
+
+        {/* the transparent speaker icon, half a second on every volume toggle */}
+        {volumeNotice && (
+          <div className="post-fs-volume-notice" aria-hidden="true">
+            <i
+              className={`fas fa-volume-${volumeNotice === 'muted' ? 'mute' : 'up'}`}
+            />
+          </div>
+        )}
       </div>
 
       {/* Bottom bar: avatar + nickname + follow */}
