@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { playNavCloseSound, playNavOpenSound } from '../utils/navSounds';
 import '../styles/nav-toggle.css';
 
 /**
@@ -23,6 +24,23 @@ const OFFCANVAS_CLOSE = 'fh5co:offcanvas-close';
 
 export function NavToggle() {
   const [active, setActive] = useState(false);
+
+  /* The sound belongs on the state, not on each handler: the sidebar opens and
+     closes from four places — the tab, an outside click, the finger-drag's own
+     release, and closeOffcanvas() (RegisterModal, the streaming button, and the
+     control-panel link in the sidebar all call it). Watching `active` covers
+     them all, and a path added later is covered without anyone remembering to
+     wire a sound in. */
+  const firstRun = useRef(true);
+  useEffect(() => {
+    if (firstRun.current) {
+      /* the mount pass is not an open — nothing to announce */
+      firstRun.current = false;
+      return;
+    }
+    if (active) playNavOpenSound();
+    else playNavCloseSound();
+  }, [active]);
 
   useEffect(() => {
     const onClose = () => setActive(false);
