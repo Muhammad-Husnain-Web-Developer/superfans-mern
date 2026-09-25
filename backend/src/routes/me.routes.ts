@@ -55,6 +55,7 @@ const settingsSchema = z.object({
   priceOfSubscription: z.coerce.number().min(0).optional(),
   earnings: z.coerce.number().min(0).optional(),
   chatToggle: z.boolean().optional(),
+  soundEffects: z.boolean().optional(),
 });
 
 meRouter.patch(
@@ -103,6 +104,7 @@ meRouter.patch(
     }
     if (input.earnings !== undefined) user.earnings = input.earnings;
     if (input.chatToggle !== undefined) user.chatToggle = input.chatToggle;
+    if (input.soundEffects !== undefined) user.soundEffects = input.soundEffects;
     if (input.profilePicture) user.profilePicture = input.profilePicture;
     if (input.coverPicture) user.coverPicture = input.coverPicture;
     /* updateCoverColor clears any cover picture first (blade parity) */
@@ -133,6 +135,8 @@ meRouter.patch(
         coverColor: user.coverColor,
         verified: user.verified,
         vip: user.vip,
+        /* echoed back so the caller's setUser() keeps the sound cache in step */
+        soundEffects: user.soundEffects !== false,
       },
     });
   }),

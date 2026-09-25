@@ -68,6 +68,12 @@ export interface IUser extends Document {
   pendingRedsysOrder?: string;
   pendingRedsysPurpose?: string;
   chatToggle: boolean;
+  /**
+   * SOUND EFFECTS — the account-wide toggle that gates every button sound in the
+   * app (the network slider's arrows, the like and hate on every wall). On by
+   * default, so an account that has never touched it behaves exactly as before.
+   */
+  soundEffects: boolean;
 
   // Geo tracking
   registeredIp?: string;
@@ -181,6 +187,8 @@ const userSchema = new Schema<IUser>(
     pendingRedsysOrder: String,
     pendingRedsysPurpose: String,
     chatToggle: { type: Boolean, default: true },
+    /* SOUND EFFECTS — same default-on shape as chatToggle above. */
+    soundEffects: { type: Boolean, default: true },
 
     registeredIp: String,
     registeredCountry: String,

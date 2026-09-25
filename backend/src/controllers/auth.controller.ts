@@ -30,6 +30,10 @@ function publicUser(user: IUser) {
     verified: user.verified,
     vip: user.vip,
     chatToggle: user.chatToggle,
+    /* `!== false` rather than `?? true`: accounts created before this field existed
+       have no value stored, and mongoose does not apply schema defaults on read — so a
+       missing field must read as on, which is what the client asked for. */
+    soundEffects: user.soundEffects !== false,
     createdAt: user.createdAt,
   };
 }

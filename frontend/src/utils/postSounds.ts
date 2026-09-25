@@ -10,6 +10,7 @@
 
 /* The client's own recordings, shipped with the frontend rather than the Laravel asset
    folder — that folder is not in git and only exists on the server. */
+   import { soundEffectsEnabled } from './soundEffects';
 const sources = {
   cor11: '/sounds/cor11.mp3',
   cor22: '/sounds/cor22.mp3',
@@ -55,6 +56,10 @@ function audio(name: keyof typeof sources) {
   return el;
 }
 function play(name: keyof typeof sources) {
+  /* SOUND EFFECTS: No — every like and hate is silent, and the like-run's step
+     does not advance while it is off, so turning it back on resumes the client's
+     sequence rather than jumping ahead by however many clicks went quiet. */
+  if (!soundEffectsEnabled()) return;
   /* autoplay policy rejects this until the page has been interacted with; the blade lets the
      same failure pass silently rather than breaking the toggle it belongs to */
   void audio(name).play().catch(() => undefined);
@@ -62,6 +67,7 @@ function play(name: keyof typeof sources) {
 
 /** The next sound in the client's run, on like and unlike alike. */
 export function playLikeSound() {
+  if (!soundEffectsEnabled()) return;
   play(LIKE_RUN[likeStep]);
   likeStep = (likeStep + 1) % LIKE_RUN.length;
 }

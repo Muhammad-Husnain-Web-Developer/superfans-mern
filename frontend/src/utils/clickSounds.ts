@@ -13,6 +13,7 @@
  * play() on one already playing is a no-op there too, so a burst of fast clicks
  * makes a single sound in both apps.
  */
+import { soundEffectsEnabled } from './soundEffects';
 const pattern = [4, 9];
 let patternIndex = 0;
 let clickCount = 0;
@@ -37,6 +38,9 @@ function audio(name: keyof typeof sources) {
 
 /** The blade's `.play-sound2` handler. */
 export function playSliderClickSound() {
+  /* SOUND EFFECTS: No — the arrows go silent, the counter holds its place so the
+     cadence picks up where it left off if the switch is turned back on. */
+  if (!soundEffectsEnabled()) return;
   clickCount++;
   let name: keyof typeof sources = 'close';
   if (clickCount >= pattern[patternIndex]) {

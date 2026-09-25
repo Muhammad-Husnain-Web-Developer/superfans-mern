@@ -14,6 +14,7 @@ import {
   type RelationRow,
   type SocialNetworkOption,
 } from './ControlPanelModal';
+import { soundEffectsEnabled, setSoundEffectsEnabled } from '../../utils/soundEffects';
 import { useCropUpload } from './ControlPanelCropModal';
 
 /**
@@ -39,6 +40,7 @@ export function UserModalCenter({
   const { setUser } = useAuth();
 
   const [bio, setBio] = useState(profile.bio ?? '');
+  const [soundOn, setSoundOn] = useState(soundEffectsEnabled());
   const [coverColor, setCoverColor] = useState(profile.coverPicture ? '' : profile.coverColor ?? '');
   const [username, setUsername] = useState(profile.usernameUrl ?? '');
   const [borderStatus, setBorderStatus] = useState(profile.profilePictureBorderStatus ?? '0');
@@ -280,6 +282,49 @@ export function UserModalCenter({
               </div>
             </div>
             <br />
+
+            {/* ---------- SOUND EFFECTS ----------
+                The client asked for a master switch over every button sound in
+                the app — the network slider's arrows, the like and hate on every
+                wall. The preference is stored on the account (see /me/settings and
+                utils/soundEffects.ts) so it is the same on every device. The white
+                button is the live one, so Yes/No reads at a glance. */}
+            <h3 style={H3}>SOUND EFFECTS:</h3>
+            <div className="container-fluid" style={{ paddingLeft: 0 }}>
+              <div className="row pb-3">
+                <div className="col-md-12">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSoundOn(true);
+                      setSoundEffectsEnabled(true);
+                    }}
+                    style={{
+                      ...SAVE_BTN,
+                      marginRight: 10,
+                      background: soundOn ? '#fff' : '#000',
+                      color: soundOn ? 'red' : '#fff',
+                    }}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSoundOn(false);
+                      setSoundEffectsEnabled(false);
+                    }}
+                    style={{
+                      ...SAVE_BTN,
+                      background: soundOn ? '#000' : '#fff',
+                      color: soundOn ? '#fff' : 'red',
+                    }}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {/* ---------- profile info ---------- */}
             <h3 style={H3}>{t('profile_info')}</h3>

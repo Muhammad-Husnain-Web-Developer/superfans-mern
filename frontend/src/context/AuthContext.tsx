@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { hydrateSoundEffects } from '../utils/soundEffects';
 
 export type UserRole = 'user' | 'influencer' | 'business' | 'admin';
 
@@ -13,6 +14,9 @@ export interface AuthUser {
   verified: boolean;
   vip: boolean;
   chatToggle?: boolean;
+  /* SOUND EFFECTS — the account-wide preference. Absent on older responses,
+     treated as `true` (on) by the hydrator. */
+  soundEffects?: boolean;
   createdAt?: string;
 }
 
@@ -34,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void import('../api/auth').then(({ fetchMe }) =>
       fetchMe().then((me) => {
         if (!cancelled) {
+          hydrateSoundEffects(me?.soundEffects);
           setUser(me);
           setLoading(false);
         }
@@ -44,7 +49,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const value = useMemo(() => ({ user, loading, setUser }), [user, loading]);
+  /* Every caller that swaps the viewer — login, logout, and the control panels'
+     own setUser after a save — has to keep the sound cache in step, or the next
+     click plays (or stays silent) against the previous account's preference.
+     Wrapping here means no caller has to remember. */
+  const setUserAndHydrate = useMemo(
+    () => (next: AuthUser | null) => {
+      hydrateSoundEffects(next?.soundEffects);
+      setUser(next);
+    },
+    [],
+  );
+
+  const value = useMemo(
+    () => ({ user, loading, setUser: setUserAndHydrate }),
+    [user, loading, setUserAndHydrate],
+  );
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
