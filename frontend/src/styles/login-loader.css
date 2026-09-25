@@ -1,0 +1,81 @@
+/* The login loader — white field, the Superheroina artwork, one gray bar filling
+   beneath it with the percentage climbing in step.
+
+   The bar is deliberately one colour: the client asked for gray, not the rainbow
+   the first sketch showed. Track is a light gray so the dark fill reads as
+   progress on the same surface.
+
+   The bar's duration here must match FILL_MS in LoginLoader.tsx — the number on
+   screen and the length of the bar have to finish on the same frame. */
+
+.login-loader {
+  position: fixed;
+  inset: 0;
+  /* higher than RegisterModal's own 123112311231 (the purple login modal the
+     mobile footer raises) — the loader has to cover it, not sit behind it */
+  z-index: 9999999999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  background: #fff;
+  transition: opacity 0.25s ease;
+}
+
+.login-loader.is-fading {
+  opacity: 0;
+}
+
+.login-loader-logo {
+  width: 132px;
+  height: auto;
+  display: block;
+}
+
+/* the track — a light gray rail the fill grows along. 10px tall, 220 wide: the
+   client asked for a fatter bar than the first pass carried */
+.login-loader-bar {
+  width: 220px;
+  height: 10px;
+  border-radius: 5px;
+  background: #e3e3e3;
+  overflow: hidden;
+}
+
+/* the fill — dark gray, growing left to right over two seconds, held at 100% once
+   done so a slow login API does not leave the bar creeping */
+.login-loader-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: #555;
+  border-radius: 5px;
+  animation: loginBarFill 2s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+
+/* the percentage under the bar */
+.login-loader-pct {
+  min-width: 52px;
+  text-align: center;
+  color: #555;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  /* so 10, 55, 100 all sit on the same width and do not jitter */
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes loginBarFill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-loader-fill {
+    animation-duration: 0.6s;
+  }
+  .login-loader {
+    transition: none;
+  }
+}

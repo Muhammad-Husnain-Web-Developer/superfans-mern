@@ -9,6 +9,7 @@ import { Select2Multi } from './Select2Multi';
 import { assetImage } from '../utils/format';
 import '../styles/footer-modals.css';
 import { useLayoutPageStyles } from '../components/StandalonePage';
+import { LoginLoader } from './LoginLoader';
 
 /**
  * Guest modal chain — exact port of footer.blade.php:
@@ -20,6 +21,30 @@ import { useLayoutPageStyles } from '../components/StandalonePage';
  */
 
 type View = 'choice' | 'creator' | 'fan' | 'login';
+
+/**
+ * A short, deterministic fingerprint of an email — the same FNV-1a the walls use
+ * for postNoise, kept here so the modal's login can decide, without a server
+ * round-trip, whether this browser session has already shown the loader to this
+ * email. Same helper the /login page carries in pages/auth/Login.tsx; the two
+ * flows are independent and each has to gate its own loader.
+ *
+ * It is not a security token; it only names, in a cookie, whose login already
+ * saw the loader.
+ */
+function emailHash(email: string): string {
+  let h = 2166136261;
+  const key = email.trim().toLowerCase();
+  for (let i = 0; i < key.length; i++) {
+    h ^= key.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
+/** Must match FILL_MS in components/LoginLoader.tsx and the cookie's own key. */
+const LOGIN_LOADER_COOKIE = 'sf_login_loader_seen';
+const LOGIN_LOADER_FILL_MS = 2000;
 
 const RegisterModalContext = createContext<{ open: () => void; openLogin: () => void } | null>(null);
 
@@ -79,6 +104,10 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   const [terms, setTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  /* the one-per-session loader, when login is submitted from the modal rather
+     than the /login page */
+  const [loaderOpen, setLoaderOpen] = useState(false);
+  const [loaderFading, setLoaderFading] = useState(false);
 
   function open() {
     setView('choice');
@@ -179,11 +208,36 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   async function submitLogin() {
     setError(null);
     setSubmitting(true);
+
+    /* Same once-per-(browser session, email) rule as the /login page — see
+       pages/auth/Login.tsx for the full note. Kept in both so either flow can
+       reach the wall on its own. */
+    const currentHash = emailHash(email);
+    const cookiePair = document.cookie
+      .split('; ')
+      .find((c) => c.startsWith(`${LOGIN_LOADER_COOKIE}=`));
+    const seenHash = cookiePair ? cookiePair.slice(`${LOGIN_LOADER_COOKIE}=`.length) : '';
+    const showLoader = seenHash !== currentHash;
+    const startedAt = Date.now();
+    if (showLoader) setLoaderOpen(true);
+
     try {
       const user = await apiLogin({ email, password });
+
+      if (showLoader) {
+        const remaining = Math.max(0, LOGIN_LOADER_FILL_MS - (Date.now() - startedAt));
+        if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
+        document.cookie = `${LOGIN_LOADER_COOKIE}=${currentHash}; path=/; SameSite=Lax`;
+        setLoaderFading(true);
+        await new Promise((r) => setTimeout(r, 250));
+      }
+
       setUser(user);
       close();
     } catch {
+      /* a failed login must not leave the loader half-finished over the form */
+      setLoaderOpen(false);
+      setLoaderFading(false);
       setError('These credentials do not match our records.');
     } finally {
       setSubmitting(false);
@@ -573,7 +627,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
             }}
             style={{ textAlign: 'center', fontWeight: 'bold' }}
           >
-            <span style={{ cursor: 'pointer' }}>{tAuth('Login_create_btn')}</span>
+            <span style={{ cursor: 'pointer' }}>{tAuth('Login_btn')}</span>
           </span>
         </p>
       </div>
@@ -590,6 +644,9 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   return (
     <RegisterModalContext.Provider value={{ open, openLogin }}>
       {children}
+      {/* The one-per-session loading screen — drawn outside the modal so its
+          fixed overlay can cover the purple form while login runs. */}
+      {loaderOpen && <LoginLoader fading={loaderFading} />}
       {/* only the two register forms carry the ← back arrow (blade: #login_Modal has none) */}
       {visible && frame(viewContent[view], view === 'creator' || view === 'fan')}
     </RegisterModalContext.Provider>
