@@ -27,8 +27,9 @@ import { SubscriberListModal } from './SubscriberListModal';
  * subscription price, earnings, bank/PayPal payouts and the Super Ads /
  * SuperCalls links, and by dropping "become a creator".
  *
- * Note the blade's ordering quirk: the profile-picture border and footer credits
- * sit *under* the NETWORKS heading here, unlike in the fan modal.
+ * Note the blade's ordering quirk: the footer credits sit *under* the NETWORKS
+ * heading here, unlike in the fan modal. The profile-picture border sat there too
+ * until David asked for it to move up into PROFILE INFO, where the fan modal keeps it.
  */
 export function InfluencerControlPanelModal({
   profile,
@@ -406,10 +407,11 @@ export function InfluencerControlPanelModal({
               20,
             )}
 
-            <hr style={HR} />
-            <h3 style={H3}>{tUi('networks_heading')}</h3>
-
-            {/* blade quirk: border + footer credits live under the NETWORKS heading here */}
+            {/* PROFILE PICTURE BORDER. The blade keeps this row *under* the NETWORKS
+                heading on the creator modal (layouts_direct_user/footer.blade.php:3757),
+                unlike the fan one. David asked for it to sit where the fan modal already
+                has it — at the foot of PROFILE INFO — so this is a deliberate departure
+                from the blade's ordering. What it saves is untouched. */}
             <div className="container-fluid" style={{ paddingLeft: 0 }}>
               <div className="row pb-3">
                 <div className="col-md-9">
@@ -447,6 +449,9 @@ export function InfluencerControlPanelModal({
                 </div>
               </div>
             </div>
+
+            <hr style={HR} />
+            <h3 style={H3}>{tUi('networks_heading')}</h3>
 
             <div className="custom-file" style={{ display: 'flex' }}>
               <label style={{ marginRight: 10, color: 'white', marginTop: 3 }}>{t('footer_credits')}</label>
