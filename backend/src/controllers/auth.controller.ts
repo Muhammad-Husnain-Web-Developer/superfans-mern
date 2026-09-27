@@ -30,6 +30,11 @@ function publicUser(user: IUser) {
     verified: user.verified,
     vip: user.vip,
     chatToggle: user.chatToggle,
+    /* the profile-picture ring (`'1'`/`'0'`). The sidebar's flipping logo card reads it
+       for the viewer's own picture, so it has to travel with the session, not only with
+       a fetched profile. Missing reads as '0' — Laravel's blades test `== '1'`, so an
+       account that never set it has no ring. */
+    profilePictureBorderStatus: user.profilePictureBorderStatus ?? '0',
     /* `!== false` rather than `?? true`: accounts created before this field existed
        have no value stored, and mongoose does not apply schema defaults on read — so a
        missing field must read as on, which is what the client asked for. */

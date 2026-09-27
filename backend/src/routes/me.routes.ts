@@ -135,6 +135,11 @@ meRouter.patch(
         coverColor: user.coverColor,
         verified: user.verified,
         vip: user.vip,
+        /* the caller hands this whole object to setUser(), which replaces the context's
+           user wholesale — so every field the app reads off the session has to be here
+           or it is lost until the next /auth/me. */
+        chatToggle: user.chatToggle,
+        profilePictureBorderStatus: user.profilePictureBorderStatus ?? '0',
         /* echoed back so the caller's setUser() keeps the sound cache in step */
         soundEffects: user.soundEffects !== false,
       },

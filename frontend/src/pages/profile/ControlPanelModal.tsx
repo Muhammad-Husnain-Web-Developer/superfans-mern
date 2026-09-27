@@ -6,6 +6,7 @@ import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
 import { useCropUpload } from './ControlPanelCropModal';
 import { soundEffectsEnabled, setSoundEffectsEnabled } from '../../utils/soundEffects';
+import { playModalOpenSound } from '../../utils/modalSounds';
 /**
  * Control panel — port of #exampleModalCenter (the `Auth::user()->role != "influencer"`
  * branch of layouts_direct_user/footer.blade.php).
@@ -168,6 +169,12 @@ export function ControlPanelModal({
       kind === 'profile' ? 'Profile picture updated' : 'Cover picture updated',
     );
   });
+
+  /* the client's woosh, fired from the panel's own mount so it lands with the panel
+     however it was opened — sidebar item, phone footer or the profile page's button */
+  useEffect(() => {
+    playModalOpenSound();
+  }, []);
 
   useEffect(() => {
     if (!flash) return;

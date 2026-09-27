@@ -547,7 +547,10 @@ export function ProfileSidebar({
         <a href={homeHref}>
           {/* the artwork on the front, this profile's picture on the back —
               turns when the sidebar opens (see FlipLogo) */}
-          <FlipLogo picture={profile.profilePicture} />
+          <FlipLogo
+            picture={profile.profilePicture}
+            ring={profile.profilePictureBorderStatus === '1'}
+          />
         </a>
       </h1>
 

@@ -14,6 +14,10 @@ export interface AuthUser {
   verified: boolean;
   vip: boolean;
   chatToggle?: boolean;
+  /* PROFILE PICTURE BORDER — `'1'` draws the ring, anything else (including an
+     account that never set it) leaves the picture bare, the way the blades' `== '1'`
+     test does. Carried on the session because the sidebar's logo card needs it. */
+  profilePictureBorderStatus?: string;
   /* SOUND EFFECTS — the account-wide preference. Absent on older responses,
      treated as `true` (on) by the hydrator. */
   soundEffects?: boolean;

@@ -17,6 +17,7 @@ import {
 } from './ControlPanelModal';
 import { useCropUpload } from './ControlPanelCropModal';
 import { soundEffectsEnabled, setSoundEffectsEnabled } from '../../utils/soundEffects';
+import { playModalOpenSound } from '../../utils/modalSounds';
 import { SubscriberListModal } from './SubscriberListModal';
 
 /**
@@ -90,6 +91,12 @@ export function InfluencerControlPanelModal({
       kind === 'profile' ? 'Profile picture updated' : 'Cover picture updated',
     );
   });
+
+  /* the client's woosh, fired from the panel's own mount so it lands with the panel
+     however it was opened — sidebar item, phone footer or the profile page's button */
+  useEffect(() => {
+    playModalOpenSound();
+  }, []);
 
   useEffect(() => {
     if (!flash) return;

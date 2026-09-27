@@ -76,7 +76,10 @@ export function WorldSidebar({
         <a href={authUser ? '/user' : '/'}>
           {/* the artwork on the front, this account's picture on the back —
               turns when the sidebar opens (see FlipLogo) */}
-          <FlipLogo picture={authUser?.profilePicture ?? null} />
+          <FlipLogo
+            picture={authUser?.profilePicture ?? null}
+            ring={authUser?.profilePictureBorderStatus === '1'}
+          />
         </a>
       </h1>
 

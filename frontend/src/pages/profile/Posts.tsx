@@ -161,10 +161,22 @@ export function Posts() {
         <div className="fh5co-narrow-content" style={{ paddingTop: 40 }}>
           <center>
             {/* avatar —Â gray border on this page (the wall uses white) */}
+            {/* the ring follows the control panel's Profile picture border:
+                user/posts.blade.php:1016 and influencer/posts.blade.php:1045 gate it on
+                `Auth::user()->profile_picture_border_status == '1'`. Those are the viewer's
+                OWN posts pages (/user/posts, /influencer/posts — no route param); the
+                someone-else blade (influencer/user_posts.blade.php:1308) draws no border. */}
             {profile.profilePicture ? (
               <img
                 src={assetImage(profile.profilePicture)}
-                style={{ width: 92, height: 92, borderRadius: 74, border: '4px solid #d3d3d3' }}
+                style={{
+                  width: 92,
+                  height: 92,
+                  borderRadius: 74,
+                  ...(!routeUsername && profile.profilePictureBorderStatus === '1'
+                    ? { border: '4px solid #d3d3d3' }
+                    : null),
+                }}
                 alt=""
               />
             ) : (
