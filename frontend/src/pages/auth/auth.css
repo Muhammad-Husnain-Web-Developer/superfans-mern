@@ -824,6 +824,7 @@
      request — #111 read as a black outline against the button's own grey */
   border: 3px solid #585858 !important;
   margin-top: 0;
+  font-weight: 700 !important;
 }
 
 /* ===== cropper modal (register_u.blade.php #modal) ===== */

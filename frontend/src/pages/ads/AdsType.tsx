@@ -147,6 +147,9 @@ export function AdsType() {
         ...fields,
         /* the creative travels as a data URL, which is what the ad builder reads */
         ...(media ? { media: media.dataUrl } : {}),
+        /* and the account it is being made for, when a business is working inside a linked
+           one — without this the ad would be stored under the business instead */
+        ...(as ? { onBehalfOf: as } : {}),
       })
       .then(({ data }) => {
         setFlash(data.message ?? 'Ad added successfully');

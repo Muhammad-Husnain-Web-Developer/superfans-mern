@@ -294,7 +294,7 @@ input[type='submit']:focus-visible,
   border-radius: 0;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   font-size: 16px !important;
-  /* font-weight: 400; */
+  font-weight: 700 !important;
   line-height: 1.5;
   cursor: pointer;
   transition: background-color 0.3s ease, border-color 0.3s ease;

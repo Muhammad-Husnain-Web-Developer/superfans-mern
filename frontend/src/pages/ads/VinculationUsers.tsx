@@ -451,11 +451,14 @@ export function VinculationUsers() {
               </div>
             )}
 
-            <p style={{ marginTop: 26, fontFamily: MONO, fontWeight: 700 }}>
+            <p
+              style={{ marginTop: 26, fontFamily: MONO, fontWeight: 700 }}
+              hidden={max > 5}
+            >
               Sign up VIP Business for more Vinculations{' '}
               <button
                 type="button"
-                onClick={() => window.alert('VIP Business is not built yet.')}
+                onClick={() => navigate('/super-ads/more-tools/vip')}
                 style={{
                   marginLeft: 14,
                   background: '#ffd400',

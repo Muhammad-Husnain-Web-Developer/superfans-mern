@@ -25,17 +25,29 @@ export const partnerRouter = Router();
  * granted before anything checks it would be a permission nobody can see.
  */
 
-/** "Máx. 5" — the client corrected his own first figure of 11 on 29 Sep 2026. His later mock
-    offers a VIP Business upgrade for more than this, which is not built yet. */
+/**
+ * How many accounts a business may hold at once.
+ *
+ * "Máx. 5" is the ordinary allowance — the client corrected his own first figure of 11 on
+ * 29 Sep 2026 — and a VIP Business account raises it to 250, which is the first line of
+ * privileges on his VIP mock. VIP is the `vip` flag the admin already sets on a user, the
+ * same one that opens Super Video.
+ */
 const MAX_LINKS = 5;
+const MAX_LINKS_VIP = 250;
 
 /** Only a business account may send these; everyone else is refused the whole area. */
 async function businessOnly(userId: string) {
-  const me = await User.findById(userId, { role: 1 }).lean();
+  const me = await User.findById(userId, { role: 1, vip: 1 }).lean();
   if (me?.role !== 'business') {
     throw ApiError.forbidden('Only business accounts can link accounts.');
   }
   return me;
+}
+
+/** That business's own ceiling. */
+function maxFor(me: { vip?: boolean } | null): number {
+  return me?.vip ? MAX_LINKS_VIP : MAX_LINKS;
 }
 
 interface LinkRow {
@@ -57,7 +69,7 @@ partnerRouter.get(
   '/links',
   requireAuth,
   asyncHandler(async (req, res) => {
-    await businessOnly(req.auth!.userId);
+    const me = await businessOnly(req.auth!.userId);
 
     const rows = await PartnerRequest.find({ business: req.auth!.userId })
       .sort({ createdAt: -1 })
@@ -88,7 +100,7 @@ partnerRouter.get(
     /* A pending ask counts against the allowance as much as an accepted one: otherwise a
        hundred could be sent out and the limit would only bite once they started coming back. */
     const used = links.filter((l) => l.status === 'pending' || l.status === 'accepted').length;
-    res.json({ success: true, data: { links, used, max: MAX_LINKS } });
+    res.json({ success: true, data: { links, used, max: maxFor(me), vip: !!me.vip } });
   }),
 );
 
@@ -97,7 +109,7 @@ partnerRouter.post(
   '/links',
   requireAuth,
   asyncHandler(async (req, res) => {
-    await businessOnly(req.auth!.userId);
+    const me = await businessOnly(req.auth!.userId);
     const { targetId } = z.object({ targetId: z.string() }).parse(req.body);
 
     if (!Types.ObjectId.isValid(targetId)) throw ApiError.badRequest('Unknown account.');
@@ -131,8 +143,9 @@ partnerRouter.post(
       business: req.auth!.userId,
       status: { $in: ['pending', 'accepted'] },
     });
-    if (used >= MAX_LINKS) {
-      throw ApiError.badRequest(`You can link at most ${MAX_LINKS} accounts.`);
+    const max = maxFor(me);
+    if (used >= max) {
+      throw ApiError.badRequest(`You can link at most ${max} accounts.`);
     }
 
     const created = await PartnerRequest.create({ business: req.auth!.userId, target: targetId });
@@ -144,8 +157,8 @@ partnerRouter.post(
  * Withdraw a request, or undo a link.
  *
  * Not in the client's first note — he confirmed it on 29 Sep 2026 ("Gracias por el Botón de
- * desvincularse. Por supuesto sí es necesario"). With only five slots, a mistyped search would
- * otherwise cost one for good, and an account could never be unlinked.
+ * desvincularse. Por supuesto sí es necesario"). With a small allowance a mistyped search would
+ * otherwise cost a slot for good, and an account could never be unlinked.
  */
 partnerRouter.delete(
   '/links/:id',

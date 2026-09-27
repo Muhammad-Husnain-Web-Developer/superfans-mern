@@ -33,6 +33,7 @@ import { AdsInformation } from './pages/ads/AdsInformation';
 import { PotentialClients } from './pages/ads/PotentialClients';
 import { MoreTools } from './pages/ads/MoreTools';
 import { VinculationUsers } from './pages/ads/VinculationUsers';
+import { VipBusiness } from './pages/ads/VipBusiness';
 import { AdsType } from './pages/ads/AdsType';
 import { AllAds } from './pages/ads/AllAds';
 import { AdsPreview } from './pages/ads/AdsPreview';
@@ -198,6 +199,7 @@ function App() {
             path="super-ads/more-tools/vinculation"
             element={<AdsGuard><VinculationUsers /></AdsGuard>}
           />
+          <Route path="super-ads/more-tools/vip" element={<AdsGuard><VipBusiness /></AdsGuard>} />
           {/* every ad in the system on one wall, so each type can be looked at */}
           <Route path="super-ads/preview" element={<AdsGuard><AdsPreview /></AdsGuard>} />
           <Route path="admin" element={<NewsGuard><AdminDashboard /></NewsGuard>} />
