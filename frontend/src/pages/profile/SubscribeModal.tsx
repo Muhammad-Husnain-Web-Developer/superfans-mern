@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { assetImage } from '../../utils/format';
+import { playSubscriptionSound } from '../../utils/modalSounds';
 
 /**
  * Subscribe confirmation modal — port of #paymentModalCenter (user_profile.blade.php L1071).
@@ -27,6 +28,13 @@ export function SubscribeModal({
   const { t: tUi } = useTranslation('ui');
   /* shown when the button is pressed before the terms are accepted */
   const [needsTerms, setNeedsTerms] = useState(false);
+
+  /* the client's stars, on the modal itself rather than the button that opens it —
+     this component stays mounted and only draws once `open` turns true, so the cue
+     hangs off that rather than off a mount */
+  useEffect(() => {
+    if (open) playSubscriptionSound();
+  }, [open]);
 
   if (!open) return null;
 
@@ -80,10 +88,13 @@ export function SubscribeModal({
         >
           ×
         </button>
-        {/* icon + title inline on one row (blade: inline-block img + h5), left-aligned title */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '24px 42px 0 6px' }}>
-          <img src={assetImage('superman2.png')} style={{ height: 51, flexShrink: 0 }} alt="" />
-          <h5 style={{ fontSize: 30, color: '#fff', margin: 0, fontWeight: 700, lineHeight: 1.15, textAlign: 'left' }}>
+        {/* The blade sets a superman2.png badge beside this title (user_profile.blade.php
+            L1071) and leaves the text left-aligned next to it. David asked for the icon
+            dropped and the title centred (29 Sep 2026), so the row is gone and the heading
+            centres on its own. The side padding is symmetric and wide enough to clear the
+            × button above, which is what keeps the centring honest. */}
+        <div style={{ padding: '24px 42px 0' }}>
+          <h5 style={{ fontSize: 30, color: '#fff', margin: 0, fontWeight: 700, lineHeight: 1.15, textAlign: 'center' }}>
             {t('subscribe_to', { defaultValue: '✨ Subscribe to' })} <span>@</span>
             {usernameUrl}:
           </h5>

@@ -11,6 +11,7 @@ import '../styles/footer-modals.css';
 import { useLayoutPageStyles } from '../components/StandalonePage';
 import { LoginLoader } from './LoginLoader';
 import { suppressPageLoaderAfterLogin } from './PageLoader';
+import { playSubscriptionSound } from '../utils/modalSounds';
 
 /**
  * Guest modal chain — exact port of footer.blade.php:
@@ -132,6 +133,18 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
     const id = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(id);
   }, [visible]);
+
+  /* The client's stars, on "Primero, crea tu cuenta" — the chooser a guest meets before
+     subscribing, which is one of the two he named.
+     Keyed on the view as well as on `visible`, because the chooser is not only reached by
+     opening the modal: the phone footer's Login button lands on the sign-in form
+     (`openLogin`), and "Regístrate" there switches the view while the frame is already up.
+     Watching `visible` alone left that road silent, which is what the client reported.
+     The sign-in form itself stays silent — it is the Login button's own door, not the
+     subscribe road. */
+  useEffect(() => {
+    if (visible && view === 'choice') playSubscriptionSound();
+  }, [visible, view]);
 
   function close() {
     setVisible(false);
@@ -426,8 +439,10 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
       </div>
       <div className="text-center mt-4" style={{ textAlign: 'center' }}>
         <br />
+        {/* was hardcoded English next to a translated link, so a Spanish reader got
+            "Already Registered? Iniciar sesión"; `already_registered` carries it in all ten */}
         <p style={{ marginBottom: 20 }}>
-          Already Registered?{' '}
+          {tAuth('already_registered')}{' '}
           <span className="button_hover_underlined" onClick={() => setView('login')} style={{ fontWeight: 'bold' }}>
             <span style={{ cursor: 'pointer' }}>{tAuth('Login_btn')}</span>
           </span>
@@ -635,8 +650,11 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
       </form>
       <div className="text-center mt-4">
         <br />
+        {/* This link goes to the account chooser, so it reads "Create One" — the blade's own
+            word (footer.blade.php:1905) and the one the /login page already uses. It had been
+            wired to `Login_btn`, which put "Login" under "Don't have an account?". */}
         <p>
-          Don&apos;t have an account?{' '}
+          {tAuth('Login_have_account')}{' '}
           <span
             id="open_register_modal"
             className="button_hover_underlined"
@@ -646,7 +664,7 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
             }}
             style={{ textAlign: 'center', fontWeight: 'bold' }}
           >
-            <span style={{ cursor: 'pointer' }}>{tAuth('Login_btn')}</span>
+            <span style={{ cursor: 'pointer' }}>{tAuth('Login_create_btn')}</span>
           </span>
         </p>
       </div>
