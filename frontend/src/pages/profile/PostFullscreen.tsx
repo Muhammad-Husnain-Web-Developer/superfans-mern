@@ -678,7 +678,14 @@ export function PostFullscreen() {
         onTouchEnd={onTouchEnd}
       >
         <style>{`
-          .ad-slide-wrap{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:56px 12px 24px}
+          /* touch-action:none — without it a phone hands a downward swipe on this slide to the
+             browser, which answers with its own pull-to-refresh: the page reloads and the swipe
+             never reaches onTouchEnd, so the reader cannot get back to the post above the ad.
+             The post slide has carried this on its media area from the start (.post-fs-media-wrap
+             below); the ad slide never got it, which is why the fault showed only on ads, and
+             only on touch — a desktop wheel has no such gesture. Nothing inside the slide scrolls,
+             so there is no panning to lose; taps and the ad's own link are unaffected. */
+          .ad-slide-wrap{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:56px 12px 24px;touch-action:none}
           .ad-slide-back{position:absolute;top:0;left:0;height:52px;display:flex;align-items:center;padding:0 16px;color:#fff;font-size:14px;text-decoration:none;z-index:10}
           .ad-slide-back:hover,.ad-slide-back:focus{color:#fff;text-decoration:none}
         `}</style>
@@ -760,7 +767,10 @@ export function PostFullscreen() {
   return (
     <div className="post-fullscreen-wrap">
       <style>{`
-        .post-fullscreen-wrap{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box}
+        /* touch-action:none on the whole slide, not just the media: a swipe that starts on the
+           top or bottom bar was outside .post-fs-media-wrap and reached the browser, which
+           pulled to refresh exactly as it did on the ad slide. */
+        .post-fullscreen-wrap{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;touch-action:none}
         /* The bar itself is see-through now, at the client's request; the grey
            it used to carry moved onto the report control alone. */
         .post-fs-topbar{position:absolute;top:0;left:0;right:0;height:52px;background:transparent;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:10}
