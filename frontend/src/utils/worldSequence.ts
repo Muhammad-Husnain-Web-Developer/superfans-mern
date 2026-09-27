@@ -13,6 +13,20 @@ import type { AdCardItem } from '../components/AdCard';
  */
 export type WorldStep = { type: 'post'; id: string } | ({ type: 'ad' } & AdCardItem);
 
+/**
+ * The ordering this visit walks the WORLD pool in.
+ *
+ * The server caches one pool for every reader and orders it by whatever seed the request
+ * carries, so the seed is what makes one reader's wall differ from another's. It is a module
+ * constant rather than stored anywhere: it is drawn once when the page loads, which means
+ * every page of one visit shares it — the wall's own paging and the full-screen reel's
+ * prefetch both send this same number, so the reel continues the wall rather than starting a
+ * different draw — and a reload draws a new one, which is the "a different wall every time"
+ * the client asked for. Deliberately not in sessionStorage: surviving a refresh is the one
+ * thing it must not do.
+ */
+export const WORLD_SEED = Math.floor(Math.random() * 0xffffffff) || 1;
+
 /** the feed's own id for an ad — `ad_<adId>`, which is what the route then carries */
 export function isAdStep(step: WorldStep): step is { type: 'ad' } & AdCardItem {
   return step.type === 'ad';

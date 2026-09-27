@@ -18,6 +18,7 @@ import {
   readSteps,
   toSteps,
   type WorldStep,
+  WORLD_SEED,
 } from '../../utils/worldSequence';
 
 /**
@@ -264,7 +265,9 @@ export function PostFullscreen() {
     const next = worldPage.current + 1;
     api
       .get<{ success: boolean; data: { items: ({ type?: string; id: string })[]; lastPage: number } }>(
-        `/world?page=${next}`,
+        /* same seed as the wall, so this page continues the run the reader was on rather
+           than an unrelated ordering of the same pool */
+        `/world?page=${next}&seed=${WORLD_SEED}`,
       )
       .then((r) => {
         worldPage.current = next;

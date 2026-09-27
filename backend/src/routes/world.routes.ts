@@ -50,6 +50,33 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+/**
+ * mulberry32 — a small PRNG entirely determined by its seed, so the same seed always walks
+ * the same sequence. That is the whole point of it here: it is what lets one reader's pages
+ * be a continuation of one another while a different reader, on the very same pool, gets a
+ * different wall.
+ */
+function seededRandom(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** The same Fisher-Yates as above, but drawing from a seed rather than Math.random. */
+function shuffleWithSeed<T>(arr: T[], seed: number): T[] {
+  const rand = seededRandom(seed);
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 interface PoolPost {
   _id: Types.ObjectId;
   influencer: Types.ObjectId;
@@ -149,12 +176,34 @@ async function buildPool(cutoff: Date): Promise<PoolPost[]> {
   return shuffle(pool);
 }
 
+/**
+ * A build already under way, so that the moment the cache lapses is not a moment every
+ * request in flight starts its own rebuild.
+ *
+ * buildPool takes around 125ms and some 70 round trips (one per creator, measured against
+ * the migrated data). Those are awaited I/O, so concurrent requests interleave rather than
+ * queue: without this, a hundred readers arriving in that 125ms window would each run the
+ * whole build — seven thousand queries for one pool. Holding the promise means the first
+ * caller does the work and everyone else waits on the same result.
+ */
+let poolBuild: Promise<PoolPost[]> | null = null;
+
 /** The pool currently on offer — reused for POOL_TTL_MS, rebuilt once that window passes. */
 async function currentPool(cutoff: Date): Promise<PoolPost[]> {
   if (poolCache && Date.now() - poolCache.builtAt < POOL_TTL_MS) return poolCache.pool;
-  const pool = await buildPool(cutoff);
-  poolCache = { builtAt: Date.now(), pool };
-  return pool;
+  if (!poolBuild) {
+    poolBuild = buildPool(cutoff)
+      .then((pool) => {
+        poolCache = { builtAt: Date.now(), pool };
+        return pool;
+      })
+      /* cleared either way: a failed build must not leave every later request awaiting a
+         promise that will never resolve again */
+      .finally(() => {
+        poolBuild = null;
+      });
+  }
+  return poolBuild;
 }
 
 /**
@@ -235,12 +284,24 @@ worldRouter.get(
       logger.warn({ err }, 'country rule skipped for this WORLD page');
     }
 
-    /* Already shuffled once, at build time (buildPool) — reshuffling again here on every
-       request is exactly what broke pagination: page 2 would be a fresh, unrelated draw
-       rather than a continuation of page 1, so the viewer kept being handed posts they had
-       already scrolled past. `reachable` keeps the cached pool's order, just with anything
-       this viewer may not see filtered out. */
-    const pagePosts = reachable.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+    /**
+     * Per-visit ordering.
+     *
+     * The pool is shared and cached; what differs between readers is the order they walk it
+     * in. The client generates one seed per page load and sends it with every page of that
+     * visit, so page 2 continues page 1 — reshuffling freshly on each request is precisely
+     * what broke pagination before, handing back posts already scrolled past. A different
+     * visit brings a different seed and therefore a different wall, which is what the client
+     * asked for after the cache made every reader's wall identical.
+     *
+     * It costs nothing: no extra query, no extra build — the same cached pool, reordered.
+     * A request with no usable seed (an older client, a direct call) keeps the pool's own
+     * order, which is exactly the behaviour that was here before.
+     */
+    const seed = Number(req.query.seed);
+    const ordered =
+      Number.isFinite(seed) && seed !== 0 ? shuffleWithSeed(reachable, seed) : reachable;
+    const pagePosts = ordered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
 
     // === enrichment (postUsers, hates, liked, following) ===
     const influencerIds = [...new Set(pagePosts.map((p) => String(p.influencer)))];

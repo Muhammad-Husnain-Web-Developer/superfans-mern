@@ -23,7 +23,7 @@ import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { SwalResult } from '../profile/Profile';
 import '../../styles/profile-page.css';
 import '../../styles/world-page.css';
-import { toSteps, type WorldStep } from '../../utils/worldSequence';
+import { toSteps, WORLD_SEED, type WorldStep } from '../../utils/worldSequence';
 import '../../styles/report-menu.css';
 import '../../styles/logo-spin.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
@@ -783,7 +783,7 @@ export function World() {
     loadedPages.current.add(p);
     setLoading(true);
     api
-      .get<{ success: boolean; data: { items: WorldItem[]; lastPage: number } }>(`/world?page=${p}`)
+      .get<{ success: boolean; data: { items: WorldItem[]; lastPage: number } }>(`/world?page=${p}&seed=${WORLD_SEED}`)
       .then((r) => {
         /* Defence in depth: the backend now hands out one stable, cached pool per five-minute
            window (world.routes.ts) so a later page should never repeat an earlier one's posts,
