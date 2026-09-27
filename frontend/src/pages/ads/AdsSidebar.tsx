@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../../context/AuthContext';
 import { SwAdsLoader } from '../../components/SwAdsLoader';
 import { SuperAdsMobileNotice } from '../../components/SuperAdsMobileNotice';
+import { AdsFlipLogo } from '../../components/FlipLogo';
 
 /** Fixed left nav for the Super-Ads area — port of resources/views/ads/sidebar.blade.php. */
 export function AdsSidebar({
@@ -21,8 +22,8 @@ export function AdsSidebar({
       <SwAdsLoader />
       <center>
         <Link className="side_logo" to="/super-ads">
-          <img src="/assets/images/Superworld-13.svg" alt="Super Ads" style={{ width: '59%' }} />
-          <h6>SUPER ADS CENTER</h6>
+          {/* the heading turns with the banner, so it lives inside the card */}
+          <AdsFlipLogo />
         </Link>
       </center>
 

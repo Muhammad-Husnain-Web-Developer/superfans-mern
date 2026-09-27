@@ -1,5 +1,5 @@
 /**
- * The sounds a modal plays as it opens — the control panel's woosh, and the stars
+ * The sounds a modal plays as it opens — the control panel's pop, and the stars
  * the client asked for on the subscription chain (29 Sep 2026).
  *
  * The client asked for these on the panel itself, not on the link that opens it, so
@@ -22,7 +22,7 @@ import { soundEffectsEnabled } from './soundEffects';
 /* the client's own files, shipped with the frontend rather than the Laravel asset
    folder: that folder is not in git and only exists on the server. The doubled
    `.mp3.mpeg` is how he sends them and prod is case-sensitive — do not tidy it. */
-const WOOSH = '/sounds/woosh.mp3';
+const POP = '/sounds/pop.mp3';
 const STARS = '/sounds/stars_effect_subscription.mp3.mpeg';
 
 /** One lazily-built <audio> per file, reused for every play. */
@@ -47,7 +47,7 @@ function cue(src: string) {
 }
 
 /** Called on the control panel's mount. */
-export const playModalOpenSound = cue(WOOSH);
+export const playModalOpenSound = cue(POP);
 
 /**
  * Called as the subscribe modal mounts and as the guest "create your account first"

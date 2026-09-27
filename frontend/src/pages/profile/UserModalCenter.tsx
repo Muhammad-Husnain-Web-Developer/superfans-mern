@@ -76,7 +76,7 @@ export function UserModalCenter({
     );
   });
 
-  /* the client's woosh, fired from the panel's own mount so it lands with the panel
+  /* the client's pop, fired from the panel's own mount so it lands with the panel
      however it was opened — sidebar item, phone footer or the profile page's button */
   useEffect(() => {
     playModalOpenSound();

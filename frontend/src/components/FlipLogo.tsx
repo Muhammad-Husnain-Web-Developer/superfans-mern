@@ -55,3 +55,46 @@ export function FlipLogo({ picture, ring = false }: { picture: string | null; ri
     </span>
   );
 }
+/**
+ * The SUPER ADS sidebar's logo card — the Superfans title banner *and* the SUPER ADS
+ * CENTER line on the front, together, turning against the SW ADS mark on the back on
+ * the same 4-second loop as the profile card above.
+ *
+ * David, 28 Sep 2026: "You do the same animation PAPER FLIP with this picture
+ * Superfans title image + SW ADS image." Then, 30 Sep 2026: "We should spin the LOGO
+ * TITLE + TEXT x NewLogoSWADS... Don't give space betwen old log and text, put it in
+ * <DIV> all together and spin it. New Logo SWAds bigger."
+ *
+ * So the heading is no longer the sidebar's own — it lives inside the front face, which
+ * is why this returns the title as well and AdsSidebar renders nothing beside it. The
+ * face is a div rather than the bare <img> it used to be: it holds the banner and the
+ * words stacked tight, and that whole block is what turns.
+ *
+ * Divs, not the spans the profile card uses: an <h6> is flow content and cannot sit
+ * inside a <span>. The surrounding .side_logo is an <a>, which takes either.
+ *
+ * Both faces are fixed artwork, so there is nothing to pass in and nothing to guard
+ * against — unlike the profile card, which holds still when the account has no
+ * picture to turn to.
+ *
+ * Both files are already served: the banner is the sidebar's own logo, and the SW ADS
+ * mark is what SwAdsLoader shows while the ads pages load.
+ */
+export function AdsFlipLogo() {
+  return (
+    <div className="logo-flip logo-flip--ads">
+      <div className="logo-flip-inner">
+        <div className="logo-flip-face logo-flip-front logo-flip-ads-title">
+          <img src="/assets/images/Superworld-13.svg" alt="Super Ads" />
+          <h6>SUPER ADS CENTER</h6>
+        </div>
+        <img
+          className="logo-flip-face logo-flip-back"
+          src="/assets/images/logo-sw-ads.png"
+          alt=""
+          aria-hidden="true"
+        />
+      </div>
+    </div>
+  );
+}

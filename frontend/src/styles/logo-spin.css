@@ -116,3 +116,98 @@
     display: none;
   }
 }
+/* ── SUPER ADS sidebar ──────────────────────────────────────────
+ * The same card and the same 4s turn, between the Superfans title block and the
+ * SW ADS mark. David, 28 Sep 2026: "You do the same animation PAPER FLIP with this
+ * picture Superfans title image + SW ADS image." Then, 30 Sep 2026: "We should spin
+ * the LOGO TITLE + TEXT x NewLogoSWADS... Don't give space betwen old log and text,
+ * put it in <DIV> all together and spin it. New Logo SWAds bigger."
+ *
+ * What changed for that second message. The front face used to be the banner alone,
+ * contained in a 2/1 box: the banner is 1920×550, so it only painted 43px of a 75px
+ * card and the 16px of letterbox under it, plus the heading's own 8px, read as a gap
+ * between the logo and the words. The words now live inside the face (FlipLogo), the
+ * face stacks them straight under the banner with no margin at all, and the block
+ * turns as one.
+ *
+ * The card is 5/3 rather than 2/1 — taller than the block it holds, on purpose. The
+ * banner and heading come to ~64px and sit centred in ~90px; the slack is what gives
+ * the square on the back its size. A square contained in this box is bound by the
+ * height, so the card's height *is* the mark's width: 90px against the 54px it had
+ * under the old box and its 7% padding, which is the "bigger" David asked for. The
+ * heading's 15px bottom margin moves to the card, so the links below do not shift.
+ */
+.logo-flip--ads {
+  width: 59%;
+  aspect-ratio: 5 / 3;
+  /* what .ads-sidebar h6's own margin-bottom used to put between the title and the
+     first nav link, now that the heading is inside the card and out of the flow */
+  margin-bottom: 15px;
+}
+
+/* The front face is a block now, not an image. Centred as a column so the banner and
+   the heading stay together in the middle of the card however tall the card is. */
+.logo-flip-ads-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.logo-flip-ads-title img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* nothing between the logo and the words — .ads-sidebar h6 carries 1px above and 15px
+   below, and both of those are the gap David asked us to take out.
+   The heading is wider than the card: "SUPER ADS CENTER" needs ~160px at 17px Anton and
+   the card is 150px, so inside a centred flex column it wrapped onto two lines. It keeps
+   its one line here and overhangs the card by a few pixels each side instead — the
+   alternative, widening the card, would have enlarged the Superworld banner too, and
+   David asked for the SW ADS mark to grow, not that one. Nothing clips it: the card sets
+   no overflow and the sidebar is 255px wide. */
+.logo-flip-ads-title h6 {
+  margin: 0 !important;
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+}
+
+/* not a profile picture: no circle, no ring. No padding either — the square takes the
+   card's full height, which is what makes it bigger.
+   And then bigger again, past the card's own edges: David still read it as small at the
+   card's height. The scale spends whitespace that was already there rather than layout —
+   the sidebar's 20px of top padding above the card, and the 22px between the card and the
+   first nav link below — so the mark grows by about a quarter (90px → 115px) and not one
+   thing around it moves. The card sets no overflow, so nothing clips the overhang. */
+.logo-flip--ads .logo-flip-back {
+  border-radius: 0;
+  padding: 0;
+  object-fit: contain;
+}
+
+/* Only on the fixed 256px column. Under 900px ads-center.css drops the sidebar to
+   position: relative and width: 100%, and the card's 59% then works out to 452px at a
+   768px viewport — the mark already paints 345px there, which is not the "small" this
+   scale is for, and scaling it further ran it 15px over the first nav link. Above the
+   breakpoint the whitespace is a known quantity and the overhang fits inside it. */
+@media (min-width: 901px) {
+  .logo-flip--ads .logo-flip-back {
+    transform: rotateY(180deg) scale(1.27);
+  }
+}
+
+/* Reduced motion stops the turn. The profile card holds on the picture because the
+   picture is the point there; here the point is the brand, so this one holds on the
+   Superfans banner — which is also the face carrying the heading, so stopping on it
+   keeps the sidebar's title readable. The SW ADS face is the one that goes. */
+@media (prefers-reduced-motion: reduce) {
+  .logo-flip--ads .logo-flip-front {
+    display: flex;
+  }
+  .logo-flip--ads .logo-flip-back {
+    display: none;
+  }
+}
