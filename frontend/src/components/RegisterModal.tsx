@@ -229,8 +229,6 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
         const remaining = Math.max(0, LOGIN_LOADER_FILL_MS - (Date.now() - startedAt));
         if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
         document.cookie = `${LOGIN_LOADER_COOKIE}=${currentHash}; path=/; SameSite=Lax`;
-        setLoaderFading(true);
-        await new Promise((r) => setTimeout(r, 250));
       }
 
       /* same as the /login page: the page behind this modal re-renders as a signed-in one
@@ -240,6 +238,21 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
       suppressPageLoaderAfterLogin();
       setUser(user);
       close();
+
+      if (showLoader) {
+        /* Fade only now, with the modal already closed. This loader is drawn by the
+           provider, which sits above the routes, so it outlives the form — and what it
+           uncovers is the page as a signed-in reader sees it, rather than the purple
+           login form they just left. Fading before the close is what made the form
+           reappear for a quarter-second. */
+        setLoaderFading(true);
+        await new Promise((r) => setTimeout(r, 250));
+        /* And then take it down. An opacity-0 loader is still a full-screen overlay at
+           z-index 9999999999999 with pointer-events: auto — left mounted, it swallowed
+           every click on the page behind it until the next reload. */
+        setLoaderOpen(false);
+        setLoaderFading(false);
+      }
     } catch {
       /* a failed login must not leave the loader half-finished over the form */
       setLoaderOpen(false);
@@ -650,11 +663,14 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
   return (
     <RegisterModalContext.Provider value={{ open, openLogin }}>
       {children}
-      {/* The one-per-session loading screen — drawn outside the modal so its
-          fixed overlay can cover the purple form while login runs. */}
-      {loaderOpen && <LoginLoader fading={loaderFading} />}
       {/* only the two register forms carry the ← back arrow (blade: #login_Modal has none) */}
       {visible && frame(viewContent[view], view === 'creator' || view === 'fan')}
+      {/* The one-per-session loading screen — drawn outside the modal so its fixed overlay
+          can cover the purple form while login runs, and LAST so that it does.
+          Both carry a z-index past the 32-bit maximum, so the browser clamps each of them
+          to 2147483647 and they end up on the same level; at that point the later element
+          in the document wins, and while the loader came first the modal covered it. */}
+      {loaderOpen && <LoginLoader fading={loaderFading} />}
     </RegisterModalContext.Provider>
   );
 }

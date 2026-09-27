@@ -46,9 +46,9 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  /* the one-per-session loader — drawn over the form while the login runs */
+  /* the one-per-session loader — drawn over the form while the login runs. It never
+     fades here: the navigation is what removes it, see the note in onSubmit. */
   const [loaderOpen, setLoaderOpen] = useState(false);
-  const [loaderFading, setLoaderFading] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -81,10 +81,13 @@ export function Login() {
            its value is THIS email's hash, so a different account on the same
            browser does not match and the loader plays for them too */
         document.cookie = `sf_login_loader_seen=${currentHash}; path=/; SameSite=Lax`;
-        setLoaderFading(true);
-        await new Promise((r) => setTimeout(r, 250));
       }
 
+      /* Straight from a full-strength loader into the wall. The loader used to fade
+         itself out here and only navigate a quarter-second later — but it lives on this
+         page, so what the fade uncovered was the login form the reader had just left,
+         for about 225ms, before the route finally changed. Leaving it opaque until the
+         navigation takes it down means the form is never shown again. */
       /* the wall we are about to land on draws Laravel's #loader; after the bar above,
          a second loading screen is one too many */
       suppressPageLoaderAfterLogin();
@@ -100,7 +103,6 @@ export function Login() {
       /* A failed login never shows the loader all the way — clear it before the
          error is printed, so the two are never on screen together. */
       setLoaderOpen(false);
-      setLoaderFading(false);
       /* Laravel answers a bad login with the localised auth.failed line from its lang files;
          our API says "Invalid credentials" in English whatever the language, so the wording
          comes from the locale file here. Any other refusal — a suspended account, say —
@@ -118,7 +120,7 @@ export function Login() {
   return (
     <AuthShell variant="login">
       {/* the one-per-session loading screen, drawn over the form while login runs */}
-      {loaderOpen && <LoginLoader fading={loaderFading} />}
+      {loaderOpen && <LoginLoader fading={false} />}
       <form onSubmit={(e) => void onSubmit(e)}>
         <div className="auth-logo-wrap">
           <a href="https://superfans.world/">

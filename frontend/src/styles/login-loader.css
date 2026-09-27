@@ -11,9 +11,13 @@
 .login-loader {
   position: fixed;
   inset: 0;
-  /* higher than RegisterModal's own 123112311231 (the purple login modal the
-     mobile footer raises) — the loader has to cover it, not sit behind it */
-  z-index: 9999999999999;
+  /* The highest z-index a browser will honour: the property is a 32-bit signed
+     integer, so anything past this is clamped to it. The value here used to read
+     9999999999999, chosen to beat RegisterModal's own 123112311231 — but both clamp
+     to this same number, which left the two on one level and the modal, being later
+     in the document, painting over the loader. The loader is now rendered last in
+     RegisterModal's provider, which is what actually keeps it on top. */
+  z-index: 2147483647;
   display: flex;
   flex-direction: column;
   align-items: center;
