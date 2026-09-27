@@ -776,12 +776,24 @@ input.login-modal-input:focus {
 }
 /* ===== Mobile footer search — the ✕ =====
    Same control the sidebar's search carries (influencer-search.css), placed on
-   the footer bar's own field. Positioned inside .mobile-search-container, which
-   is already position:relative, so it never pushes the input wider or moves the
-   bar's other buttons. Hidden when the field is empty. */
+   the footer bar's own field. It never pushes the input wider or moves the bar's
+   other buttons. Shown from the moment the field is entered.
+
+   It hangs off .mobile-search-field rather than .mobile-search-container: the
+   container's base rule is position:relative, but the ≤768px block above turns it
+   static on purpose so the suggestions list can resolve against the fixed bar and
+   span its full width. On a phone the ✕ therefore anchored to the bar as well, and
+   landed outside the field's right edge. The wrapper holds only the input and the
+   ✕, so the list is untouched. */
+.mobile-search-field {
+  position: relative;
+  display: block;
+}
+
 .mobile-search-clear {
   position: absolute;
-  right: 6px;
+  /* 2px off the right edge, at the client's request */
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
   width: 20px;

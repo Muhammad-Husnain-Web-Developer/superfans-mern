@@ -96,36 +96,48 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
   return (
     <div className={`mobile-footer-menu${authUser ? '' : ' is-guest'}${searching ? ' is-searching' : ''}`}>
       <div className="mobile-search-container" ref={searchBoxRef}>
-        <input
-          type="text"
-          className="footer-search-input influencer_search"
-          placeholder={tUi('search_placeholder')}
-          autoComplete="off"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => setSearching(true)}
-          onBlur={() => setSearching(false)}
-          /* reserve room for the ✕ when it shows, so a long query does not run
-             underneath it */
-          style={query ? { paddingRight: 26 } : undefined}
-        />
-        {query && (
-          <button
-            type="button"
-            className="mobile-search-clear"
-            /* No preventDefault: the input's own onBlur collapses the bar, and
-               that is exactly the behaviour the client wants on the ✕ — the same
-               as tapping outside. clearSearch also sets searching=false, so the
-               two paths arrive at the same state even if the order differs. */
-            onClick={(e) => {
-              e.stopPropagation();
-              clearSearch();
-            }}
-            aria-label={tUi('close')}
-          >
-            ✕
-          </button>
-        )}
+        {/* The ✕ is positioned against this wrapper, not the container: below 768px the
+            container is deliberately position:static so the suggestions list can resolve
+            against the fixed bar and span its full width. Without the wrapper the ✕
+            anchored to the bar too, and sat outside the field's right edge. */}
+        <span className="mobile-search-field">
+          <input
+            type="text"
+            className="footer-search-input influencer_search"
+            placeholder={tUi('search_placeholder')}
+            autoComplete="off"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => setSearching(true)}
+            onBlur={() => setSearching(false)}
+            /* reserve room for the ✕ whenever it shows, so a long query does not run
+               underneath it */
+            style={searching || query ? { paddingRight: 26 } : undefined}
+          />
+          {/* The client asked for the ✕ from the moment the field is entered, not from the
+              first character typed — so it is there to close the search straight away.
+              Tapping it on an empty field blurs the input first, which unmounts the button
+              before its click lands; that costs nothing, because blur collapses the bar and
+              that is all clearSearch would have done with nothing typed. With text present
+              the query keeps the button mounted through the blur, so the click still runs. */}
+          {(searching || query) && (
+            <button
+              type="button"
+              className="mobile-search-clear"
+              /* No preventDefault: the input's own onBlur collapses the bar, and
+                 that is exactly the behaviour the client wants on the ✕ — the same
+                 as tapping outside. clearSearch also sets searching=false, so the
+                 two paths arrive at the same state even if the order differs. */
+              onClick={(e) => {
+                e.stopPropagation();
+                clearSearch();
+              }}
+              aria-label={tUi('close')}
+            >
+              ✕
+            </button>
+          )}
+        </span>
         <ul className="mobile-suggestions-list" style={{ display: hits.length ? 'flex' : 'none' }}>
           {hits.map((h) => (
             <li
