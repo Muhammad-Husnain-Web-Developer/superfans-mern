@@ -6,6 +6,7 @@ import { login } from '../../api/auth';
 import { useAuth } from '../../context/AuthContext';
 import { AuthShell, localeLogo } from './AuthShell';
 import { LoginLoader } from '../../components/LoginLoader';
+import { suppressPageLoaderAfterLogin } from '../../components/PageLoader';
 import { postLoginPath } from '../../utils/postLoginRedirect';
 
 /**
@@ -84,6 +85,9 @@ export function Login() {
         await new Promise((r) => setTimeout(r, 250));
       }
 
+      /* the wall we are about to land on draws Laravel's #loader; after the bar above,
+         a second loading screen is one too many */
+      suppressPageLoaderAfterLogin();
       setUser(user);
       /* Laravel flashes show_referral_modal on login; mimic the one-shot with
          sessionStorage so the wall shows the "invite a friend" modal once after

@@ -3,6 +3,32 @@ import { useTranslation } from 'react-i18next';
 import { localeLogo } from '../pages/auth/AuthShell';
 
 /**
+ * How long after a login this loader stands down, in ms. The login navigates within a
+ * frame or two of marking the window, so this only has to outlast that hop.
+ */
+const LOGIN_SUPPRESS_MS = 2000;
+
+let suppressedUntil = 0;
+
+/**
+ * Called by the login flows just before they hand over to the page behind them.
+ *
+ * Both of them already draw their own loading screen — the percentage bar in
+ * components/LoginLoader — and the page they land on would otherwise mount this one
+ * straight afterwards and play its full 2.6s fade over a document that finished loading
+ * long ago, so the reader watches two loading screens in a row for about five seconds.
+ * The blade never had that problem: there, login was a redirect into a real page load,
+ * and #loader was the only loading screen in the app.
+ *
+ * A short window rather than a flag that waits to be consumed: business accounts land on
+ * /super-ads, which draws no loader at all, and an unconsumed flag would then sit there
+ * and silence the next page that does draw one.
+ */
+export function suppressPageLoaderAfterLogin(): void {
+  suppressedUntil = Date.now() + LOGIN_SUPPRESS_MS;
+}
+
+/**
  * Full-screen white loader with the locale Superworld logo —
  * exact port of #loader from layouts_direct_user/header.blade.php:
  * shown immediately, then `opacity 2.6s ease` to 0 and display:none after 10ms
@@ -13,6 +39,9 @@ export function PageLoader() {
   const [faded, setFaded] = useState(false);
   const [gone, setGone] = useState(false);
   const { t: tUi } = useTranslation('ui');
+  /* read, never cleared — the window closes on its own, so this stays safe to call
+     twice on the same mount the way StrictMode does in development */
+  const afterLogin = Date.now() < suppressedUntil;
 
   useEffect(() => {
     const start = () => {
@@ -29,7 +58,7 @@ export function PageLoader() {
     return () => window.removeEventListener('load', start);
   }, []);
 
-  if (gone) return null;
+  if (afterLogin || gone) return null;
 
   return (
     <div

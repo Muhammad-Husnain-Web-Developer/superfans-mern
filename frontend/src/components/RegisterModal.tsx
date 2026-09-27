@@ -10,6 +10,7 @@ import { assetImage } from '../utils/format';
 import '../styles/footer-modals.css';
 import { useLayoutPageStyles } from '../components/StandalonePage';
 import { LoginLoader } from './LoginLoader';
+import { suppressPageLoaderAfterLogin } from './PageLoader';
 
 /**
  * Guest modal chain — exact port of footer.blade.php:
@@ -232,6 +233,11 @@ export function RegisterModalProvider({ children }: { children: ReactNode }) {
         await new Promise((r) => setTimeout(r, 250));
       }
 
+      /* same as the /login page: the page behind this modal re-renders as a signed-in one
+         and would draw Laravel's #loader straight after the bar that just finished. The
+         register flow above is left alone — it never shows the bar, so its single loader
+         is the blade's own behaviour. */
+      suppressPageLoaderAfterLogin();
       setUser(user);
       close();
     } catch {
