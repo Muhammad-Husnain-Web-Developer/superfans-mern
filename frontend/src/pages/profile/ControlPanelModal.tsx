@@ -7,6 +7,9 @@ import type { NetworkDetail, ProfileData } from '../../api/profiles';
 import { useCropUpload } from './ControlPanelCropModal';
 import { soundEffectsEnabled, setSoundEffectsEnabled } from '../../utils/soundEffects';
 import { playModalOpenSound } from '../../utils/modalSounds';
+/* .control-panel-dialog — the phone gutter, shared by all three panels: the other two
+   import their shared pieces from this file, so importing it here loads it for them too. */
+import '../../styles/footer-modals.css';
 /**
  * Control panel — port of #exampleModalCenter (the `Auth::user()->role != "influencer"`
  * branch of layouts_direct_user/footer.blade.php).
@@ -302,8 +305,7 @@ export function ControlPanelModal({
       onClick={onClose}
     >
       <div
-        className="modal-dialog modal-dialog-centered"
-        style={{ margin: '30px auto', maxWidth: 600 }}
+        className="modal-dialog modal-dialog-centered control-panel-dialog"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content" style={{ borderRadius: 20, background: 'red' }}>
@@ -867,8 +869,7 @@ export function ControlPanelModal({
           onClick={() => setEditNetwork(null)}
         >
           <div
-            className="modal-dialog modal-dialog-centered"
-            style={{ margin: '30px auto', maxWidth: 600 }}
+            className="modal-dialog modal-dialog-centered control-panel-dialog"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="modal-content" style={{ borderRadius: 20, background: 'red', padding: 15 }}>

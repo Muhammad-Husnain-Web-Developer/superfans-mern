@@ -804,3 +804,23 @@ input.login-modal-input:focus {
   background: #c8c8c8;
   color: #222;
 }
+/* ===== Control panel dialog =====
+ *
+ * The blades' control panels are plain `.modal-dialog modal-dialog-centered`
+ * (layouts_direct_user/footer.blade.php:2637 and :3534), so they inherit bootstrap 3's
+ * own dialog geometry: a 10px gutter all round on phones, 600px centred from 768px up.
+ *
+ * The port wrote `margin: 30px auto` inline at every width instead, and `auto` computes
+ * to 0 once the screen is narrower than the dialog — which is why the panel sat flush
+ * against both phone edges while Add Post, on the identical rules in
+ * add-post-modal.css (.add-post-dialog), kept its gutter. */
+.control-panel-dialog {
+  margin: 10px;
+  max-width: 600px;
+}
+
+@media (min-width: 768px) {
+  .control-panel-dialog {
+    margin: 30px auto;
+  }
+}

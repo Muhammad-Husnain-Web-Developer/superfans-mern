@@ -377,10 +377,21 @@ export function LoggedInNav({
   const base = authUser.role === 'influencer' ? '/influencer' : '/user';
   const addPostFirst = authUser.role === 'influencer';
 
-  /** footer.blade.php L4589: on mobile, close the offcanvas first, open 100ms later */
-  function handleControlPanel() {
-    if (window.innerWidth < 768) closeOffcanvas();
-    setTimeout(() => onControlPanel?.(), 100);
+  /**
+   * The blades open both of these sidebar modals the same way
+   * (layouts_direct_user/footer.blade.php:4589 for the control panel, :4606 for Add Post):
+   * under 768px the offcanvas is dismissed first and the modal is shown 300ms later, once
+   * the sidebar has finished sliding away — otherwise the modal opens behind a sidebar
+   * that is still on screen. At 768px and up the blade skips the wait entirely.
+   */
+  function openSidebarModal(open?: () => void) {
+    if (!open) return;
+    if (window.innerWidth < 768) {
+      closeOffcanvas();
+      setTimeout(open, 300);
+    } else {
+      open();
+    }
   }
 
   return (
@@ -433,7 +444,11 @@ export function LoggedInNav({
             }}
           >
             {addPostFirst && showAddPost && (
-              <p className="dropdown-item add_post_item" style={COLLAPSE_ITEM} onClick={onAddPost}>
+              <p
+                className="dropdown-item add_post_item"
+                style={COLLAPSE_ITEM}
+                onClick={() => openSidebarModal(onAddPost)}
+              >
                 <i className="fa fa-plus"></i> {t('add_post', { defaultValue: 'Add post' })}
               </p>
             )}
@@ -443,13 +458,17 @@ export function LoggedInNav({
             <p
               className="dropdown-item control_panel_item"
               style={COLLAPSE_ITEM}
-              onClick={handleControlPanel}
+              onClick={() => openSidebarModal(onControlPanel)}
             >
               <i className="far fa-user-circle"></i>{' '}
               {t('control_panel', { defaultValue: 'Control Panel' })}
             </p>
             {!addPostFirst && showAddPost && (
-              <p className="dropdown-item add_post_item" style={COLLAPSE_ITEM} onClick={onAddPost}>
+              <p
+                className="dropdown-item add_post_item"
+                style={COLLAPSE_ITEM}
+                onClick={() => openSidebarModal(onAddPost)}
+              >
                 <i className="fa fa-plus"></i> {t('add_post', { defaultValue: 'Add post' })}
               </p>
             )}

@@ -204,8 +204,7 @@ export function UserModalCenter({
       onClick={onClose}
     >
       <div
-        className="modal-dialog modal-dialog-centered"
-        style={{ margin: '30px auto', maxWidth: 600 }}
+        className="modal-dialog modal-dialog-centered control-panel-dialog"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-content" style={{ borderRadius: 20, background: 'red' }}>
@@ -759,7 +758,7 @@ export function UserModalCenter({
           style={{ zIndex: 123123, display: 'block', position: 'fixed', inset: 0, overflowY: 'auto', background: 'rgba(0,0,0,0.5)' }}
           onClick={() => setEditNetwork(null)}
         >
-          <div className="modal-dialog modal-dialog-centered" style={{ margin: '30px auto', maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-dialog modal-dialog-centered control-panel-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="modal-content" style={{ borderRadius: 20, background: 'red', padding: 15 }}>
               <div className="container-fluid" style={{ paddingLeft: 0 }}>
                 <div className="row pb-3">
