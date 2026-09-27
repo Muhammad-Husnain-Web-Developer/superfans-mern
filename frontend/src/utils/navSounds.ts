@@ -13,10 +13,10 @@
 import { soundEffectsEnabled } from './soundEffects';
 
 const sources = {
-  open: '/sounds/open.mp3.mpeg',
+  open: '/sounds/obrir.mp3',
   /* the client's filename was close.MP3 — renamed lowercase to match the URL.
      Most filesystems in production are case-sensitive. */
-  close: '/sounds/close.mp3.mpeg',
+  close: '/sounds/tancar.mp3',
 };
 
 const elements: Partial<Record<keyof typeof sources, HTMLAudioElement>> = {};
