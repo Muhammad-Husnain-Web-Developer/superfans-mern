@@ -319,48 +319,6 @@ export function InfluencerControlPanelModal({
               </div>
             </div>
             <br />
-            {/* ---------- SOUND EFFECTS ----------
-                The client asked for a master switch over every button sound in
-                the app — the network slider's arrows, the like and hate on every
-                wall. The white button is the live one, so Yes/No reads at a
-                glance. Saved to localStorage the moment it is pressed. */}
-            <h3 style={H3}>SOUND EFFECTS:</h3>
-            <div className="container-fluid" style={{ paddingLeft: 0 }}>
-              <div className="row pb-3">
-                <div className="col-md-12">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSoundOn(true);
-                      setSoundEffectsEnabled(true);
-                    }}
-                    style={{
-                      ...SAVE_BTN,
-                      marginRight: 10,
-                      background: soundOn ? '#fff' : '#000',
-                      color: soundOn ? 'red' : '#fff',
-                    }}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSoundOn(false);
-                      setSoundEffectsEnabled(false);
-                    }}
-                    style={{
-                      ...SAVE_BTN,
-                      background: soundOn ? '#000' : '#fff',
-                      color: soundOn ? '#fff' : 'red',
-                    }}
-                  >
-                    No
-                  </button>
-                </div>
-              </div>
-            </div>
-
             {/* ---------- profile info ---------- */}
             <h3 style={H3}>{t('profile_info', { defaultValue: 'Profile info' })}</h3>
 
@@ -737,6 +695,51 @@ export function InfluencerControlPanelModal({
                 </Fragment>
               ))
             )}
+
+            <hr style={HR} />
+            {/* ---------- SOUND EFFECTS ----------
+                The client asked for a master switch over every button sound in
+                the app — the network slider's arrows, the like and hate on every
+                wall. The black button is the live one, so Yes/No reads at a
+                glance. Saved to localStorage the moment it is pressed. David
+                asked for it directly above SUPER ADS CENTER, under the
+                subscriptions and following lists. */}
+            <h3 style={{ ...H3, textAlign: 'center' }}>SOUND EFFECTS:</h3>
+            <div className="container-fluid" style={{ paddingLeft: 0, paddingRight: 0 }}>
+              <div className="row pb-3">
+                <div className="col-md-12" style={{ textAlign: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSoundOn(true);
+                      setSoundEffectsEnabled(true);
+                    }}
+                    style={{
+                      ...SAVE_BTN,
+                      marginRight: 10,
+                      background: soundOn ? '#000' : '#fff',
+                      color: soundOn ? '#fff' : 'red',
+                    }}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSoundOn(false);
+                      setSoundEffectsEnabled(false);
+                    }}
+                    style={{
+                      ...SAVE_BTN,
+                      background: soundOn ? '#fff' : '#000',
+                      color: soundOn ? 'red' : '#fff',
+                    }}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            </div>
 
             {/* ---------- creator-only promos ---------- */}
             <hr style={HR} />
