@@ -94,7 +94,22 @@ export function SubscribeModal({
             centres on its own. The side padding is symmetric and wide enough to clear the
             × button above, which is what keeps the centring honest. */}
         <div style={{ padding: '24px 42px 0' }}>
-          <h5 style={{ fontSize: 30, color: '#fff', margin: 0, fontWeight: 700, lineHeight: 1.15, textAlign: 'center' }}>
+          <h5
+            style={{
+              /* A flat 30px broke the Spanish title into three ragged lines on a phone —
+                 "✨ Suscribirse" / "a" / "@werizoooon:" — with one word stranded in the
+                 middle, which is what the client was seeing. It shrinks on narrow screens
+                 so the wording holds together, and keeps its 30px from ~500px up. */
+              fontSize: 'clamp(20px, 6vw, 30px)',
+              color: '#fff',
+              margin: 0,
+              fontWeight: 700,
+              lineHeight: 1.2,
+              textAlign: 'center',
+              /* evens the lines out when a long handle still has to wrap */
+              textWrap: 'balance',
+            }}
+          >
             {t('subscribe_to', { defaultValue: '✨ Subscribe to' })} <span>@</span>
             {usernameUrl}:
           </h5>
