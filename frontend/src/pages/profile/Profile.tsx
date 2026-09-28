@@ -776,17 +776,23 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                 {profile.profilePicture ? (
                   <img
                     src={assetImage(profile.profilePicture)}
-                    /* PROFILE PICTURE BORDER: the control panel's Yes/No, not "has a
-                       picture". user/index.blade.php:1541 and influencer/activity.blade.php:1339
-                       draw this 4px white ring behind `Auth::user()->profile_picture_border_status
-                       == '1'`, and only on the viewer's own wall — the blades that render
-                       someone else's profile (influencer/influencer_activity.blade.php:1180,
-                       user_activity.blade.php:1291) carry no border at all. */
+                    /* PROFILE PICTURE BORDER: the control panel's Yes/No, not "has a picture".
+                       The ring belongs to whoever's picture this is, so it reads that account's
+                       own setting and shows on a visitor's view too.
+                       Laravel only ever drew it on your own wall — user/index.blade.php:1541 and
+                       influencer/activity.blade.php:1339 gate it on `Auth::user()->
+                       profile_picture_border_status == '1'`, while the blades for someone else's
+                       profile (influencer_activity.blade.php:1180, user_activity.blade.php:1291)
+                       carry no border at all. David asked (28 Sep 2026) for it on a visited
+                       profile as well, so this departs from the blade deliberately. It also
+                       settles a split inside this page: the sidebar's own card has been ringing
+                       the visited profile's picture all along (ProfileSidebar's FlipLogo), which
+                       is the mismatch he photographed. */
                     style={{
                       width: 92,
                       height: 92,
                       borderRadius: 74,
-                      ...(wallVariant && profile.profilePictureBorderStatus === '1'
+                      ...(profile.profilePictureBorderStatus === '1'
                         ? { border: '4px solid white' }
                         : null),
                     }}
