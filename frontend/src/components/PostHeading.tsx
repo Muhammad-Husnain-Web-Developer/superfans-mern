@@ -33,7 +33,13 @@ export function PostHeading({
   const [overflows, setOverflows] = useState(false);
   const { t: tUi } = useTranslation('ui');
 
-  const handles = [...(author ? [author] : []), ...tagged].filter((h) => h.usernameUrl);
+  /* One entry per account. A post may tag its own author — 12 of them in the migrated data
+     do, @superzubair's among them — and that put the same handle in this strip twice, which
+     React then reported as two children sharing a key. The author is listed first, so keeping
+     the first of each also keeps them at the front where they belong. */
+  const handles = [...(author ? [author] : []), ...tagged]
+    .filter((h) => h.usernameUrl)
+    .filter((h, i, all) => all.findIndex((other) => other.usernameUrl === h.usernameUrl) === i);
 
   useEffect(() => {
     const run = runRef.current;

@@ -68,6 +68,7 @@ export interface IUser extends Document {
   pendingRedsysOrder?: string;
   pendingRedsysPurpose?: string;
   chatToggle: boolean;
+  notificationsSeenAt?: Date;
   /**
    * SOUND EFFECTS — the account-wide toggle that gates every button sound in the
    * app (the network slider's arrows, the like and hate on every wall). On by
@@ -187,6 +188,10 @@ const userSchema = new Schema<IUser>(
     pendingRedsysOrder: String,
     pendingRedsysPurpose: String,
     chatToggle: { type: Boolean, default: true },
+    /* NOTIFICATIONS — when this reader last opened the panel. Everything newer than it is
+       what the bell's unread count is counting. Absent on an account that has never opened
+       it, which reads as "everything is unread". */
+    notificationsSeenAt: { type: Date },
     /* SOUND EFFECTS — same default-on shape as chatToggle above. */
     soundEffects: { type: Boolean, default: true },
 

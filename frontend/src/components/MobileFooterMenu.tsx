@@ -7,6 +7,7 @@ import { useRegisterModal } from './RegisterModal';
 import { assetImage } from '../utils/format';
 import { AddPostHost } from '../pages/profile/AddPostHost';
 import { StreamModal } from './StreamModal';
+import { NotificationsBell } from './NotificationsBell';
 import '../styles/footer-modals.css';
 
 interface SearchHit {
@@ -182,10 +183,23 @@ export function MobileFooterMenu({ onAddPost }: { onAddPost?: () => void }) {
             <strong style={{ fontSize: 25 }}>+</strong>
           </div>
 
-          <div className="footer-btn-stream" onClick={() => setStreamOpen(true)} style={{ cursor: 'pointer' }}>
+          {/* Icon only, as the client's own bar is drawn: the red dot alone, no wording. The
+              label it used to print is kept as the accessible name so nothing is lost to a
+              reader that cannot see the dot. */}
+          <div
+            className="footer-btn-stream"
+            onClick={() => setStreamOpen(true)}
+            style={{ cursor: 'pointer' }}
+            role="button"
+            aria-label={tUi('nav_stream')}
+            title={tUi('nav_stream')}
+          >
             <span className="stream-indicator"></span>
-            {tUi('nav_stream')}
           </div>
+
+          {/* the client's bell sits between the stream button and the inbox, as in his
+              own capture of the bar */}
+          <NotificationsBell />
 
           <a href="/user/messages" className="footer-btn-message">
             <i className="fa fa-envelope"></i>

@@ -9,6 +9,7 @@ import { NetworkSlider } from '../../components/NetworkSlider';
 import { networkLogo } from '../../utils/networkLogo';
 import '../../styles/influencer-search.css';
 import { FlipLogo } from '../../components/FlipLogo';
+import { NotificationsBell } from '../../components/NotificationsBell';
 import '../../styles/logo-spin.css';
 import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
@@ -430,6 +431,11 @@ export function LoggedInNav({
               {authUser.usernameUrl} <i className="far fa-user-circle" style={{ fontSize: 20 }}></i>
             </b>
           </p>
+          {/* David, 29 Sep 2026: "In Desktop, maybe we can put the Bell in the LEFTBAR."
+              Outside the collapse below, which only opens when the handle above is clicked —
+              a bell whose count cannot be seen until you go looking for it is no bell. */}
+          <NotificationsBell variant="sidebar" />
+
           <div
             className={`collapse-div collapse${menuOpen ? ' in show' : ''}`}
             id="demo"
