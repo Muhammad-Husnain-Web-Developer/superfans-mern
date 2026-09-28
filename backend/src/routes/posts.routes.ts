@@ -246,6 +246,26 @@ postsRouter.get(
       req.auth ? Hate.exists({ post: post._id, user: req.auth.userId }).then(Boolean) : false,
     ]);
 
+    /**
+     * A suspended or deleted account's post is not open by its own link.
+     *
+     * Laravel does not check this: `UserController::post_detail` (:1195) loads the post and
+     * renders it, whoever wrote it — the only suspension check in the app is on the profile
+     * page (`user_profile`, :1392), which answers with the custom error view. So the original
+     * blocks the profile and filters the WORLD feed, yet leaves a direct post link open, and
+     * this port reproduced that gap faithfully. The client reported it as suspending not
+     * working, which is the fair reading: an account taken down should not still be readable
+     * through one of its posts. A deliberate departure from the blade, and the deviation is
+     * on this side rather than Laravel's.
+     *
+     * A missing author counts too: deleting a user leaves their posts behind, and those must
+     * not outlive the account either. 404 rather than 403 — there is nothing here to ask
+     * permission for, and the viewer already draws its own 404 for it.
+     */
+    if (!influencer || influencer.status === 'suspended' || influencer.status === 'deleted') {
+      throw ApiError.notFound('Post not found');
+    }
+
     const idx = siblings.findIndex((s) => String(s._id) === String(post._id));
     const prevId = idx > 0 ? String(siblings[idx - 1]._id) : null;
     const nextId = idx >= 0 && idx < siblings.length - 1 ? String(siblings[idx + 1]._id) : null;

@@ -11,6 +11,7 @@ import { Post } from '../models/Post.js';
 import { Coupon, Package, PackageInclude, Modal, Asset, WaterMark, Cart } from '../models/adminEntities.js';
 import { ReachLock } from '../models/ReachLock.js';
 import { forgetLocks } from '../utils/worldReach.js';
+import { invalidateWorldPool } from './world.routes.js';
 
 export const adminRouter = Router();
 
@@ -133,6 +134,9 @@ adminRouter.put(
     }
 
     await User.updateOne({ _id: req.params.id }, { $set: body });
+    /* the WORLD pool keeps only active creators, so a status written here has to reach the
+       wall now rather than whenever the pool next expires */
+    if (body.status !== undefined) invalidateWorldPool();
     res.json({ success: true, message: 'User updated successfully' });
   }),
 );
@@ -142,6 +146,9 @@ adminRouter.delete(
   requireAuth,
   admin(async (req, res) => {
     await User.deleteOne({ _id: req.params.id });
+    /* with the row gone the pool's lookup no longer matches them — but only once it is
+       rebuilt, so ask for that now */
+    invalidateWorldPool();
     res.json({ success: true, message: 'User deleted successfully' });
   }),
 );
@@ -204,6 +211,10 @@ adminRouter.post(
     const suspended = u.status === 'suspended';
     u.status = suspended ? 'active' : 'suspended';
     await u.save();
+    /* Both directions: suspending has to take the account off the wall at once — an admin
+       who suspends someone and then looks at WORLD is checking exactly this — and
+       unsuspending has to put them back just as promptly. */
+    invalidateWorldPool();
     res.json({
       success: true,
       status: u.status,

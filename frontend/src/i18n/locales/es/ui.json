@@ -1,6 +1,7 @@
 {
     "accept": "Aceptar",
-    "account_suspended_short": "Esta cuenta está suspendida",
+    "account_suspended_short": "Esta cuenta está suspendida temporalmente o de por vida.",
+    "account_suspended_support": "Si eres el propietario, contacta con el equipo de soporte de Superfans World.",
     "actions_label": "Acciones",
     "active": "Activo",
     "ad_not_available": "Anuncio no disponible",

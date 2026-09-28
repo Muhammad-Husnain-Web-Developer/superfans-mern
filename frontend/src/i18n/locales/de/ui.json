@@ -1,6 +1,7 @@
 {
     "accept": "Akzeptieren",
-    "account_suspended_short": "Dieses Konto ist gesperrt",
+    "account_suspended_short": "Dieses Konto ist vorübergehend oder dauerhaft gesperrt.",
+    "account_suspended_support": "Wenn Sie der Inhaber sind, wenden Sie sich an das Support-Team von Superfans World.",
     "actions_label": "Aktionen",
     "active": "Aktiv",
     "ad_not_available": "Anzeige nicht verfügbar",

@@ -324,7 +324,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
      Those pages also use layouts.main, whose control panel is the fuller #userModalCenter
      (wallVariant), while the canonical /{username} profile uses the layouts_direct_user one. */
   const { t: tReport } = useTranslation('report');
-  const { t: tUi } = useTranslation('ui');
+  const { t: tUi, i18n } = useTranslation('ui');
   const { usernameUrl: routeUsername } = useParams();
   const { t } = useTranslation('content');
   const { user: authUser } = useAuth();
@@ -506,9 +506,23 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
      que estabas buscando no ha sido encontrada" names this case exactly */
   if (state === 'notfound') return <NotFoundPage />;
   if (state === 'suspended' || !profile) {
+    /* The client asked for the logo over this message and for the message itself to say how
+       long it lasts and where to turn — the page used to be one red line on an empty screen.
+       Same per-locale wordmark the sign-in pages and the loader draw, so a reader who lands
+       here still knows whose site they are on. */
     return (
-      <div style={{ textAlign: 'center', padding: '20vh 20px', fontFamily: 'Roboto, sans-serif' }}>
-        <h1 style={{ color: '#da1212' }}>{tUi('account_suspended_short')}</h1>
+      <div style={{ textAlign: 'center', padding: '14vh 20px', fontFamily: 'Roboto, sans-serif' }}>
+        <img
+          src={localeLogo(i18n.resolvedLanguage ?? 'en')}
+          alt="Superfans World"
+          style={{ width: 320, maxWidth: '80%', height: 'auto', marginBottom: 28 }}
+        />
+        <h1 style={{ color: '#da1212', maxWidth: 720, margin: '0 auto' }}>
+          {tUi('account_suspended_short')}
+        </h1>
+        <p style={{ color: '#555', fontSize: 17, maxWidth: 560, margin: '14px auto 0' }}>
+          {tUi('account_suspended_support')}
+        </p>
       </div>
     );
   }

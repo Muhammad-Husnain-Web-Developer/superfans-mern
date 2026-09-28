@@ -1,6 +1,7 @@
 {
     "accept": "Принять",
-    "account_suspended_short": "Этот аккаунт заблокирован",
+    "account_suspended_short": "Этот аккаунт заблокирован временно или навсегда.",
+    "account_suspended_support": "Если вы владелец, обратитесь в службу поддержки Superfans World.",
     "actions_label": "Действия",
     "active": "Активно",
     "ad_not_available": "Реклама недоступна",

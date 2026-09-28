@@ -188,13 +188,40 @@ async function buildPool(cutoff: Date): Promise<PoolPost[]> {
  */
 let poolBuild: Promise<PoolPost[]> | null = null;
 
+/**
+ * Bumped by invalidateWorldPool. A build carries the generation it started under and only
+ * stores its result if that is still the current one — otherwise a suspension landing while
+ * a build was already running would be undone by that build finishing a moment later with
+ * the author still in it.
+ */
+let poolGeneration = 0;
+
+/**
+ * Drop the cached pool, so the next reader gets one built from the accounts as they stand now.
+ *
+ * Suspending or deleting an account takes it out of the pool — the build filters creators on
+ * `user.status === 'active'`, and a deleted account has no row to match at all. What it could
+ * not do on its own was take effect *now*: the wall went on serving the pool built before the
+ * change for the rest of its five minutes, so an admin who suspended someone and looked at
+ * WORLD still saw their posts, and reported it as the suspension not working. The admin panel
+ * calls this instead, which is what makes it immediate without shortening the window for
+ * everyone else.
+ */
+export function invalidateWorldPool(): void {
+  poolCache = null;
+  poolGeneration++;
+}
+
 /** The pool currently on offer — reused for POOL_TTL_MS, rebuilt once that window passes. */
 async function currentPool(cutoff: Date): Promise<PoolPost[]> {
   if (poolCache && Date.now() - poolCache.builtAt < POOL_TTL_MS) return poolCache.pool;
   if (!poolBuild) {
+    const generation = poolGeneration;
     poolBuild = buildPool(cutoff)
       .then((pool) => {
-        poolCache = { builtAt: Date.now(), pool };
+        /* a pool built before an invalidation is already out of date — hand it to the
+           readers waiting on it, but do not let it become the cached one */
+        if (generation === poolGeneration) poolCache = { builtAt: Date.now(), pool };
         return pool;
       })
       /* cleared either way: a failed build must not leave every later request awaiting a

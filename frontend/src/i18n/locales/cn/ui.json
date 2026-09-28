@@ -1,6 +1,7 @@
 {
     "accept": "接受",
-    "account_suspended_short": "此账户已被停用",
+    "account_suspended_short": "此账户已被临时或永久停用。",
+    "account_suspended_support": "如果您是账户所有者，请联系 Superfans World 支持团队。",
     "actions_label": "操作",
     "active": "启用",
     "ad_not_available": "广告不可用",

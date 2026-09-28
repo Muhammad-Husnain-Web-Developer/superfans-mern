@@ -1,6 +1,7 @@
 {
     "accept": "Acceptar",
-    "account_suspended_short": "Aquest compte està suspès",
+    "account_suspended_short": "Aquest compte està suspès temporalment o de per vida.",
+    "account_suspended_support": "Si ets el propietari, contacta amb l'equip de suport de Superfans World.",
     "actions_label": "Accions",
     "active": "Actiu",
     "ad_not_available": "Anunci no disponible",
