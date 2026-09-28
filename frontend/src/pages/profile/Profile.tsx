@@ -333,7 +333,9 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<ProfilePost[]>([]);
-  const [state, setState] = useState<'loading' | 'ok' | 'notfound' | 'suspended'>('loading');
+  const [state, setState] = useState<'loading' | 'ok' | 'notfound' | 'suspended' | 'deleted'>(
+    'loading',
+  );
   /* the wall already recorded where it was when a post was opened; without this
      it never played the position back, and every return started at the top */
   useScrollMemory(state === 'ok' && posts.length > 0);
@@ -480,9 +482,15 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
         setState('ok');
         document.title = `Superfans | ${p.usernameUrl}`;
       })
-      .catch((err: { response?: { status?: number } }) => {
+      .catch((err: { response?: { status?: number; data?: { data?: { status?: string } } } }) => {
         if (cancelled) return;
-        setState(err.response?.status === 403 ? 'suspended' : 'notfound');
+        if (err.response?.status !== 403) {
+          setState('notfound');
+          return;
+        }
+        /* 403 is the account gate, and the body says which kind — a closed account reads
+           differently from a suspended one, as the blade's own error view does. */
+        setState(err.response.data?.data?.status === 'deleted' ? 'deleted' : 'suspended');
       });
     return () => {
       cancelled = true;
@@ -505,7 +513,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   /* an unknown handle is Laravel's errors/404 — "la página o perfil de usuario
      que estabas buscando no ha sido encontrada" names this case exactly */
   if (state === 'notfound') return <NotFoundPage />;
-  if (state === 'suspended' || !profile) {
+  if (state === 'suspended' || state === 'deleted' || !profile) {
     /* The client asked for the logo over this message and for the message itself to say how
        long it lasts and where to turn — the page used to be one red line on an empty screen.
        Same per-locale wordmark the sign-in pages and the loader draw, so a reader who lands
@@ -518,11 +526,15 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
           style={{ width: 320, maxWidth: '80%', height: 'auto', marginBottom: 28 }}
         />
         <h1 style={{ color: '#da1212', maxWidth: 720, margin: '0 auto' }}>
-          {tUi('account_suspended_short')}
+          {tUi(state === 'deleted' ? 'account_closed_short' : 'account_suspended_short')}
         </h1>
-        <p style={{ color: '#555', fontSize: 17, maxWidth: 560, margin: '14px auto 0' }}>
-          {tUi('account_suspended_support')}
-        </p>
+        {/* the "contact support" line belongs to a suspension, which can be lifted — a closed
+            account is the client's own one-line wording and nothing to appeal */}
+        {state !== 'deleted' && (
+          <p style={{ color: '#555', fontSize: 17, maxWidth: 560, margin: '14px auto 0' }}>
+            {tUi('account_suspended_support')}
+          </p>
+        )}
       </div>
     );
   }

@@ -45,8 +45,13 @@ profilesRouter.get(
           PremiumAccess.exists({ influencer: user._id, user: req.auth.userId }).then(Boolean),
         ]);
     }
-    if (user.status === 'suspended') {
-      res.status(403).json({ success: false, message: 'suspended', data: { status: user.status } });
+    /* Laravel gates both here — `UserController::user_profile` (:1392) sends 'suspended' and
+       'deleted' alike to errors/custom_user_error and lets the view pick its wording off the
+       status. The port only carried the suspended half, so a closed account's profile went on
+       rendering in full; the client reported it against @superzubair. The status travels with
+       the refusal so the page can say which of the two it is. */
+    if (user.status === 'suspended' || user.status === 'deleted') {
+      res.status(403).json({ success: false, message: user.status, data: { status: user.status } });
       return;
     }
 

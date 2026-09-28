@@ -233,6 +233,9 @@ adminRouter.post(
     const deleted = u.status === 'deleted';
     u.status = deleted ? 'active' : 'deleted';
     await u.save();
+    /* the same reason as the suspend toggle above: this is the status the WORLD pool filters
+       on, and the wall would otherwise keep serving the pool it built before the change */
+    invalidateWorldPool();
     res.json({
       success: true,
       status: u.status,
