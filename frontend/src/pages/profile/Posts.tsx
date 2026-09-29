@@ -161,11 +161,14 @@ export function Posts() {
         <div className="fh5co-narrow-content" style={{ paddingTop: 40 }}>
           <center>
             {/* avatar —Â gray border on this page (the wall uses white) */}
-            {/* the ring follows the control panel's Profile picture border:
-                user/posts.blade.php:1016 and influencer/posts.blade.php:1045 gate it on
-                `Auth::user()->profile_picture_border_status == '1'`. Those are the viewer's
-                OWN posts pages (/user/posts, /influencer/posts — no route param); the
-                someone-else blade (influencer/user_posts.blade.php:1308) draws no border. */}
+            {/* The ring follows this profile's own "Profile picture border", whoever is
+                looking — the same rule the wall and the sidebar's card now use.
+                Laravel only drew it on your own posts page (user/posts.blade.php:1016,
+                influencer/posts.blade.php:1045, gated on `Auth::user()->…`) and left the
+                someone-else blade bare (influencer/user_posts.blade.php:1308). David asked
+                on 28 Sep 2026 for it on a visited profile too; that was applied to the wall
+                and this page was missed, so /posts/<someone> lost the ring the rest of the
+                app was drawing. */}
             {profile.profilePicture ? (
               <img
                 src={assetImage(profile.profilePicture)}
@@ -173,7 +176,7 @@ export function Posts() {
                   width: 92,
                   height: 92,
                   borderRadius: 74,
-                  ...(!routeUsername && profile.profilePictureBorderStatus === '1'
+                  ...(profile.profilePictureBorderStatus === '1'
                     ? { border: '4px solid #d3d3d3' }
                     : null),
                 }}

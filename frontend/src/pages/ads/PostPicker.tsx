@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import { assetImage } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
@@ -17,13 +18,16 @@ export function PostPicker({
   /** the media comes back with the id: the create form previews what was picked */
   onSelect: (id: string, media: string | null) => void;
 }) {
+  /* a business working inside a linked account passes its id along (Vinculación Partner) */
+  const [params] = useSearchParams();
+  const as = params.get('as');
   const [posts, setPosts] = useState<AdPost[]>([]);
   const [shown, setShown] = useState(4);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     api
-      .get<{ posts: AdPost[] }>('/ads/posts')
+      .get<{ posts: AdPost[] }>(`/ads/posts${as ? `?as=${encodeURIComponent(as)}` : ''}`)
       .then(({ data }) => setPosts(data.posts))
       .catch(() => setPosts([]))
       .finally(() => setLoading(false));

@@ -31,6 +31,8 @@ import { AdsCenter } from './pages/ads/AdsCenter';
 import { MyAds } from './pages/ads/MyAds';
 import { AdsInformation } from './pages/ads/AdsInformation';
 import { PotentialClients } from './pages/ads/PotentialClients';
+import { MoreTools } from './pages/ads/MoreTools';
+import { VinculationUsers } from './pages/ads/VinculationUsers';
 import { AdsType } from './pages/ads/AdsType';
 import { AllAds } from './pages/ads/AllAds';
 import { AdsPreview } from './pages/ads/AdsPreview';
@@ -191,6 +193,11 @@ function App() {
           <Route path="super-ads/potential-clients" element={<AdsGuard><PotentialClients /></AdsGuard>} />
           <Route path="super-ads/ad/:type" element={<AdsGuard><AdsType /></AdsGuard>} />
           <Route path="super-ads/all-ads" element={<AdsGuard><AllAds /></AdsGuard>} />
+          <Route path="super-ads/more-tools" element={<AdsGuard><MoreTools /></AdsGuard>} />
+          <Route
+            path="super-ads/more-tools/vinculation"
+            element={<AdsGuard><VinculationUsers /></AdsGuard>}
+          />
           {/* every ad in the system on one wall, so each type can be looked at */}
           <Route path="super-ads/preview" element={<AdsGuard><AdsPreview /></AdsGuard>} />
           <Route path="admin" element={<NewsGuard><AdminDashboard /></NewsGuard>} />

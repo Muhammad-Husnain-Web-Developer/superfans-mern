@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
+import { actingFor, askedFor, mayActOn } from '../utils/actingFor.js';
 import { saveBase64Media } from '../services/storage.js';
 import { paymentProvider } from '../services/payments/index.js';
 import { sendMail } from '../services/mailer.js';
@@ -171,13 +172,22 @@ adsRouter.get(
   '/center',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const me = await User.findById(req.auth!.userId);
+    /* `?as=<id>` means a business is working inside an account it is linked to. The role
+       reported here is that account's, which is what lifts the three creator-only cards the
+       centre hides from a business — the client asked for exactly that. */
+    const actorId = await actingFor(req, askedFor(req));
+    const me = await User.findById(actorId);
     if (!me) throw ApiError.unauthorized();
     const profile = await AdUserProfile.findOne({ user: me._id });
     res.json({
       success: true,
       adTypes: [...AD_TYPES],
       role: me.role,
+      /* who the centre is working as, so the page can say so out loud */
+      actingFor:
+        actorId === req.auth!.userId
+          ? null
+          : { id: String(me._id), usernameUrl: me.usernameUrl ?? null, role: me.role },
       /* what the advertiser charges, so the create form's live preview can show the same
          button the feed will — Subscribe for a creator with a price, Follow otherwise */
       priceOfSubscription: me.priceOfSubscription ?? null,
@@ -225,9 +235,12 @@ adsRouter.post(
       isCompany: !!body.is_company,
       companySize: body.is_company ? body.company_size ?? null : null,
     };
+    /* the profile belongs to the account being worked in: a business filling this in for a
+       linked creator is completing *their* advertiser details, not its own */
+    const actorId = await actingFor(req, req.body.onBehalfOf);
     await AdUserProfile.updateOne(
-      { user: req.auth!.userId },
-      { $set: update, $setOnInsert: { user: req.auth!.userId } },
+      { user: actorId },
+      { $set: update, $setOnInsert: { user: actorId } },
       { upsert: true },
     );
     res.json({ success: true });
@@ -399,7 +412,7 @@ adsRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const posts = await Post.find(
-      { influencer: req.auth!.userId, visible: true },
+      { influencer: await actingFor(req, askedFor(req)), visible: true },
       { imageVideo: 1 },
     )
       .sort({ createdAt: -1 })
@@ -424,8 +437,9 @@ adsRouter.get(
   asyncHandler(async (req, res) => {
     const type = String(req.params.type);
     if (!VALID_TYPES.has(type)) throw ApiError.notFound();
-    await assertTypeAllowed(req.auth!.userId, type);
-    const ads = await AdCampaign.find({ type: type as AdType, user: req.auth!.userId }).sort({ createdAt: -1 }).lean();
+    const actorId = await actingFor(req, askedFor(req));
+    await assertTypeAllowed(actorId, type);
+    const ads = await AdCampaign.find({ type: type as AdType, user: actorId }).sort({ createdAt: -1 }).lean();
     res.json({ success: true, type, ads: ads.map(campaignDto) });
   }),
 );
@@ -435,9 +449,10 @@ adsRouter.get(
   '/my-ads',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const ads = await Ad.find({ user: req.auth!.userId }).sort({ createdAt: -1 }).lean();
+    const actorId = await actingFor(req, askedFor(req));
+    const ads = await Ad.find({ user: actorId }).sort({ createdAt: -1 }).lean();
     const paidIds = new Set(
-      (await AdPayment.find({ user: req.auth!.userId }, { ad: 1 }).lean()).map((p) => String(p.ad)),
+      (await AdPayment.find({ user: actorId }, { ad: 1 }).lean()).map((p) => String(p.ad)),
     );
     res.json({ success: true, ads: ads.map((a) => ({ ...adDto(a), paid: paidIds.has(String(a._id)) })) });
   }),
@@ -448,7 +463,9 @@ adsRouter.get(
   '/information',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const ads = await Ad.find({ user: req.auth!.userId }).sort({ createdAt: -1 }).lean();
+    const ads = await Ad.find({ user: await actingFor(req, askedFor(req)) })
+      .sort({ createdAt: -1 })
+      .lean();
     const rows = ads.map((a) => {
       const amount = a.amount ?? 0;
       const impressions = a.impressions ?? 0;
@@ -504,8 +521,9 @@ adsRouter.post(
   '/store/:type',
   requireAuth,
   asyncHandler(async (req, res) => {
-    await assertTypeAllowed(req.auth!.userId, String(req.params.type));
-    const { adId } = await buildAd(String(req.params.type), req.auth!.userId, req.body, 'active');
+    const actorId = await actingFor(req, req.body.onBehalfOf);
+    await assertTypeAllowed(actorId, String(req.params.type));
+    const { adId } = await buildAd(String(req.params.type), actorId, req.body, 'active');
     res.json({ success: true, adId, message: 'campaign submitted' });
   }),
 );
@@ -520,7 +538,8 @@ adsRouter.post(
     const me = await User.findById(req.auth!.userId);
     if (!me) throw ApiError.unauthorized();
 
-    const { adId } = await buildAd(String(req.params.type), req.auth!.userId, req.body, 'draft');
+    const actorId = await actingFor(req, req.body.onBehalfOf);
+    const { adId } = await buildAd(String(req.params.type), actorId, req.body, 'draft');
     const { url } = await paymentProvider.createCheckout({
       mode: 'payment',
       amount,
@@ -544,7 +563,8 @@ adsRouter.post(
     const { ad_id, amount } = z
       .object({ ad_id: z.string(), amount: z.coerce.number().positive() })
       .parse(req.body);
-    const me = await User.findById(req.auth!.userId);
+    const actorId = await actingFor(req, req.body.onBehalfOf);
+    const me = await User.findById(actorId);
     if (!me) throw ApiError.unauthorized();
     const ad = await Ad.findOne({ _id: ad_id, user: me._id });
     if (!ad) throw ApiError.notFound('Ad not found');
@@ -571,7 +591,7 @@ adsRouter.get(
   asyncHandler(async (req, res) => {
     const ad = await AdCampaign.findById(req.params.id);
     if (!ad || ad.type !== req.params.type) throw ApiError.notFound();
-    if (String(ad.user) !== req.auth!.userId) throw ApiError.forbidden();
+    if (!(await mayActOn(req, ad.user))) throw ApiError.forbidden();
     const details = await AdCampaignDetail.find({ campaign: ad._id }).lean();
     res.json({
       success: true,
@@ -588,7 +608,7 @@ adsRouter.delete(
   asyncHandler(async (req, res) => {
     const ad = await Ad.findById(req.params.id);
     if (!ad) throw ApiError.notFound();
-    if (String(ad.user) !== req.auth!.userId) throw ApiError.forbidden();
+    if (!(await mayActOn(req, ad.user))) throw ApiError.forbidden();
     const hasPayment = await AdPayment.exists({ ad: ad._id });
     const isActive = ad.status === true;
     await ad.deleteOne();
@@ -608,7 +628,7 @@ adsRouter.put(
   asyncHandler(async (req, res) => {
     const campaign = await AdCampaign.findById(req.params.id);
     if (!campaign) throw ApiError.notFound();
-    if (String(campaign.user) !== req.auth!.userId) throw ApiError.forbidden();
+    if (!(await mayActOn(req, campaign.user))) throw ApiError.forbidden();
     campaign.status = campaign.status === 'active' ? 'stopped' : 'active';
     await campaign.save();
     res.json({ success: true, status: campaign.status, message: 'Ad status updated' });
@@ -622,7 +642,7 @@ adsRouter.delete(
   asyncHandler(async (req, res) => {
     const campaign = await AdCampaign.findById(req.params.id);
     if (!campaign) throw ApiError.notFound();
-    if (String(campaign.user) !== req.auth!.userId) throw ApiError.forbidden();
+    if (!(await mayActOn(req, campaign.user))) throw ApiError.forbidden();
     await AdCampaignDetail.deleteMany({ campaign: campaign._id });
     await campaign.deleteOne();
     res.json({ success: true, message: 'Ad deleted successfully' });
@@ -760,7 +780,7 @@ adsRouter.put(
   asyncHandler(async (req, res) => {
     const ad = await Ad.findById(req.params.id);
     if (!ad) throw ApiError.notFound();
-    const mine = String(ad.user) === req.auth!.userId;
+    const mine = await mayActOn(req, ad.user);
     if (!mine && !(await isAdsAdmin(req.auth!.userId))) throw ApiError.forbidden();
     if (!ad.status && !ad.approved) {
       throw ApiError.badRequest('This ad is not approved yet. You cannot activate it.');

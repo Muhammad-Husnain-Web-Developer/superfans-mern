@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
@@ -21,6 +22,9 @@ const usd = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits
 
 /** Inform Ads — port of ads/information.blade.php: per-ad budget/impressions/clicks/spent/remaining. */
 export function AdsInformation() {
+  /* a business working inside a linked account passes its id along (Vinculacion Partner) */
+  const [params] = useSearchParams();
+  const as = params.get('as');
   useStandalonePageStyles([BOOTSTRAP4_CDN, '/page-css/ads-center.css']);
   const [ads, setAds] = useState<InfoAd[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +32,7 @@ export function AdsInformation() {
   useEffect(() => {
     document.title = 'Superfans | Inform Ads';
     api
-      .get<{ ads: InfoAd[] }>('/ads/information')
+      .get<{ ads: InfoAd[] }>(`/ads/information${as ? `?as=${encodeURIComponent(as)}` : ''}`)
       .then(({ data }) => setAds(data.ads))
       .finally(() => setLoading(false));
   }, []);

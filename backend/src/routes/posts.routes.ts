@@ -7,6 +7,7 @@ import multer from 'multer';
 import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireAuth, optionalAuth } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
+import { actingFor } from '../utils/actingFor.js';
 import { Post } from '../models/Post.js';
 import { Like } from '../models/Like.js';
 import { Hate } from '../models/Hate.js';
@@ -88,8 +89,13 @@ postsRouter.post(
        no place is shown everywhere. */
     const place = await placeFromRequest(req);
 
+    /* A linked business may post on the account it manages. The client asked for the result
+       to be indistinguishable — "Exactly like the User/Influencer normal post" — so the post
+       is stored under that account and carries no mark of who uploaded it. */
+    const actorId = await actingFor(req, req.body.onBehalfOf);
+
     const post = await Post.create({
-      influencer: req.auth!.userId,
+      influencer: actorId,
       imageVideo: req.file.filename,
       thumbnail: thumbnail ?? undefined,
       tags,
@@ -103,7 +109,7 @@ postsRouter.post(
        have the app retry and post it twice. */
     if (place) {
       try {
-        const author = await User.findById(req.auth!.userId, { earned: 1 });
+        const author = await User.findById(actorId, { earned: 1 });
         if (author && (await refreshEarned(author, place.country))) await author.save();
       } catch (err) {
         logger.warn({ err }, 'reach bookkeeping after post failed');

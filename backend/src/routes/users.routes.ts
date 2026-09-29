@@ -174,9 +174,13 @@ usersRouter.get(
 
     res.json({
       success: true,
-      /* profilePicture rides along so a picker can show a face beside the handle; the
-         existing callers simply ignore it */
+      /* profilePicture rides along so a picker can show a face beside the handle, and id /
+         usernameUrl so a caller that has to act on the account — More Tools sends it a
+         vinculación solicitude — has something to name it by. `name` stays as it was: the
+         handle under that key is what every existing caller reads. */
       data: results.map((u) => ({
+        id: String(u._id),
+        usernameUrl: u.usernameUrl,
         name: u.usernameUrl,
         verified: u.verified,
         profilePicture: u.profilePicture ?? null,

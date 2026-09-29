@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { isAxiosError } from 'axios';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import { DataTableShell } from './DataTableShell';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
@@ -81,6 +82,9 @@ interface PostThumb { id: string; imageVideo: string | null }
  * "Back to Ads Dashboard" bar, the "Add New {Type} Ad" toggle, and the campaigns table
  * with Stop/Play + Delete per row. */
 export function AdsType() {
+  /* a business working inside a linked account passes its id along (Vinculacion Partner) */
+  const [params] = useSearchParams();
+  const as = params.get('as');
   useStandalonePageStyles([BOOTSTRAP4_CDN, '/page-css/ads-center.css']);
   const { type = '' } = useParams();
   const [ads, setAds] = useState<Campaign[]>([]);
@@ -104,7 +108,7 @@ export function AdsType() {
   const load = useCallback(() => {
     setLoading(true);
     api
-      .get<{ ads: Campaign[] }>(`/ads/type/${type}`)
+      .get<{ ads: Campaign[] }>(`/ads/type/${type}${as ? `?as=${encodeURIComponent(as)}` : ''}`)
       .then(({ data }) => setAds(data.ads))
       .catch((e) => { if (isAxiosError(e) && e.response?.status === 403) setDenied(true); })
       .finally(() => setLoading(false));
@@ -118,7 +122,7 @@ export function AdsType() {
   // load the advertiser's posts for the post-picker types when the form opens
   useEffect(() => {
     if (addOpen && isPostType && posts.length === 0) {
-      api.get<{ posts: PostThumb[] }>('/ads/posts').then(({ data }) => setPosts(data.posts)).catch(() => undefined);
+      api.get<{ posts: PostThumb[] }>(`/ads/posts${as ? `?as=${encodeURIComponent(as)}` : ''}`).then(({ data }) => setPosts(data.posts)).catch(() => undefined);
     }
   }, [addOpen, isPostType, posts.length]);
 

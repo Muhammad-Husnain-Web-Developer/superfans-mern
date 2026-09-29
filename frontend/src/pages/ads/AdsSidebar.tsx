@@ -7,7 +7,11 @@ import { SwAdsLoader } from '../../components/SwAdsLoader';
 import { SuperAdsMobileNotice } from '../../components/SuperAdsMobileNotice';
 
 /** Fixed left nav for the Super-Ads area — port of resources/views/ads/sidebar.blade.php. */
-export function AdsSidebar({ active }: { active?: 'center' | 'my-ads' | 'clients' | 'info' }) {
+export function AdsSidebar({
+  active,
+}: {
+  active?: 'center' | 'my-ads' | 'clients' | 'info' | 'more-tools';
+}) {
   const { user } = useAuth();
   const [modal, setModal] = useState<null | 'search' | 'config' | 'help'>(null);
 
@@ -28,7 +32,7 @@ export function AdsSidebar({ active }: { active?: 'center' | 'my-ads' | 'clients
         <a href="#" onClick={(e) => { e.preventDefault(); setModal('search'); }}> Locations</a>
         <Link to="/super-ads/potential-clients" className={active === 'clients' ? 'active' : undefined}>Potential Clients</Link>
         <Link to="/super-ads/information" className={active === 'info' ? 'active' : undefined}>Inform Ads</Link>
-        <a href="#" onClick={(e) => { e.preventDefault(); setModal('search'); }}> More Tools</a>
+        <Link to="/super-ads/more-tools" className={active === 'more-tools' ? 'active' : undefined}> More Tools</Link>
       </div>
 
       <div className="footer-links">

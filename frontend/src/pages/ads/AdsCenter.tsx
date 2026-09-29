@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
+import { PostForLinked } from './PostForLinked';
 import { LocationPicker } from './LocationPicker';
 import { CountrySelect, CitySelect } from './CountryCityFields';
 import { PostPicker } from './PostPicker';
@@ -124,6 +126,8 @@ const BUTTON_ACTIONS = ['More Info', 'Ask Offer', 'Fill Out Survey', 'Check Webs
 
 interface CenterData {
   role: string;
+  /** set when a business is working inside an account it is linked to (Vinculación Partner) */
+  actingFor?: { id: string; usernameUrl: string | null; role: string } | null;
   /** a creator who charges is subscribed to, not followed — the preview says which */
   priceOfSubscription: number | null;
   profile: Record<string, unknown> | null;
@@ -164,13 +168,20 @@ export function AdsCenter() {
   }
   const [card, setCard] = useState<AdCard | null>(null);
 
+  /* `?as=<id>` — Administrar on a linked account opens the centre inside that account. The
+     server checks the link on every call; this only carries the id. */
+  const [params] = useSearchParams();
+  const as = params.get('as');
+  /* the other half of a link: posting on that profile, which the client put in here too */
+  const [postingFor, setPostingFor] = useState(false);
+
   useEffect(() => {
     document.title = 'Superfans | Super Ads';
     void load();
-  }, []);
+  }, [as]);
 
   async function load() {
-    const { data: d } = await api.get<CenterData>('/ads/center');
+    const { data: d } = await api.get<CenterData>(`/ads/center${as ? `?as=${encodeURIComponent(as)}` : ''}`);
     setData(d);
   }
 
@@ -210,6 +221,57 @@ export function AdsCenter() {
   return (
     <>
       <AdsSidebar active="center" />
+      {/* Working inside someone else's account is not a state to leave unsaid: every ad made
+          from here belongs to them, not to the business making it. */}
+      {postingFor && data?.actingFor && (
+        <PostForLinked
+          targetId={data.actingFor.id}
+          handle={data.actingFor.usernameUrl ?? data.actingFor.id}
+          onClose={() => setPostingFor(false)}
+        />
+      )}
+      {data?.actingFor && (
+        <div
+          style={{
+            position: 'sticky',
+            top: 0,
+            zIndex: 30,
+            background: '#ffd400',
+            border: '3px solid #c9a600',
+            padding: '8px 14px',
+            fontFamily: 'Consolas, "Courier New", monospace',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+          }}
+        >
+          <span>
+            Working inside @{data.actingFor.usernameUrl ?? data.actingFor.id} —{' '}
+            {data.actingFor.role === 'influencer' ? 'Creator account' : 'User account'}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPostingFor(true)}
+            style={{
+              marginLeft: 'auto',
+              background: '#6622e5',
+              color: '#fff',
+              border: '3px solid #520be0',
+              borderRadius: 0,
+              fontWeight: 700,
+              padding: '4px 14px',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            + Add Post
+          </button>
+          <a href="/super-ads" style={{ color: '#222', textDecoration: 'underline' }}>
+            Leave
+          </a>
+        </div>
+      )}
       <div className="main">
         {data && data.missing.length > 0 && (
           <div className="redlabel">
@@ -347,6 +409,9 @@ function ProfileModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  /* the advertiser profile being filled in belongs to the account being worked in */
+  const [params] = useSearchParams();
+  const as = params.get('as');
   const [f, setF] = useState({
     name: (initial?.name as string) ?? '',
     surnames: (initial?.surnames as string) ?? '',
@@ -369,7 +434,7 @@ function ProfileModal({
     e.preventDefault();
     setBusy(true);
     try {
-      await api.post('/ads/profile', f);
+      await api.post('/ads/profile', { ...f, ...(as ? { onBehalfOf: as } : {}) });
       onSaved();
     } finally {
       setBusy(false);
@@ -451,6 +516,9 @@ function CreateAdModal({
   onClose: () => void;
   advertiserPaid?: boolean;
 }) {
+  /* the account this ad is being made for, when a business is working inside a linked one */
+  const [params] = useSearchParams();
+  const as = params.get('as');
   const [amount, setAmount] = useState(card.min);
   const [days, setDays] = useState(4);
   const [terms, setTerms] = useState(false);
@@ -561,7 +629,10 @@ function CreateAdModal({
         body.button_action = buttonAction;
       }
 
-      const { data } = await api.post<{ url?: string }>(`/ads/initiate-payment/${card.type}`, body);
+      const { data } = await api.post<{ url?: string }>(`/ads/initiate-payment/${card.type}`, {
+        ...body,
+        ...(as ? { onBehalfOf: as } : {}),
+      });
       if (data.url) window.location.href = data.url;
       else setError('The payment page could not be opened. Please try again.');
     } catch (err) {

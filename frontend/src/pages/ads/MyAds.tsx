@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import { assetImage, isVideoFile, videoMime } from '../../utils/format';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
@@ -23,20 +24,29 @@ export function MyAds() {
   const [ads, setAds] = useState<MyAd[]>([]);
   const [loading, setLoading] = useState(true);
   const paymentStatus = usePaymentReturn(() => void load());
+  /* the same `?as=` the centre carries: a business looking at a linked account's ads */
+  const [params] = useSearchParams();
+  const as = params.get('as');
 
   useEffect(() => {
     document.title = 'Superfans | My Ads';
     void load();
-  }, []);
+  }, [as]);
 
   async function load() {
-    const { data } = await api.get<{ ads: MyAd[] }>('/ads/my-ads');
+    const { data } = await api.get<{ ads: MyAd[] }>(
+      `/ads/my-ads${as ? `?as=${encodeURIComponent(as)}` : ''}`,
+    );
     setAds(data.ads);
     setLoading(false);
   }
 
   async function pay(ad: MyAd) {
-    const { data } = await api.post<{ url?: string }>('/ads/pay-existing', { ad_id: ad.id, amount: ad.amount });
+    const { data } = await api.post<{ url?: string }>('/ads/pay-existing', {
+      ad_id: ad.id,
+      amount: ad.amount,
+      ...(as ? { onBehalfOf: as } : {}),
+    });
     if (data.url) window.location.href = data.url;
   }
 
