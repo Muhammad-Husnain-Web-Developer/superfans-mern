@@ -269,7 +269,14 @@ export function RegisterForm({ role }: { role: 'user' | 'influencer' }) {
       };
       const user = await apiRegister(input);
       setUser(user);
-      navigate(postLoginPath(user.role), { replace: true });
+      /* David, 30 Sep 2026: the interests screen comes between registering and the
+         wall. It sends them on to postLoginPath itself once they have answered, so
+         this is the only place the detour is decided.
+         Business accounts skip it: they register to buy ads, they have no WORLD feed
+         for an interest to shape. */
+      navigate(user.role === 'business' ? postLoginPath(user.role) : '/intereses', {
+        replace: true,
+      });
     } catch (err) {
       const message = isAxiosError(err)
         ? ((err.response?.data as { message?: string } | undefined)?.message ?? 'Registration failed')

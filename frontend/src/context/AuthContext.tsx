@@ -26,6 +26,8 @@ export interface AuthUser {
   soundEffects?: boolean;
   /* ESTADO — the reader's own dot. Absent on an older response, which reads as online. */
   presence?: UserPresence;
+  /* INTERESTS — the slugs chosen on the screen after registration. */
+  interests?: string[];
   createdAt?: string;
 }
 

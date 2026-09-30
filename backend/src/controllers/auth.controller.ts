@@ -46,6 +46,9 @@ function publicUser(user: IUser) {
        schema default on read, so an absent value reads as online — the same shape as
        soundEffects above, and the same value login would have set. */
     presence: user.presence ?? 'online',
+    /* INTERESTS — on the session so the app can tell an account that has already
+       answered the screen after registration from one that has not. */
+    interests: user.interests ?? [],
     createdAt: user.createdAt,
   };
 }

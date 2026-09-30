@@ -60,6 +60,10 @@ const settingsSchema = z.object({
   /* ESTADO — the dot beside the @nickname. Laravel has no equivalent; this is the
      client's own (30 Sep 2026). */
   presence: z.enum(['online', 'away', 'disconnected']).optional(),
+  /* INTERESTS — the slugs chosen on the screen after registration. Capped at the
+     length of the list the screen offers, so a crafted request cannot grow the array
+     without bound; the values themselves are only ever read back as slugs. */
+  interests: z.array(z.string().max(40)).max(60).optional(),
 });
 
 meRouter.patch(
@@ -109,6 +113,7 @@ meRouter.patch(
     if (input.earnings !== undefined) user.earnings = input.earnings;
     if (input.chatToggle !== undefined) user.chatToggle = input.chatToggle;
     if (input.soundEffects !== undefined) user.soundEffects = input.soundEffects;
+    if (input.interests !== undefined) user.interests = input.interests;
     const presenceChanged = input.presence !== undefined && input.presence !== user.presence;
     if (input.presence !== undefined) user.presence = input.presence;
     if (input.profilePicture) user.profilePicture = input.profilePicture;
@@ -156,6 +161,7 @@ meRouter.patch(
         soundEffects: user.soundEffects !== false,
         /* ESTADO, so the reader's own dot redraws off the same setUser() */
         presence: user.presence ?? 'online',
+        interests: user.interests ?? [],
       },
     });
   }),

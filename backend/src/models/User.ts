@@ -39,6 +39,21 @@ export interface IUser extends Document {
   number?: string;
   phone?: string;
   categories: string[];
+  /**
+   * INTERESTS — what this reader wants their WORLD feed built from, chosen on the
+   * screen that follows registration (David, 30 Sep 2026).
+   *
+   * Deliberately its own field rather than a second use of `categories` above: that
+   * one is a creator's own subject matter, picked in the register form and shown on
+   * their profile. These are the opposite direction — what somebody wants to be
+   * shown — and a fan who creates nothing still has them.
+   *
+   * Stored as stable slugs ('football', 'popular_girls'), never as the label the
+   * reader saw. The labels are translated into ten languages, so storing them would
+   * leave a Spanish account's 'Fútbol' and an English one's 'Football' as two
+   * different interests, and the feed filter David is planning could not match them.
+   */
+  interests: string[];
 
   // Social networks (CSV columns in Laravel → arrays here)
   networks: string[];
@@ -178,6 +193,8 @@ const userSchema = new Schema<IUser>(
     number: String,
     phone: String,
     categories: { type: [String], default: [] },
+    /* INTERESTS — slugs, see the note on the interface above. */
+    interests: { type: [String], default: [] },
 
     networks: { type: [String], default: [] },
     networkProfileLinks: { type: [String], default: [] },

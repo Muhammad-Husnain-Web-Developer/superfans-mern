@@ -6,6 +6,7 @@ import { Login } from './pages/auth/Login';
 import { Register } from './pages/auth/Register';
 import { RegisterFan } from './pages/auth/RegisterFan';
 import { RegisterCreator } from './pages/auth/RegisterCreator';
+import { Interests } from './pages/auth/Interests';
 import { CreatorConfirm } from './pages/auth/CreatorConfirm';
 import { ForgotPassword } from './pages/auth/ForgotPassword';
 import { ResetPassword } from './pages/auth/ResetPassword';
@@ -52,6 +53,17 @@ import { AdManagement } from './pages/admin/AdManagement';
 import { Merchandising } from './pages/merch/Merchandising';
 import { MerchandisingShow } from './pages/merch/MerchandisingShow';
 import { RegisterModalProvider } from './components/RegisterModal';
+
+/**
+ * The interests screen needs an account to save against — it is only ever reached
+ * straight after registering, when there is one.
+ */
+function InterestsGate() {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Interests />;
+}
 
 /**
  * /user and /influencer are Laravel's "my wall" routes: they render the viewer's own
@@ -119,6 +131,10 @@ function App() {
           <Route path="fan" element={<RegisterFan />} />
           <Route path="creador" element={<RegisterCreator />} />
           <Route path="creador/confirm" element={<CreatorConfirm />} />
+          {/* INTERESTS — the screen after registration (David, 30 Sep 2026). Reached
+              from the register form rather than linked to; a reader who arrives here
+              signed out has nothing to save, so it sends them to the login. */}
+          <Route path="intereses" element={<InterestsGate />} />
           <Route path="password/reset" element={<ForgotPassword />} />
           <Route path="password/reset/:token" element={<ResetPassword />} />
           <Route path="business/login" element={<BusinessLogin />} />
