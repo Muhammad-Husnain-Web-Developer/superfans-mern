@@ -624,7 +624,7 @@ export function InfluencerControlPanelModal({
                   </div>
                 </div>
                 <div className="col-xs-6" style={{ textAlign: 'end', paddingRight: 22 }}>
-                  <button type="button" style={PARTNERSHIP_BTN} onClick={() => setPartnershipOpen(true)}>
+                  <button type="button" className="partnership-btn" onClick={() => setPartnershipOpen(true)}>
                     <span>{t('notavailable10k_title2')}</span>
                     <hr style={{ marginTop: 0, marginBottom: 0 }} />
                     {t('notavailable10k_button')}
@@ -868,15 +868,9 @@ export function InfluencerControlPanelModal({
 }
 
 
-/** The black two-line button beside the video-views figure (.open-btn in the blade). */
-const PARTNERSHIP_BTN: React.CSSProperties = {
-  background: '#000000',
-  color: '#ffffff',
-  padding: '3px 15px',
-  fontWeight: 'bold',
-  border: 0,
-  outline: 0,
-};
+/* The black two-line button beside the video-views figure (.open-btn in the blade) is
+   styled as `.partnership-btn` in styles/footer-modals.css — it needs a :hover, and an
+   inline style object cannot carry one. */
 
 /**
  * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.

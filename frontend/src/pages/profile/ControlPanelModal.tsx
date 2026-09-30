@@ -67,7 +67,7 @@ export const FILE_SAVE_BTN: CSSProperties = {
    every section after it). David wants the softer line he sees on the live site, so the
    rule is a translucent white instead and picks up the panel's red underneath. Only the
    three control panels use it, and all three sit on that red, so nothing else shifts. */
-export const HR: CSSProperties = { borderTop: '6px solid rgb(234 204 45 / 31%)' };
+export const HR: CSSProperties = { borderTop: '6px solid #fa2f02' };
 
 export const SELECT_STYLE: CSSProperties = {
   color: 'white',

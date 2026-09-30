@@ -843,3 +843,43 @@ input.login-modal-input:focus {
     margin: 30px auto;
   }
 }
+
+/* "Vincular partnership" — the black two-line button beside the video-views figure in the
+ * creator's control panel (.open-btn, layouts_influencer/footer.blade.php:2776).
+ *
+ * The blade gives it no hover state at all. David asked for one (28 Sep 2026): white
+ * ground with red lettering on hover, which is the pair every other button in this panel
+ * already uses at rest.
+ *
+ * It lives here rather than in an inline style object because an inline `background`
+ * always beats a `:hover` rule, so the hover could never take.
+ */
+.partnership-btn {
+  background: #000000;
+  color: #ffffff;
+  padding: 3px 15px;
+  font-weight: bold;
+  border: 0;
+  outline: 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.partnership-btn:hover,
+.partnership-btn:focus-visible {
+  background: #ffffff;
+  color: red;
+}
+
+/* The rule between the button's two lines takes the text's colour, so it reads white on
+   the black ground and red on the hovered white one, matching the mockup's red underline.
+   The whole shorthand is needed, not just the colour: an <hr> defaults to `border-style:
+   inset`, which Chrome paints its own flat grey however the colour is set. */
+.partnership-btn hr {
+  /* the browser's own stylesheet puts `color: gray` on every <hr>, which is what
+     currentColor would otherwise resolve to; this hands it back to the button */
+  color: inherit;
+  border: 0;
+  border-top: 6px solid currentColor;
+  opacity: 1;
+}
