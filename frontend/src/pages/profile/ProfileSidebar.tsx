@@ -319,23 +319,28 @@ export function FooterLanguageSelector() {
   );
 }
 
-/** Sidebar social-networks slider (#slider_id) with prev/next controls. */
+/**
+ * Sidebar social-networks slider (#slider_id) with prev/next controls.
+ *
+ * The rule that closes this block is NOT drawn here. The blade keeps it outside the
+ * `@if ($Influencer_networks != null)` (influencer/activity.blade.php:989-994), so it is
+ * there whether or not the account has added a network; ours had it inside, and an account
+ * with no networks lost the slider and the rule together, leaving the bare gap between
+ * STREAMING and MUNDO that David reported (30 Sep 2026). It is at the call site now.
+ */
 function NetworksSlider({ networks }: { networks: NetworkDetail[] }) {
   if (networks.length === 0) return null;
   return (
-    <>
-      <div>
-        <NetworkSlider
-          items={networks.map((n) => ({
-            name: n.name,
-            href: n.link,
-            src: networkLogo(n.name, 'scroll') ?? assetImage(n.image),
-          }))}
-          soundClass="play-sound2"
-        />
-      </div>
-      <hr style={{ marginBottom: 20 }} />
-    </>
+    <div>
+      <NetworkSlider
+        items={networks.map((n) => ({
+          name: n.name,
+          href: n.link,
+          src: networkLogo(n.name, 'scroll') ?? assetImage(n.image),
+        }))}
+        soundClass="play-sound2"
+      />
+    </div>
   );
 }
 
@@ -736,6 +741,10 @@ export function ProfileSidebar({
             <li>
               <NetworksSlider networks={profile.networkDetails} />
             </li>
+
+            {/* The blade's rule between the networks and MUNDO, drawn whether or not there
+                are any networks to close off (influencer/activity.blade.php:994). */}
+            <hr style={{ marginBottom: 20 }} />
 
             {authUser ? (
               <>
