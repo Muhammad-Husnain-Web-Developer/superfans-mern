@@ -598,9 +598,28 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
             <div style={{ padding: 20, textAlign: 'center' }}>
               {posts[0].imageVideo &&
                 (isVideoFile(posts[0].imageVideo) ? (
+                  /* David, 30 Sep 2026: "Video Controls out of this modal in case of
+                     video / Autoplay with NO VOLUME". The blade has `controls` here
+                     (user/index.blade.php:2102) and no autoplay — this is his change,
+                     not a porting slip, so it should not be "corrected" back.
+                     `muted` is what makes the autoplay allowed at all: every browser
+                     blocks a clip that starts with sound, and this modal opens on its
+                     own rather than off a tap, so there is no gesture to rely on. It
+                     is also the no-volume he asked for, so the one attribute covers
+                     both. `loop` because a short clip that plays once and freezes on
+                     its last frame reads as broken, and the reader has no controls
+                     left to restart it with. */
                   <video
-                    controls
+                    autoPlay
+                    muted
+                    loop
                     playsInline
+                    /* React sets muted as a DOM property but does not always emit the
+                       attribute; setting it on the node too means autoplay is never
+                       refused over a missing attribute. */
+                    ref={(el) => {
+                      if (el) el.muted = true;
+                    }}
                     poster={posts[0].thumbnail ? assetImage(`thumbnails/${posts[0].thumbnail}`) : undefined}
                     style={{ width: 200, borderRadius: 14, border: '4px solid rgba(255,255,255,0.4)', boxShadow: '0 0 20px rgba(255,255,255,0.25)', marginBottom: 15, maxWidth: '100%', height: 'auto' }}
                   >

@@ -380,6 +380,16 @@ worldRouter.get(
       user?: Types.ObjectId;
     }>([
       { $match: { status: true } },
+      /* A suspended or deleted advertiser has to leave the wall with everyone else. The
+         posts already do — buildPool only draws from active accounts — but the ad tile
+         carries the advertiser's @handle, avatar and a Follow/Subscribe button leading to
+         a profile that now refuses the visit, so an ad was a way back onto WORLD for an
+         account that had been taken off it.
+         Most migrated ads have no advertiser on record at all (56 of the 73 active ones
+         here), and those are legitimate — the test only drops an ad that names an owner
+         who is no longer active, or whose row has gone entirely. */
+      { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'owner' } },
+      { $match: { $or: [{ user: null }, { 'owner.status': 'active' }] } },
       { $sample: { size: 3 } },
       { $project: { media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1, user: 1 } },
     ]);
