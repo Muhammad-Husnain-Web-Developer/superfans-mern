@@ -436,10 +436,13 @@ export function LoggedInNav({
               {/* David, 30 Sep 2026: the unread count rides on the profile mark here.
                   It is what lets the bell itself move down into the dropdown — the
                   number stays in sight while the menu is shut, which was the whole
-                  reason the bell had been left outside it (his 29 Sep note). */}
+                  reason the bell had been left outside it (his 29 Sep note).
+                  Only while it is shut, though: once the menu opens, the Notifications
+                  button below carries its own copy of the same number, and two badges
+                  for one count read as two things to deal with. */}
               <span className="username-mark">
                 <i className="far fa-user-circle" style={{ fontSize: 20 }}></i>
-                {unreadCount > 0 && (
+                {!menuOpen && unreadCount > 0 && (
                   <span className="notif-badge username-mark-badge">
                     {unreadCount > 99 ? '99+' : unreadCount}
                   </span>

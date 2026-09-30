@@ -105,6 +105,35 @@
     border-radius: 0px;
 }
 
+/* NO ROUNDED CORNERS ON THE CHOSEN CHIP (David, 30 Sep 2026: "mujhe border radius
+ * nahi chahiye").
+ *
+ * The round corner was never a border-radius — measured, the chip computes
+ * `border-radius: 0px` whether it is chosen or not. It is Chrome's own focus ring:
+ * `outline-style: auto`, which the browser draws as a ROUNDED ring however square the
+ * element is, and thick enough to cover the chip's real corners. It looked like it
+ * jumped between chips because it is focus, and a click moves focus to whatever was
+ * clicked last — exactly the behaviour described.
+ *
+ * Proof: the same chosen chip photographs round while focused and square the moment
+ * focus leaves it, with the computed radius reading 0px both times.
+ *
+ * So the outline goes, and a square one replaces it for keyboard users only.
+ * `outline-style: solid` follows the element's own (zero) radius instead of rounding
+ * it, and :focus-visible never fires for a mouse click — so the person clicking sees
+ * nothing at all, and the person tabbing still knows where they are.
+ */
+.interests-chip:focus,
+.interests-continue:focus {
+  outline: none;
+}
+
+.interests-chip:focus-visible,
+.interests-continue:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 3px;
+}
+
 /* Phones: the chips keep wrapping on their own, but the question and the button both
    want the full width rather than a right-hand corner of it. */
 @media (max-width: 600px) {
