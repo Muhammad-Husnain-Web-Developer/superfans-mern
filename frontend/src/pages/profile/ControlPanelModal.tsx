@@ -402,8 +402,7 @@ export function ControlPanelModal({
                 </div>
               </div>
             </div>
-            <br />
-            <br />
+          <hr style={HR} />
             {/* ---------- ESTADO ----------
                 David, 30 Sep 2026: the reader picks their own dot, and it changes for
                 everyone the moment it is pressed. Saved through the same /me/settings

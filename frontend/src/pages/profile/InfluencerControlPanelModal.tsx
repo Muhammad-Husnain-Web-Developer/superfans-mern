@@ -323,9 +323,9 @@ export function InfluencerControlPanelModal({
                 </div>
               </div>
             </div>
-            <br />
+          <hr style={HR} />
             {/* ---------- profile info ---------- */}
-            <br />
+           
             {/* ---------- ESTADO ----------
                 David, 30 Sep 2026: the reader picks their own dot, and it changes for
                 everyone the moment it is pressed. Saved through the same /me/settings
