@@ -3,6 +3,9 @@ import { hydrateSoundEffects } from '../utils/soundEffects';
 
 export type UserRole = 'user' | 'influencer' | 'business' | 'admin';
 
+/** ESTADO — what the dot beside an @nickname shows. */
+export type UserPresence = 'online' | 'away' | 'disconnected';
+
 export interface AuthUser {
   id: string;
   name: string;
@@ -21,6 +24,8 @@ export interface AuthUser {
   /* SOUND EFFECTS — the account-wide preference. Absent on older responses,
      treated as `true` (on) by the hydrator. */
   soundEffects?: boolean;
+  /* ESTADO — the reader's own dot. Absent on an older response, which reads as online. */
+  presence?: UserPresence;
   createdAt?: string;
 }
 

@@ -8,8 +8,11 @@ import { loginSchema, registerSchema } from '../validators/auth.schemas.js';
 import { sendMail } from '../services/mailer.js';
 import { renderEmail } from '../services/emailTemplate.js';
 import { env } from '../config/env.js';
+import { broadcast } from '../services/realtime.js';
 import {
   REFRESH_COOKIE,
+  ACCESS_COOKIE,
+  verifyAccessToken,
   clearAuthCookies,
   setAuthCookies,
   signAccessToken,
@@ -39,6 +42,10 @@ function publicUser(user: IUser) {
        have no value stored, and mongoose does not apply schema defaults on read — so a
        missing field must read as on, which is what the client asked for. */
     soundEffects: user.soundEffects !== false,
+    /* ESTADO. Missing on accounts older than the field, and mongoose applies no
+       schema default on read, so an absent value reads as online — the same shape as
+       soundEffects above, and the same value login would have set. */
+    presence: user.presence ?? 'online',
     createdAt: user.createdAt,
   };
 }
@@ -95,6 +102,16 @@ export async function login(req: Request, res: Response): Promise<void> {
     throw ApiError.unauthorized('Invalid credentials');
   }
 
+  /* ESTADO resets to online on every login — the client's rule (30 Sep 2026). Someone
+     who left as "Desconectado" comes back online rather than being invisible without
+     realising it. updateOne rather than save(): `user` was loaded with +password, and
+     save() would run the hashing hook over an already-hashed value. */
+  if (user.presence !== 'online') {
+    user.presence = 'online';
+    await User.updateOne({ _id: user._id }, { $set: { presence: 'online' } });
+    broadcast('presence:changed', { userId: String(user._id), presence: 'online' });
+  }
+
   issueSession(res, user);
   res.json({ success: true, data: publicUser(user) });
 }
@@ -127,7 +144,29 @@ export async function me(req: Request, res: Response): Promise<void> {
   res.json({ success: true, data: publicUser(user) });
 }
 
-export async function logout(_req: Request, res: Response): Promise<void> {
+export async function logout(req: Request, res: Response): Promise<void> {
+  /* The counterpart of the reset on login: someone who has signed out is not online,
+     and a green dot on an empty chair is the one state a reader cannot correct for
+     themselves.
+     The route carries no requireAuth — signing out has to work with a stale token too —
+     so the id is read from the access cookie here rather than from req.auth, which
+     nothing on this route populates. Entirely best-effort: an expired, forged or absent
+     token just means no dot is cleared, and the sign-out itself still goes through. */
+  let userId: string | null = null;
+  try {
+    const token = (req.cookies as Record<string, string | undefined>)[ACCESS_COOKIE];
+    if (token) userId = verifyAccessToken(token).sub;
+  } catch {
+    userId = null;
+  }
+  if (userId) {
+    try {
+      await User.updateOne({ _id: userId }, { $set: { presence: 'disconnected' } });
+      broadcast('presence:changed', { userId, presence: 'disconnected' });
+    } catch {
+      /* the sign-out matters more than the dot */
+    }
+  }
   clearAuthCookies(res);
   res.json({ success: true });
 }

@@ -5,6 +5,7 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireAuth } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
 import { User } from '../models/User.js';
+import { broadcast } from '../services/realtime.js';
 import { Followership } from '../models/Followership.js';
 import { Subscription } from '../models/Subscription.js';
 import { Hate } from '../models/Hate.js';
@@ -56,6 +57,9 @@ const settingsSchema = z.object({
   earnings: z.coerce.number().min(0).optional(),
   chatToggle: z.boolean().optional(),
   soundEffects: z.boolean().optional(),
+  /* ESTADO — the dot beside the @nickname. Laravel has no equivalent; this is the
+     client's own (30 Sep 2026). */
+  presence: z.enum(['online', 'away', 'disconnected']).optional(),
 });
 
 meRouter.patch(
@@ -105,6 +109,8 @@ meRouter.patch(
     if (input.earnings !== undefined) user.earnings = input.earnings;
     if (input.chatToggle !== undefined) user.chatToggle = input.chatToggle;
     if (input.soundEffects !== undefined) user.soundEffects = input.soundEffects;
+    const presenceChanged = input.presence !== undefined && input.presence !== user.presence;
+    if (input.presence !== undefined) user.presence = input.presence;
     if (input.profilePicture) user.profilePicture = input.profilePicture;
     if (input.coverPicture) user.coverPicture = input.coverPicture;
     /* updateCoverColor clears any cover picture first (blade parity) */
@@ -114,6 +120,12 @@ meRouter.patch(
     }
 
     await user.save();
+    /* ESTADO — tell every open page at once, so the dot the reader just changed turns
+       on other people's screens without them reloading. After the save, so nothing is
+       announced that did not land. */
+    if (presenceChanged) {
+      broadcast('presence:changed', { userId: String(user._id), presence: user.presence });
+    }
     if (priceRose) void notifySubscribersOfPriceRise(String(user._id), user.priceOfSubscription ?? 0);
     /* David, 16 Sep 2026: every current subscriber moves to the new price too, from their
        next payment — not just new sign-ups. Runs both directions (a price drop should reach
@@ -142,6 +154,8 @@ meRouter.patch(
         profilePictureBorderStatus: user.profilePictureBorderStatus ?? '0',
         /* echoed back so the caller's setUser() keeps the sound cache in step */
         soundEffects: user.soundEffects !== false,
+        /* ESTADO, so the reader's own dot redraws off the same setUser() */
+        presence: user.presence ?? 'online',
       },
     });
   }),

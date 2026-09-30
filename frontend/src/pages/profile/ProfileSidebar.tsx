@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PresenceDot } from '../../components/PresenceDot';
 import { useAuth } from '../../context/AuthContext';
 import { closeOffcanvas } from '../../components/NavToggle';
 import { api } from '../../api/client';
@@ -602,32 +603,30 @@ export function ProfileSidebar({
         <span
           style={{ width: 20, height: 20, background: '#585858', position: 'absolute', zIndex: 2, left: 0 }}
         ></span>
-        <span
+        {/* ESTADO — the dot David circled (30 Sep 2026). Two of them, as the blade
+            has it: this one is pinned over the mask at the left edge so it is always
+            visible, and the one below rides in the text and scrolls away with a long
+            nickname. Both were a hardcoded green; both now show the real status and
+            follow it live over the socket. */}
+        <PresenceDot
+          userId={profile.id}
+          presence={profile.presence}
+          size={10}
           style={{
-            width: 10,
-            height: 10,
-            backgroundColor: '#0ed145',
-            display: 'inline-block',
             marginRight: 5,
-            borderRadius: 30,
             verticalAlign: 'middle',
             zIndex: 3,
             position: 'absolute',
             left: 5,
             top: 5,
           }}
-        ></span>
-        <span
-          style={{
-            width: 10,
-            height: 10,
-            backgroundColor: '#0ed145',
-            display: 'inline-block',
-            marginRight: 5,
-            borderRadius: 30,
-            verticalAlign: 'middle',
-          }}
-        ></span>{' '}
+        />
+        <PresenceDot
+          userId={profile.id}
+          presence={profile.presence}
+          size={10}
+          style={{ marginRight: 5, verticalAlign: 'middle' }}
+        />{' '}
         {/* `transform: translateX(55%)` inline, as the blade has it — the piece
             that makes the animation start from the right, and the fallback the
             span shows if the animation is ever off (prefers-reduced-motion). */}

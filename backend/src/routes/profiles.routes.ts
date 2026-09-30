@@ -129,6 +129,9 @@ profilesRouter.get(
         instagramLink: user.instagramLink ?? null,
         footerNameUsername: user.footerNameUsername ?? null,
         profilePictureBorderStatus: user.profilePictureBorderStatus ?? null,
+        /* ESTADO — the dot the wall draws beside this profile's @nickname. Absent on
+           accounts older than the field, which reads as online (the schema default). */
+        presence: user.presence ?? 'online',
         country: user.country ?? null,
         birth: user.birth ?? null,
         gender: user.gender ?? null,

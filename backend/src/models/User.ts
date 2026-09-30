@@ -6,6 +6,13 @@ export type UserRole = 'user' | 'influencer' | 'business' | 'admin';
    column and offers Restore beside it, so nothing is ever taken off the table. */
 export type UserStatus = 'active' | 'suspended' | 'deleted';
 
+/**
+ * ESTADO — what the dot beside an @nickname shows. Distinct from UserStatus above:
+ * that one is whether the account may log in at all, this one is what other readers
+ * see while it is logged in.
+ */
+export type UserPresence = 'online' | 'away' | 'disconnected';
+
 export interface IUser extends Document {
   // Identity
   name: string;
@@ -75,6 +82,17 @@ export interface IUser extends Document {
    * default, so an account that has never touched it behaves exactly as before.
    */
   soundEffects: boolean;
+  /**
+   * ESTADO — the presence the account shows other people: the green/red/yellow dot
+   * beside its @nickname. Deliberately NOT `status` above, which is the account's
+   * standing (active / suspended / deleted) and is what the login checks.
+   *
+   * The client asked (30 Sep 2026) for it to reset to `online` on every login, so it
+   * is a live presence the reader can override for the session rather than a lasting
+   * preference. Nothing expires it: `away` and `disconnected` are chosen, and stay
+   * until the reader changes them or logs in again.
+   */
+  presence: UserPresence;
 
   // Geo tracking
   registeredIp?: string;
@@ -194,6 +212,13 @@ const userSchema = new Schema<IUser>(
     notificationsSeenAt: { type: Date },
     /* SOUND EFFECTS — same default-on shape as chatToggle above. */
     soundEffects: { type: Boolean, default: true },
+    /* ESTADO. Default `online` so an account that predates the field, or one that has
+       never touched the switch, reads as online — which is also what login sets. */
+    presence: {
+      type: String,
+      enum: ['online', 'away', 'disconnected'],
+      default: 'online',
+    },
 
     registeredIp: String,
     registeredCountry: String,

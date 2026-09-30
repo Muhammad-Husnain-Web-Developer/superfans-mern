@@ -43,6 +43,8 @@ export interface ProfileData {
   instagramLink: string | null;
   footerNameUsername: string | null;
   profilePictureBorderStatus: string | null;
+  /** ESTADO — the dot beside this profile's @nickname. */
+  presence?: import('../context/AuthContext').UserPresence;
   birth?: string | null;
   gender?: string | null;
   country: string | null;

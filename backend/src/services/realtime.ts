@@ -47,3 +47,16 @@ export function initRealtime(server: http.Server): void {
 export function emitToUser(userId: string, event: string, payload: unknown): void {
   io?.to(userId).emit(event, payload);
 }
+
+/**
+ * Emit to every connected socket, whoever they are.
+ *
+ * Chat is addressed — a message concerns two people — but ESTADO is not: anyone with
+ * a profile, a wall or a feed open may be looking at the dot of the account that just
+ * changed it, and we have no list of who that is. The payload carries only a user id
+ * and the new presence, which is already public on every page that renders the dot,
+ * so there is nothing here a reader could not have fetched anyway.
+ */
+export function broadcast(event: string, payload: unknown): void {
+  io?.emit(event, payload);
+}

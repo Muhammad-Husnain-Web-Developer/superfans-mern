@@ -7,6 +7,8 @@ import type { NetworkDetail, ProfileData } from '../../api/profiles';
 import { useCropUpload } from './ControlPanelCropModal';
 import { soundEffectsEnabled, setSoundEffectsEnabled } from '../../utils/soundEffects';
 import { playModalOpenSound } from '../../utils/modalSounds';
+import { PresenceSection } from './PresenceSection';
+import type { UserPresence } from '../../context/AuthContext';
 /* .control-panel-dialog — the phone gutter, shared by all three panels: the other two
    import their shared pieces from this file, so importing it here loads it for them too. */
 import '../../styles/footer-modals.css';
@@ -148,6 +150,9 @@ export function ControlPanelModal({
   const { t: tUi } = useTranslation('ui');
 
   const [bio, setBio] = useState(profile.bio ?? '');
+  /* ESTADO — the reader's own dot. Seeded from the loaded profile; the panel keeps its
+     own copy so the pressed button turns black before the save comes back. */
+  const [presence, setPresence] = useState<UserPresence>(profile.presence ?? 'online');
     /* SOUND EFFECTS — gates every button sound in the app (slider arrows, like/hate). */
   const [soundOn, setSoundOn] = useState(soundEffectsEnabled());
   const [username, setUsername] = useState(profile.usernameUrl ?? '');
@@ -398,6 +403,19 @@ export function ControlPanelModal({
               </div>
             </div>
             <br />
+            <br />
+            {/* ---------- ESTADO ----------
+                David, 30 Sep 2026: the reader picks their own dot, and it changes for
+                everyone the moment it is pressed. Saved through the same /me/settings
+                patch as every other field here, and the server broadcasts it from there. */}
+            <PresenceSection
+              value={presence}
+              onPick={(next) => {
+                setPresence(next);
+                void save({ presence: next }, 'Estado updated');
+              }}
+              H3={H3}
+            />
             {/* ---------- profile info ---------- */}
             <h3 style={H3}>{t('profile_info', { defaultValue: 'Profile info' })}</h3>
 
