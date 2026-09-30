@@ -82,27 +82,13 @@
     border-radius: 0px;
 }
 
-.interests-continue {
-  background: #2b2b2b;
-  color: #fff;
-  border: none;
-  border-radius: 0px;
-  font-size: 19px;
-  font-weight: 600;
-  padding: 14px 34px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-.interests-continue:hover:not(:disabled) {
-  background: #000;
-    border-radius: 0px;
-}
-
+/* The look — background, border, hover, font — all comes from .btn-register-dark in
+   auth.css, which the markup carries alongside this class. Nothing visual is repeated
+   here on purpose: a copy would be one more thing to remember when that button is
+   restyled. What is left is only what belongs to this screen. */
 .interests-continue:disabled {
   opacity: 0.6;
   cursor: default;
-    border-radius: 0px;
 }
 
 /* NO ROUNDED CORNERS ON THE CHOSEN CHIP (David, 30 Sep 2026: "mujhe border radius

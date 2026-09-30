@@ -100,9 +100,15 @@ export function Interests() {
         </div>
 
         <div className="interests-actions">
+          {/* David, 30 Sep 2026: this button is to be the register page's button —
+              same border, same hover, same background. It wears that page's own class
+              rather than a copy of its declarations, so the two cannot drift apart
+              later; auth.css is already on every page (RegisterModal imports it and
+              its provider wraps the app). .interests-continue is kept alongside for
+              the one thing that is this screen's own: full width on a phone. */}
           <button
             type="button"
-            className="interests-continue"
+            className="btn-register-dark interests-continue"
             onClick={() => void onContinue()}
             disabled={saving}
           >
