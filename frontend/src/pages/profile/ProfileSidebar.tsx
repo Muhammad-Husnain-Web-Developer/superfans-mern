@@ -11,6 +11,7 @@ import { networkLogo } from '../../utils/networkLogo';
 import '../../styles/influencer-search.css';
 import { FlipLogo } from '../../components/FlipLogo';
 import { NotificationsBell } from '../../components/NotificationsBell';
+import { useUnreadCount } from '../../utils/unreadNotifications';
 import '../../styles/logo-spin.css';
 import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
@@ -374,6 +375,8 @@ export function LoggedInNav({
   const { t } = useTranslation('nav');
   const { user: authUser } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  /* above the early return: a hook after it would not always run */
+  const unreadCount = useUnreadCount();
   if (!authUser) return null;
 
   const base = authUser.role === 'influencer' ? '/influencer' : '/user';
@@ -429,13 +432,21 @@ export function LoggedInNav({
           >
             <b>@</b>
             <b>
-              {authUser.usernameUrl} <i className="far fa-user-circle" style={{ fontSize: 20 }}></i>
+              {authUser.usernameUrl}{' '}
+              {/* David, 30 Sep 2026: the unread count rides on the profile mark here.
+                  It is what lets the bell itself move down into the dropdown — the
+                  number stays in sight while the menu is shut, which was the whole
+                  reason the bell had been left outside it (his 29 Sep note). */}
+              <span className="username-mark">
+                <i className="far fa-user-circle" style={{ fontSize: 20 }}></i>
+                {unreadCount > 0 && (
+                  <span className="notif-badge username-mark-badge">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </span>
             </b>
           </p>
-          {/* David, 29 Sep 2026: "In Desktop, maybe we can put the Bell in the LEFTBAR."
-              Outside the collapse below, which only opens when the handle above is clicked —
-              a bell whose count cannot be seen until you go looking for it is no bell. */}
-          <NotificationsBell variant="sidebar" />
 
           <div
             className={`collapse-div collapse${menuOpen ? ' in show' : ''}`}
@@ -450,6 +461,11 @@ export function LoggedInNav({
               border: 0,
             }}
           >
+            {/* David, 30 Sep 2026: "notification ka button iski dropdown main ana chahiye
+                add post, control panel aur card ke sath" — so the bell sits in here with
+                the other three rather than above the handle. Its own count is on the
+                profile mark above, which is what keeps it findable while this is shut. */}
+            <NotificationsBell variant="sidebar" />
             {addPostFirst && showAddPost && (
               <p
                 className="dropdown-item add_post_item"

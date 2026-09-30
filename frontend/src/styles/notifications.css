@@ -261,3 +261,33 @@
     animation: none;
   }
 }
+
+/* The unread count on the profile mark beside the @nickname (David, 30 Sep 2026).
+ *
+ * This is what pays for moving the bell down into the dropdown: the menu is shut most
+ * of the time, and the number has to be visible without opening it.
+ *
+ * The mark is an inline <i>, so the wrapper is what the badge is positioned against —
+ * without it the badge would hang off .username_li instead and land at the far edge of
+ * the column. */
+.username-mark {
+  position: relative;
+  display: inline-block;
+  /* room at the top-right for the badge to sit in, so it never overlaps the glyph */
+  padding-right: 2px;
+}
+
+.username-mark-badge {
+  /* the shared .notif-badge supplies the pill: red, 14px, white text. Only the
+     placement differs here — pinned to the mark's top-right corner rather than the
+     bottom-right of a square bar button. */
+  right: -8px;
+  bottom: auto;
+  top: -7px;
+  /* the sidebar item resets .notif-badge to static; this one is positioned, and has to
+     say so after that rule */
+  position: absolute;
+  /* the nickname above is bold and the badge is not part of that word */
+  font-weight: 700;
+  line-height: 14px;
+}

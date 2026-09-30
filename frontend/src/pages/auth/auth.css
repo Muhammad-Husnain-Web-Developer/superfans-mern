@@ -41,20 +41,22 @@
   background: #fff;
   border-radius: 30px;
   border: 0;
-  padding: 1.5rem; /* p-4 */
-  padding-top: 0;
+  padding: 1.5rem; /* .card.p-4 in the blade — all four sides, measured at 24px */
 }
 
+/* The blade's own .card-body, which it measures at `0 20px 20px` — bootstrap's 1.25rem
+   on three sides with the top taken off. */
 .auth-card-body {
   padding: 1.25rem;
   padding-top: 0;
 }
-@media (max-width: 500px) {
-  .auth-card,
-  .auth-card-body {
-    padding: 0 !important;
-  }
-}
+/* There used to be a `@media (max-width: 500px) { padding: 0 !important }` here, from the
+   first port. It stripped both paddings on a phone, so the fields ran the full 382px of the
+   card instead of the 294px the blade gives them (`.card.p-4` 24px + `.card-body` 20px on
+   each side = 88px). That is what the client saw as "everything is bigger" on Login and
+   Register (30 Sep 2026): the type was never larger — every size matches the blade — the
+   form was simply filling the screen edge to edge. The blade has no such breakpoint, so
+   neither do we now. */
 
 .auth-logo-wrap {
   text-align: center;

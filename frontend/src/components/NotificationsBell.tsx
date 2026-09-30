@@ -4,6 +4,7 @@ import { Trans, useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import { setUnreadCount, useUnreadCount } from '../utils/unreadNotifications';
 import { assetImage } from '../utils/format';
 import '../styles/notifications.css';
 
@@ -106,6 +107,10 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
   const navigate = useNavigate();
   const relative = useRelative();
 
+  /* Read up here with the other hooks, not where it is used: the component returns
+     early for a signed-out reader, and a hook after that return would not always run. */
+  const sharedUnread = useUnreadCount();
+
   const [open, setOpen] = useState(false);
   const [data, setData] = useState<Payload | null>(null);
   const [loading, setLoading] = useState(false);
@@ -120,7 +125,11 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
   const load = useCallback(() => {
     api
       .get<{ success: boolean; data: Payload }>('/notifications')
-      .then((r) => setData(r.data.data))
+      .then((r) => {
+        setData(r.data.data);
+        /* the sidebar's profile mark draws the same number (David, 30 Sep 2026) */
+        setUnreadCount(r.data.data.unread ?? 0);
+      })
       .catch(() => undefined);
   }, []);
 
@@ -141,6 +150,7 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
     /* everything up to now stops counting — the badge clears here rather than waiting for
        the round trip, which is what makes the tap feel answered */
     setData((d) => (d ? { ...d, unread: 0 } : d));
+    setUnreadCount(0);
     void api.post('/notifications/seen').catch(() => undefined);
   }
 
@@ -182,7 +192,9 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
     setData((d) => (d ? { ...d, partner: d.partner.filter((p) => p.id !== request.id) } : d));
   }
 
-  const unread = data?.unread ?? 0;
+  /* the shared store, not data.unread: the bar's bell and the sidebar's are separate
+     mounts, and opening one has to empty the other's badge too */
+  const unread = sharedUnread;
 
   function row(item: Item) {
     const when = <span className="notif-when"> {relative(item.at)}</span>;
