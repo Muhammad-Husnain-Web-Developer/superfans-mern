@@ -323,7 +323,7 @@ export function InfluencerControlPanelModal({
             <h3 style={H3}>{t('profile_info', { defaultValue: 'Profile info' })}</h3>
 
             <div className="custom-file" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-              <label style={{ marginBottom: 10, color: 'white', fontSize: 14 }}>{t('profile_picture')}</label>
+              <label style={{ marginBottom: 10, color: 'white', fontSize: 16 }}>{t('profile_picture')}</label>
               <input
                 type="file"
                 className="custom-file-input profile_picture"
@@ -337,7 +337,7 @@ export function InfluencerControlPanelModal({
             </div>
 
             <div className="custom-file" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
-              <label style={{ marginBottom: 10, color: 'white', fontSize: 14 }}>{t('cover_picture')}</label>
+              <label style={{ marginBottom: 10, color: 'white', fontSize: 16 }}>{t('cover_picture')}</label>
               <input
                 type="file"
                 className="custom-file-input cover_picture"

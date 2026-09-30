@@ -405,7 +405,7 @@ export function ControlPanelModal({
               className="custom-file"
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}
             >
-              <label style={{ marginBottom: 10, color: 'white', fontSize: 14 }}>
+              <label style={{ marginBottom: 10, color: 'white', fontSize: 16 }}>
                 {t('profile_picture', { defaultValue: 'Profile picture' })}
               </label>
               <input
@@ -429,7 +429,7 @@ export function ControlPanelModal({
               className="custom-file"
               style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}
             >
-              <label style={{ marginBottom: 10, color: 'white', fontSize: 14 }}>
+              <label style={{ marginBottom: 10, color: 'white', fontSize: 16 }}>
                 {t('cover_picture', { defaultValue: 'Cover picture' })}
               </label>
               <input
