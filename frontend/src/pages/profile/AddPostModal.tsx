@@ -280,10 +280,28 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
                   {t('tag_instructions', { defaultValue: '' })}
                 </small>
                 <br />
+                {/* The box holds only what is being typed. It used to fall back to the
+                    tags already chosen, so after picking one the name stayed in the box and
+                    had to be cleared by hand before the next search; the chosen ones are
+                    listed as chips underneath, which is where they belong. */}
                 <input
                   type="text"
-                  value={tagQuery ? tagQuery : tags.join(',')}
-                  onChange={(e) => setTagQuery(e.target.value.split(',').pop() ?? '')}
+                  value={tagQuery}
+                  onChange={(e) => {
+                    const typed = e.target.value;
+                    /* a comma ends a name — the hint above the box says so */
+                    if (!typed.includes(',')) {
+                      setTagQuery(typed);
+                      return;
+                    }
+                    const parts = typed.split(',');
+                    const rest = parts.pop() ?? '';
+                    const done = parts.map((n) => n.trim()).filter(Boolean);
+                    if (done.length > 0) {
+                      setTags((prev) => [...prev, ...done.filter((n) => !prev.includes(n))]);
+                    }
+                    setTagQuery(rest);
+                  }}
                   placeholder={t('type_username_or_name', { defaultValue: 'Type username or name' })}
                   style={{ width: '100%', padding: 5, border: '1px solid lightgray', borderRadius: 5 }}
                 />
@@ -307,7 +325,7 @@ export function AddPostModal({ myPosts, onClose, onChanged }: AddPostModalProps)
                         <li
                           key={s.name}
                           onClick={() => {
-                            if (!tags.includes(s.name)) setTags([...tags, s.name]);
+                            setTags((prev) => (prev.includes(s.name) ? prev : [...prev, s.name]));
                             setTagQuery('');
                             setSuggestions([]);
                           }}

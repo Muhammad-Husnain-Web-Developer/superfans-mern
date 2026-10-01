@@ -405,7 +405,17 @@ adsRouter.get(
    One deliberate difference from Laravel: a hidden post is left out. Laravel still offered
    them, which is what David reported — a post taken off the profile was still on offer to
    promote, and reads to the owner as one they had deleted. */
+/* What the ad picker will list.
+ *
+ * Laravel allows images only (UserController::getUserPosts:1361). That left a creator who
+ * posts video with nothing to promote — TepazAI's 16 visible posts are all .mp4, so the
+ * picker came back empty and "Buy Fast Ads" was a dead end — while the Boost Your Post modal
+ * on the same account's wall happily offered that very video, autoplay and all. The ad
+ * creative itself has drawn video for a while (the preview and the WORLD feed's AdCard both
+ * render <video>), so the filter was the only thing in the way. David chose to widen it
+ * (1 Oct 2026), which is a deliberate step away from the blade. */
 const PICKER_IMAGE_EXTENSIONS = new Set(['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+const PICKER_VIDEO_EXTENSIONS = new Set(['mp4', 'mov', 'webm', 'm4v']);
 
 adsRouter.get(
   '/posts',
@@ -413,17 +423,22 @@ adsRouter.get(
   asyncHandler(async (req, res) => {
     const posts = await Post.find(
       { influencer: await actingFor(req, askedFor(req)), visible: true },
-      { imageVideo: 1 },
+      /* the thumbnail rides along so the picker can poster a clip rather than download it */
+      { imageVideo: 1, thumbnail: 1 },
     )
       .sort({ createdAt: -1 })
       .lean();
     res.json({
       success: true,
       posts: posts
-        .map((p) => ({ id: String(p._id), imageVideo: (p as { imageVideo?: string }).imageVideo ?? null }))
+        .map((p) => ({
+          id: String(p._id),
+          imageVideo: (p as { imageVideo?: string }).imageVideo ?? null,
+          thumbnail: (p as { thumbnail?: string }).thumbnail ?? null,
+        }))
         .filter((p) => {
           const ext = p.imageVideo?.split('.').pop()?.toLowerCase() ?? '';
-          return PICKER_IMAGE_EXTENSIONS.has(ext);
+          return PICKER_IMAGE_EXTENSIONS.has(ext) || PICKER_VIDEO_EXTENSIONS.has(ext);
         })
         .slice(0, 200),
     });

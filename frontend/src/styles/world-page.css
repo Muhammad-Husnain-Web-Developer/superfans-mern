@@ -296,17 +296,8 @@
             min-width: 0;
         }
 
-        .feed_posts_heading_marquee {
-            display: inline-flex;
-            align-items: center;
-            white-space: nowrap;
-            width: 100%;
-            will-change: transform;
-        }
-
-        .feed_posts_heading_left.is-overflowing .feed_posts_heading_marquee {
-            animation: scroll-left 10s linear infinite;
-        }
+        /* the strip's keyframes live in post-heading.css, measured per strip — a copy
+           here would win by name and cut long handle runs short again */
 
         .feed_posts_heading_right {
             flex: 1;
@@ -328,15 +319,6 @@
             padding: 2px 6px;
         }
 
-        @keyframes scroll-left {
-            0% {
-                transform: translateX(100%);
-            }
-
-            100% {
-                transform: translateX(-100%);
-            }
-        }
 
         .message-tag:hover {
             color: white !important;

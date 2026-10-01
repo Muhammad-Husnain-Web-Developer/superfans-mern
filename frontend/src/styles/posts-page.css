@@ -96,14 +96,8 @@
              padding: 10px;
         }
         
-        @keyframes scroll-left {
-    0% {
-        transform: translateX(100%);
-    }
-    100% {
-        transform: translateX(-100%);
-    }
-}
+        /* the strip's keyframes live in post-heading.css, measured per strip — a copy
+           here would win by name and cut long handle runs short again */
 /* (closing brace added — the blade's inline <style> was unbalanced; browsers
    auto-close it at </style> but the bundler requires valid CSS) */
 

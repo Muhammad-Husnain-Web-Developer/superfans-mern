@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { markFeedReturn } from '../utils/feedMemory';
@@ -19,6 +19,9 @@ export interface HeadingHandle {
  * place — a second copy is how the wall ended up scrolling every handle,
  * including the short ones that already fit.
  */
+/** how fast the handle strip scrolls. The old fixed 10s covered 300px, which is this. */
+const MARQUEE_PX_PER_SEC = 30;
+
 export function PostHeading({
   author,
   tagged = [],
@@ -30,7 +33,8 @@ export function PostHeading({
   right?: ReactNode;
 }) {
   const runRef = useRef<HTMLSpanElement | null>(null);
-  const [overflows, setOverflows] = useState(false);
+  /* null while the handles fit the slot; otherwise the travel this particular run needs */
+  const [marquee, setMarquee] = useState<{ from: number; to: number; seconds: number } | null>(null);
   const { t: tUi } = useTranslation('ui');
 
   /* One entry per account. A post may tag its own author — 12 of them in the migrated data
@@ -45,7 +49,24 @@ export function PostHeading({
     const run = runRef.current;
     const slot = run?.parentElement;
     if (!run || !slot) return;
-    const measure = () => setOverflows(run.scrollWidth > slot.clientWidth + 1);
+    /* The travel is measured, not written in the stylesheet. The keyframes used to run from
+       translateX(100%) to -100%, and that percentage is of the run's own box — the slot's
+       150px — so a strip of two handles, or one long one, turned back to the start while
+       half of it was still unread. From the right edge of the slot to clear off the left is
+       `slot + content`, whatever the handles happen to be, and holding the pace at a fixed
+       px/s keeps a long strip from racing a short one. */
+    const measure = () => {
+      const content = run.scrollWidth;
+      const visible = slot.clientWidth;
+      if (content <= visible + 1) {
+        setMarquee(null);
+        return;
+      }
+      const next = { from: visible, to: -content, seconds: (visible + content) / MARQUEE_PX_PER_SEC };
+      setMarquee((prev) =>
+        prev && prev.from === next.from && prev.to === next.to ? prev : next,
+      );
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(slot);
@@ -65,8 +86,20 @@ export function PostHeading({
       className="feed_posts_heading_p feed-heading-flex"
       style={{ position: 'relative', top: 25, fontSize: 14, marginBottom: 12 }}
     >
-      <span className={`feed_posts_heading_left${overflows ? ' is-overflowing' : ''}`}>
-        <span className="feed_posts_heading_marquee" ref={runRef}>
+      <span className={`feed_posts_heading_left${marquee ? ' is-overflowing' : ''}`}>
+        <span
+          className="feed_posts_heading_marquee"
+          ref={runRef}
+          style={
+            marquee
+              ? ({
+                  '--marquee-from': `${marquee.from}px`,
+                  '--marquee-to': `${marquee.to}px`,
+                  '--marquee-duration': `${marquee.seconds}s`,
+                } as CSSProperties)
+              : undefined
+          }
+        >
           {handles.map((h) => (
             <Link
               key={h.usernameUrl}

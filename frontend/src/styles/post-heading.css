@@ -22,14 +22,22 @@
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
-  width: 100%;
+  /* as wide as the handles actually are, so no handle is squeezed by the flex box and
+     the measured scrollWidth is the real length of the run; min-width keeps the slot
+     filled when they already fit */
+  width: max-content;
+  min-width: 100%;
   will-change: transform;
+}
+
+.feed_posts_heading_marquee > * {
+  flex: 0 0 auto;
 }
 
 /* only a run of text too long for the slot scrolls; a handle that already fits
    stays put */
 .feed_posts_heading_left.is-overflowing .feed_posts_heading_marquee {
-  animation: scroll-left 10s linear infinite;
+  animation: post-heading-scroll var(--marquee-duration, 10s) linear infinite;
 }
 
 .feed_posts_heading_right {
@@ -40,13 +48,16 @@
   min-width: 0;
 }
 
-@keyframes scroll-left {
+/* The two ends are set per strip from JS (--marquee-from / --marquee-to, in px): from the
+   right edge of the slot until the whole run has passed off the left. A percentage here is
+   of the run's own box, which cut long strips short. */
+@keyframes post-heading-scroll {
   0% {
-    transform: translateX(100%);
+    transform: translateX(var(--marquee-from, 100%));
   }
 
   100% {
-    transform: translateX(-100%);
+    transform: translateX(var(--marquee-to, -100%));
   }
 }
 

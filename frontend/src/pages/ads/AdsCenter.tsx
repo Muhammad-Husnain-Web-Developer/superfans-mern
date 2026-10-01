@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
@@ -175,10 +175,28 @@ export function AdsCenter() {
   /* the other half of a link: posting on that profile, which the client put in here too */
   const [postingFor, setPostingFor] = useState(false);
 
+  /* `/super-ads/buy/:postId` — the Boost Your Post modal's "Buy Fast Ads" button. The route
+     existed but nothing read the id, so the advertiser landed on the grid and had to find the
+     same post again by hand; the one thing the link was for was lost on arrival. (Laravel has
+     no `buy` route at all — the blade's button 404s there — so there is nothing to match and
+     this is ours to decide.) It opens the promote-post card with that post already picked. */
+  const { postId: boostPostId } = useParams();
+  const autoOpenedRef = useRef(false);
+
   useEffect(() => {
     document.title = 'Superfans | Super Ads';
     void load();
   }, [as]);
+
+  /* once, and only after the centre's data is in: onCardClick needs it to run the same
+     profile-complete and role checks a real click goes through */
+  useEffect(() => {
+    if (!boostPostId || autoOpenedRef.current || !data) return;
+    autoOpenedRef.current = true;
+    const promotePost = CARDS.find((c) => c.id === 1);
+    if (promotePost) onCardClick(promotePost);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [boostPostId, data]);
 
   async function load() {
     const { data: d } = await api.get<CenterData>(`/ads/center${as ? `?as=${encodeURIComponent(as)}` : ''}`);
@@ -388,6 +406,8 @@ export function AdsCenter() {
         <CreateAdModal
           card={card}
           onClose={() => setCard(null)}
+          /* the post the Boost modal was opened for, if the route carried one */
+          initialPostId={boostPostId}
           /* so the live preview draws the button this advertiser's ad will actually carry */
           advertiserPaid={isPaidAdvertiser({
             role: data?.role,
@@ -511,10 +531,13 @@ function CreateAdModal({
   card,
   onClose,
   advertiserPaid = false,
+  initialPostId,
 }: {
   card: AdCard;
   onClose: () => void;
   advertiserPaid?: boolean;
+  /** preselected post, when the centre was opened from Boost Your Post */
+  initialPostId?: string;
 }) {
   /* the account this ad is being made for, when a business is working inside a linked one */
   const [params] = useSearchParams();
@@ -526,7 +549,7 @@ function CreateAdModal({
   const [country, setCountry] = useState('');
   const [city, setCity] = useState('');
   const [media, setMedia] = useState<string>(''); // base64
-  const [postId, setPostId] = useState('');
+  const [postId, setPostId] = useState(initialPostId ?? '');
   /* what the picked post looks like, so the preview can show it — the three post-picker
      cards never upload anything, so without this their preview stayed empty */
   const [postMedia, setPostMedia] = useState<string | null>(null);

@@ -29,14 +29,8 @@
              padding: 10px;
         }
         
-        @keyframes scroll-left {
-    0% {
-        transform: translateX(100%);
-    }
-    100% {
-        transform: translateX(-100%);
-    }
-}
+        /* the strip's keyframes live in post-heading.css, measured per strip — a copy
+           here would win by name and cut long handle runs short again */
 
 
 /* ==== next style block ==== */

@@ -375,7 +375,13 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
   useEffect(() => {
     if (boostShownRef.current || !wallVariant || !profile) return;
     if (authUser?.usernameUrl !== profile.usernameUrl) return;
-    const hasBoost = profile.role === 'user' && posts.length > 0;
+    /* David, 1 Oct 2026: "Add modal on CREATORS Influencer Accounts". Laravel only ever
+       had it on the fan wall — #boostlatest-postModal lives in user/index.blade.php and the
+       influencer wall blade has no copy — so the `role === 'user'` test was a faithful port,
+       and widening it here is his change, not a fix. A creator has more reason to boost a
+       post than a fan does. */
+    const hasBoost =
+      (profile.role === 'user' || profile.role === 'influencer') && posts.length > 0;
     boostShownRef.current = true;
     const timer = setTimeout(() => {
       if (hasBoost) setBoostOpen(true);
@@ -637,8 +643,15 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                 <br />
                 <b>{tUi('boost_now')}</b>
               </p>
+              {/* David, 1 Oct 2026: "Open SW Ads in another tab". The blade's own link
+                  (user/index.blade.php:2120) navigates in place; opening a tab keeps the
+                  wall where it was, so closing Super Ads returns to the post rather than
+                  to a reloaded feed. `noreferrer` comes with the new tab — without it the
+                  opened page keeps a handle on this one through `window.opener`. */}
               <a
                 href={`/super-ads/buy/${posts[0].id}`}
+                target="_blank"
+                rel="noreferrer"
                 style={{ display: 'inline-block', padding: '12px 22px', background: '#00e676', color: '#000', fontSize: 17, fontWeight: 800, marginTop: 12, textDecoration: 'none' }}
               >
                 ⚡ Buy Fast Ads
