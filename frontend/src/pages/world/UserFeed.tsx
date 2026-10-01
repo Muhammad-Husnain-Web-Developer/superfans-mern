@@ -151,7 +151,9 @@ function FeedCard({ post }: { post: FeedPost }) {
   const navigate = useNavigate();
   const clickTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [heart, setHeart] = useState(false);
-  const [views, setViews] = useState(post.viewsTotal);
+  /* read-only: the eye counts impressions, which only the full-screen viewer reports.
+     Nothing on this card may move it — see doLike. */
+  const [views] = useState(post.viewsTotal);
   const [liked, setLiked] = useState(post.viewerLiked ?? false);
   const [hated, setHated] = useState(post.viewerHated ?? false);
   const [likeRows, setLikeRows] = useState(post.likesCount ?? 0);
@@ -187,7 +189,7 @@ function FeedCard({ post }: { post: FeedPost }) {
 
   // function doLike() {
   //   api
-  //     .post<{ success: boolean; data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+  //     .post<{ success: boolean; data: { status: string; views?: number; likesTotal: number; likesCount: number; hatesCount: number } }>(
   //       `/posts/${post.id}/like-toggle`,
   //     )
   //     .then((r) => {
@@ -227,21 +229,19 @@ function doLike() {
     setHated(false);
     setLikeRows((prev) => prev + 1);
     if (hated) setHateRows((prev) => prev - 1);
-    setViews((prev) => prev + 1);
   } else {
     setLikeRows((prev) => prev - 1);
-    setViews((prev) => prev - 1);
   }
 
   api
-    .post<{ success: boolean; data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
+    .post<{ success: boolean; data: { status: string; views?: number; likesTotal: number; likesCount: number; hatesCount: number } }>(
       `/posts/${post.id}/like-toggle`,
     )
     .then((r) => {
       const nowLiked = r.data.data.status === 'post liked';
       setLiked(nowLiked);
       if (nowLiked) setHated(false);
-      setViews(r.data.data.likesTotal);
+      /* the eye is deliberately not touched here: a like is not a view */
       setLikeRows(r.data.data.likesCount);
       setHateRows(r.data.data.hatesCount);
     })
@@ -256,10 +256,8 @@ function doLike() {
       if (willBeLiked) {
         setLikeRows((prev) => prev - 1);
         if (hated) setHateRows((prev) => prev + 1);
-        setViews((prev) => prev - 1);
       } else {
         setLikeRows((prev) => prev + 1);
-        setViews((prev) => prev + 1);
       }
     });
 }

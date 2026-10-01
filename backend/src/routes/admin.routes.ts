@@ -286,7 +286,7 @@ adminRouter.get(
        field first sank every such post below every migrated one regardless of recency — see
        the same fix in profiles.routes.ts / posts.routes.ts. */
     const posts = await Post.find({ influencer: req.params.id })
-      .select('mysqlId imageVideo noOfLikes likePercent likePercentManual createdAt')
+      .select('mysqlId imageVideo noOfLikes noOfViews likePercent likePercentManual createdAt')
       .sort({ createdAt: -1, mysqlId: -1 })
       .setOptions({ withMissing: true })
       .lean();
@@ -298,6 +298,8 @@ adminRouter.get(
         id: String(p._id),
         postId: p.mysqlId ?? null,
         imageVideo: p.imageVideo ?? null,
+        /* the column is headed "Views", so it shows the view figure the eye shows */
+        noOfViews: p.noOfViews ?? 0,
         noOfLikes: p.noOfLikes ?? 0,
         likePercent: p.likePercent ?? null,
         /* the table marks these with a padlock: "apply to all" steps over them */
@@ -307,7 +309,18 @@ adminRouter.get(
   }),
 );
 
-/** update_likes — the same add/remove pair, on a post (:2077). */
+/**
+ * update_likes — the same add/remove pair, on a post (:2077).
+ *
+ * The box is labelled "Add Views", and it moves both figures in step, exactly as the growth
+ * bot does. In Laravel there was only ever one number — `no_of_likes` was also the view
+ * count (`SUM(posts.no_of_likes) as total_views`, InfluencerController:502) — so a single
+ * `$inc` satisfied both readings. Now that the eye has its own field, moving only one of
+ * them breaks whichever reading is left behind: writing likes alone leaves the eye still
+ * after the admin has just added views to it, and writing views alone stops the box pushing
+ * a post over the `noOfLikes >= 1000` line into the WORLD pool, which is what it was for.
+ * So both, together, and both floored at zero.
+ */
 adminRouter.post(
   '/posts/:id/likes',
   requireAuth,
@@ -319,11 +332,18 @@ adminRouter.post(
     const p = await Post.findById(req.params.id).setOptions({ withMissing: true });
     if (!p) throw ApiError.notFound('Post not found');
     const current = p.noOfLikes ?? 0;
+    const currentViews = p.noOfViews ?? 0;
 
     if (action === 'add') {
       p.noOfLikes = current + amount;
+      p.noOfViews = currentViews + amount;
       await p.save();
-      res.json({ success: true, noOfLikes: p.noOfLikes, message: 'Likes Added Succesfully' });
+      res.json({
+        success: true,
+        noOfLikes: p.noOfLikes,
+        noOfViews: p.noOfViews,
+        message: 'Views Added Succesfully',
+      });
       return;
     }
 
@@ -331,8 +351,16 @@ adminRouter.post(
       throw ApiError.badRequest('remove likes value must be equal to or less than likes');
     }
     p.noOfLikes = current - amount;
+    /* the eye was seeded a little above likes (it carried the real Like rows too), so it
+       can legitimately still be positive here — clamp rather than go negative */
+    p.noOfViews = Math.max(0, currentViews - amount);
     await p.save();
-    res.json({ success: true, noOfLikes: p.noOfLikes, message: 'Likes Removed Successfully' });
+    res.json({
+      success: true,
+      noOfLikes: p.noOfLikes,
+      noOfViews: p.noOfViews,
+      message: 'Views Removed Successfully',
+    });
   }),
 );
 
@@ -524,23 +552,74 @@ adminRouter.post('/growth/:userId', requireAuth, admin(async (req, res) => {
   res.json({ success: true, message: `Growth started at Gear ${u.growthGearLevel}`, growthStatus: 'active', growthGearLevel: u.growthGearLevel });
 }));
 
-/** Run one growth tick for all active-growth users — port of processGrowth (cron target). */
-adminRouter.post('/growth/process/run', requireAuth, admin(async (_req, res) => {
+/**
+ * One growth tick — port of Laravel's scheduled `growth:process` command
+ * (app/Console/Commands/ProcessUserGrowth.php), which its Kernel runs every minute.
+ *
+ * This replaces an earlier port of `InfluencerController::processGrowth()` — the same app's
+ * *other*, cruder growth routine, which adds a flat `rand(1, gear)` to the newest ten posts
+ * and is not scheduled anywhere. That one was the wrong source: on a large account it adds
+ * one to five likes a tick, which is invisible, and the fields the real command keeps its
+ * place with — `Post.growthStartTime`, `User.followerGrowthTime` — were already carried into
+ * our schema and sat unused. This is the engine the client has been watching.
+ *
+ * What it does, per the command:
+ *  · a post grows on an interval set by its age — every minute under 48h, every hour under
+ *    312h (13 days), every 11 hours after that — so a new post climbs and an old one drifts.
+ *  · the amount is proportional: 0.5% of the account's followers, times a gear multiplier,
+ *    times a 0.8–1.2 jitter, and never less than 1.
+ *  · followers move on their own 150-minute clock, same base, slightly gentler gears.
+ *
+ * Two deliberate additions the client asked for (1 Oct 2026):
+ *  · views grow alongside likes — "if they have VISIBLE Posts and they are boted by admin,
+ *    Posts should be more Views";
+ *  · only `visible` posts are touched. The blade's command takes every post.
+ */
+const LIKE_GEAR: Record<number, number> = { 1: 0.5, 2: 1, 3: 1.5, 4: 2.5, 5: 3.5 };
+const FOLLOWER_GEAR: Record<number, number> = { 1: 0.5, 2: 1, 3: 1.5, 4: 2, 5: 3 };
+
+export async function runGrowthTick(): Promise<{ users: number; posts: number }> {
   const users = await User.find({ growthStatus: 'active' });
-  const rand = (n: number) => Math.floor(Math.random() * n) + 1;
-  let processed = 0;
+  const now = Date.now();
+  const minutesSince = (d?: Date | null, fallback = 0) =>
+    d ? (now - new Date(d).getTime()) / 60000 : fallback;
+  const jitter = () => (Math.floor(Math.random() * 41) + 80) / 100; // 0.80 – 1.20
+
+  let touchedPosts = 0;
   for (const u of users) {
     const gear = u.growthGearLevel ?? 1;
-    const posts = await Post.find({ influencer: u._id }).sort({ createdAt: -1 }).limit(10);
+    const followers = u.noOfFollowers ?? 0;
+    const base = Math.ceil(followers * 0.005);
+
+    const posts = await Post.find({ influencer: u._id, visible: true });
     for (const p of posts) {
-      (p as unknown as { noOfLikes: number }).noOfLikes = ((p as unknown as { noOfLikes?: number }).noOfLikes ?? 0) + rand(gear);
-      await p.save();
+      const ageHours = (now - new Date(p.createdAt).getTime()) / 3600000;
+      const interval = ageHours < 48 ? 1 : ageHours < 312 ? 60 : 660;
+      /* no mark yet means "due now", the same as the command's subMinutes(2) default */
+      if (minutesSince(p.growthStartTime, interval) < interval) continue;
+
+      const growth = Math.max(1, Math.trunc(base * (LIKE_GEAR[gear] ?? 1) * jitter()));
+      await Post.updateOne(
+        { _id: p._id },
+        { $inc: { noOfLikes: growth, noOfViews: growth }, $set: { growthStartTime: new Date() } },
+      );
+      touchedPosts++;
     }
-    u.noOfFollowers = (u.noOfFollowers ?? 0) + rand(gear * 2);
-    await u.save();
-    processed++;
+
+    if (minutesSince(u.followerGrowthTime, 180) >= 150) {
+      const fBase = Math.max(1, Math.ceil(followers * 0.005));
+      const growth = Math.max(1, Math.trunc(fBase * (FOLLOWER_GEAR[gear] ?? 1) * jitter()));
+      u.noOfFollowers = followers + growth;
+      u.followerGrowthTime = new Date();
+      await u.save();
+    }
   }
-  res.json({ success: true, message: `Growth processed for ${processed} user(s)`, processed });
+  return { users: users.length, posts: touchedPosts };
+}
+
+adminRouter.post('/growth/process/run', requireAuth, admin(async (_req, res) => {
+  const { users, posts } = await runGrowthTick();
+  res.json({ success: true, message: `Growth processed for ${users} user(s), ${posts} post(s)`, processed: users });
 }));
 
 /* ================= coupons ================= */

@@ -97,7 +97,10 @@ export function PostItem({
     .map((name, i) => [name.trim(), (post.taggedProfilePictures?.[i] ?? '').trim()] as const)
     .filter(([name]) => name);
   const [heart, setHeart] = useState(false);
-  const [likes, setLikes] = useState(post.noOfLikes);
+  /* the eye is the view count now, not the like count (David, 1 Oct 2026); the fallback keeps
+     the old figure if a payload has not been updated rather than dropping it to zero. A like
+     no longer moves it, which is why nothing here sets it. */
+  const [views] = useState(post.views ?? post.noOfLikes);
   /* the pill's own counts: real rows only, kept apart from the view figure above */
   const [liked, setLiked] = useState(post.viewerLiked ?? false);
   const [hated, setHated] = useState(post.viewerHated ?? false);
@@ -153,8 +156,7 @@ export function PostItem({
   //       const nowLiked = r.data.data.status === 'post liked';
   //       setLiked(nowLiked);
   //       if (nowLiked) setHated(false);
-  //       setLikes(r.data.data.likesTotal);
-  //       setLikeRows(r.data.data.likesCount);
+  //   //       setLikeRows(r.data.data.likesCount);
   //       setHateRows(r.data.data.hatesCount);
   //       feedback.onLiked();
   //     })
@@ -185,10 +187,8 @@ function doLike() {
     setHated(false);
     setLikeRows((prev) => prev + 1);
     if (hated) setHateRows((prev) => prev - 1);
-    setLikes((prev) => prev + 1);
   } else {
     setLikeRows((prev) => prev - 1);
-    setLikes((prev) => prev - 1);
   }
 
   api
@@ -199,7 +199,6 @@ function doLike() {
       const nowLiked = r.data.data.status === 'post liked';
       setLiked(nowLiked);
       if (nowLiked) setHated(false);
-      setLikes(r.data.data.likesTotal);
       setLikeRows(r.data.data.likesCount);
       setHateRows(r.data.data.hatesCount);
     })
@@ -213,11 +212,9 @@ function doLike() {
       if (willBeLiked) {
         setLikeRows((prev) => prev - 1);
         if (hated) setHateRows((prev) => prev + 1);
-        setLikes((prev) => prev - 1);
-      } else {
+          } else {
         setLikeRows((prev) => prev + 1);
-        setLikes((prev) => prev + 1);
-      }
+          }
     });
 }
 function doHate() {
@@ -298,13 +295,13 @@ function doHate() {
       <div className="stats-wrapper has-actions" onClick={(e) => e.stopPropagation()}>
         <div className="view-count">
           <span className="eye-icon">👁️</span>
-          <span className="number_of_post_likes">{formatNumberRounded(likes)}</span>
+          <span className="number_of_post_likes">{formatNumberRounded(views)}</span>
         </div>
         {!locked && (
           <RatingPill
             pct={likePercent(likeRows, hateRows, post.likePercent, {
               id: post.id,
-              views: post.noOfLikes,
+              views: post.views ?? post.noOfLikes,
             })}
             liked={liked}
             hated={hated}
@@ -1112,6 +1109,23 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
               {' '}
               {t('followers', { defaultValue: 'Followers' })}
             </a>
+            {/* David, 1 Oct 2026: "put Price Subscription in the own profile CREATOR with his
+                Price." A visitor already reads it off the Subscribe button; the creator has no
+                Subscribe button on their own wall, so their own price was the one thing about
+                their account they could not see here. Owner only, and only when there is a
+                price to show — a free account has nothing to say. */}
+            {isOwner && profile.role === 'influencer' && (profile.priceOfSubscription ?? 0) > 0 && (
+              <>
+                {' | '}
+                <b>
+                  <a style={{ fontSize: '0.69em' }}>${profile.priceOfSubscription}</a>
+                </b>
+                {/* `price_stat`, not `price_fee`: that one is the control panel's form
+                    label and ends in a colon, which read as "$120 Price of fee:" here.
+                    The siblings are bare nouns — Post, Likes, Followers — so this is too. */}
+                <a style={{ fontSize: '0.69em' }}> {t('price_stat', { defaultValue: 'Price' })}</a>
+              </>
+            )}
             <h2
               className="fh5co-heading animate-box"
               style={{ fontFamily: "'Roboto Slab', serif", color: '#dd2110' }}

@@ -197,24 +197,64 @@ postsRouter.post(
     ]);
     res.json({
       success: true,
-      data: { status, likesTotal: likeRows + post.noOfLikes, likesCount: likeRows, hatesCount: hateRows },
+      /* `views` is the eye's figure and a like must not move it (David, 1 Oct 2026) — it is
+         returned unchanged so the caller can keep showing the same number. `likesTotal` stays
+         exactly as it was: the WORLD tiers, the profile stat and likePercent all still read
+         the like figure, and nothing about them changes here. */
+      data: {
+        status,
+        views: post.noOfViews ?? 0,
+        likesTotal: likeRows + post.noOfLikes,
+        likesCount: likeRows,
+        hatesCount: hateRows,
+      },
     });
   }),
 );
 
-/* ---------- record a visit ---------- */
+/* ---------- record a visit, and count it as a view ----------
+ *
+ * David, 1 Oct 2026: "If we look (impress) a post, image or video, we plus +1 👁️", and a
+ * person who opens the same post again counts once. An impression is the full screen — this
+ * route is already called from exactly there (PostFullscreen, PostDetail, and the WORLD
+ * media click that opens it), so the count hangs off the visit that was already being
+ * written rather than a second signal.
+ *
+ * The "once" is decided by whether this viewer already has a visit row for this post:
+ * by account when signed in, by address when not. The row is still written every time —
+ * it is the visit log, and the client may want the repeat visits later — but `noOfViews`
+ * only moves the first time.
+ *
+ * `noOfLikes` is not touched here, and nothing else about it changes: it still decides
+ * which posts reach the WORLD pool and how creators are tiered.
+ */
 postsRouter.post(
   '/:id/visit',
   optionalAuth,
   asyncHandler(async (req, res) => {
     const post = await Post.findById(req.params.id);
     if (!post) throw ApiError.notFound('Post not found');
+
+    const viewer = req.auth?.userId
+      ? { user: req.auth.userId }
+      : req.ip
+        ? { user: { $exists: false }, ipAddress: req.ip }
+        : null;
+    /* a viewer we cannot tell apart from anyone else — no account, no address — is counted
+       as a fresh impression rather than silently dropped */
+    const seenBefore = viewer
+      ? (await PostVisit.countDocuments({ post: post._id, ...viewer })) > 0
+      : false;
+
     await PostVisit.create({
       post: post._id,
       user: req.auth?.userId,
       ipAddress: req.ip,
     });
-    res.json({ success: true });
+
+    if (!seenBefore) await Post.updateOne({ _id: post._id }, { $inc: { noOfViews: 1 } });
+
+    res.json({ success: true, counted: !seenBefore });
   }),
 );
 
@@ -307,6 +347,8 @@ postsRouter.get(
         visible: post.visible,
         tags: post.tags,
         taggedProfilePictures: post.taggedProfilePictures,
+        /* the eye reads `views`; `likesTotal` is kept beside it, unchanged */
+        views: post.noOfViews ?? 0,
         likesTotal: likeRows + post.noOfLikes,
         likesCount: likeRows,
         hatesCount: hateRows,

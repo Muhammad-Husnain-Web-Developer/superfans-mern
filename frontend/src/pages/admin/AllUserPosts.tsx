@@ -11,6 +11,9 @@ interface PanelPost {
   id: string;
   postId: number | null;
   imageVideo: string | null;
+  /** what the eye shows. The column is headed Views, so this is the figure in it. */
+  noOfViews: number;
+  /** still carried: the box moves both, and likes is what the WORLD threshold reads */
   noOfLikes: number;
   /** the typed ❤️/💩 figure; null means the pill runs on the real votes alone */
   likePercent: number | null;
@@ -31,6 +34,7 @@ function PostRow({
   onFlash: (f: Flash) => void;
   onChanged: (p: {
     id: string;
+    noOfViews?: number;
     noOfLikes?: number;
     likePercent?: number | null;
     likePercentManual?: boolean;
@@ -52,12 +56,12 @@ function PostRow({
       if (!amount) return;
       setBusy(true);
       try {
-        const { data } = await api.post<{ message: string; noOfLikes: number }>(
+        const { data } = await api.post<{ message: string; noOfLikes: number; noOfViews: number }>(
           `/admin/posts/${post.id}/likes`,
           { action, amount },
         );
         onFlash({ kind: 'success', text: data.message });
-        onChanged({ id: post.id, noOfLikes: data.noOfLikes });
+        onChanged({ id: post.id, noOfLikes: data.noOfLikes, noOfViews: data.noOfViews });
       } catch (err) {
         const text = isAxiosError(err)
           ? ((err.response?.data as { message?: string } | undefined)?.message ?? 'Something went wrong')
@@ -119,7 +123,7 @@ function PostRow({
       </td>
       <td>{influencerId ?? '—'}</td>
       <td>
-        <b>{post.noOfLikes.toLocaleString('en-US')}</b>
+        <b>{post.noOfViews.toLocaleString('en-US')}</b>
       </td>
       <td>
         <input type="number" required value={amount} onChange={(e) => setAmount(e.target.value)} />
@@ -209,6 +213,7 @@ export function AllUserPosts() {
   const patch = useCallback(
     (p: {
       id: string;
+      noOfViews?: number;
       noOfLikes?: number;
       likePercent?: number | null;
       likePercentManual?: boolean;
@@ -218,6 +223,7 @@ export function AllUserPosts() {
           x.id === p.id
             ? {
                 ...x,
+                noOfViews: p.noOfViews ?? x.noOfViews,
                 noOfLikes: p.noOfLikes ?? x.noOfLikes,
                 likePercent: p.likePercent !== undefined ? p.likePercent : x.likePercent,
                 likePercentManual:

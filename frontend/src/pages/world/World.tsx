@@ -292,6 +292,8 @@ interface WorldItem {
   thumbnail?: string | null;
   noOfLikes?: number;
   likesTotal?: number;
+  /** the eye */
+  views?: number;
   likesCount?: number;
   hatesCount?: number;
   likePercent?: number | null;
@@ -359,8 +361,11 @@ function WorldPostCard({
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number } | null>(null);
   const [liked, setLiked] = useState(item.viewerLiked ?? false);
   const [hated, setHated] = useState(item.viewerHated ?? false);
-  const [likesTotal, setLikesTotal] = useState(item.likesTotal ?? item.noOfLikes ?? 0);
-  /* the pill runs on the real rows only — likesTotal above is the view figure */
+/* The eye is the view count now, not the like count (David, 1 Oct 2026). `views` falls back
+   to the old figure so a payload that has not been updated keeps showing what it shows
+   today rather than dropping to zero. */
+  const [views] = useState(item.views ?? item.likesTotal ?? item.noOfLikes ?? 0);
+  /* the pill runs on the real rows only */
   const [likes, setLikes] = useState(item.likesCount ?? 0);
   const [hates, setHates] = useState(item.hatesCount ?? 0);
   const [heartShow, setHeartShow] = useState(false);
@@ -447,11 +452,10 @@ function toggleLike() {
     setHated(false);
     setLikes((prev) => prev + 1);
     if (hated) setHates((prev) => prev - 1);
-    setLikesTotal((prev) => prev + 1);
   } else {
     setLikes((prev) => prev - 1);
-    setLikesTotal((prev) => prev - 1);
   }
+  /* a like does not move the eye — that was the client's second note */
 
   api
     .post<{ data: { status: string; likesTotal: number; likesCount: number; hatesCount: number } }>(
@@ -461,7 +465,6 @@ function toggleLike() {
       const nowLiked = r.data.data.status === 'post liked';
       setLiked(nowLiked);
       if (nowLiked) setHated(false);
-      setLikesTotal(r.data.data.likesTotal);
       setLikes(r.data.data.likesCount);
       setHates(r.data.data.hatesCount);
     })
@@ -477,12 +480,11 @@ function toggleLike() {
         // We had increased likes, so decrease back
         setLikes((prev) => prev - 1);
         if (hated) setHates((prev) => prev + 1);
-        setLikesTotal((prev) => prev - 1);
       } else {
         // We had decreased likes, so increase back
         setLikes((prev) => prev + 1);
-        setLikesTotal((prev) => prev + 1);
       }
+      /* nothing to undo on the eye: a like never moved it */
     });
 }
   /** the pill's 💩 half — /me/hate, the same endpoint the full-screen viewer uses. */
@@ -749,13 +751,13 @@ function toggleHate() {
         <div className="view-count" onClick={onMediaClick}>
           <span className="eye-icon">👁️</span>
           <span className="number_of_post_likes" style={liked ? { color: '#da1212' } : undefined}>
-            {formatNumberRounded(likesTotal)}
+            {formatNumberRounded(views)}
           </span>
         </div>
         <RatingPill
           pct={likePercent(likes, hates, item.likePercent, {
             id: item.id,
-            views: item.likesTotal ?? item.noOfLikes,
+            views: item.views ?? item.likesTotal ?? item.noOfLikes,
           })}
           liked={liked}
           hated={hated}

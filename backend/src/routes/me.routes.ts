@@ -409,15 +409,25 @@ meRouter.post(
       Like.countDocuments({ post: post._id }),
       Hate.countDocuments({ post: post._id }),
     ]);
-    res.json({ success: true, data: { status, likesTotal: likeRows + post.noOfLikes, likesCount: likeRows, hatesCount: hateRows } });
+    /* same as posts.routes: the eye's figure rides along unchanged, a like never moves it */
+    res.json({
+      success: true,
+      data: {
+        status,
+        views: post.noOfViews ?? 0,
+        likesTotal: likeRows + post.noOfLikes,
+        likesCount: likeRows,
+        hatesCount: hateRows,
+      },
+    });
   }),
 );
 
 /**
  * Feed (user/feed.blade.php) — posts from everyone the viewer subscribes to, then
  * everyone they follow, latest 5 per creator. Each card carries its author (@username,
- * avatar, verified) and a view count (likes table + legacy no_of_likes), exactly like
- * the two blade loops (subscriptions ordered by created_at, followerships by updated_at).
+ * avatar, verified) and the post's view count, exactly like the two blade loops
+ * (subscriptions ordered by created_at, followerships by updated_at).
  */
 /** How many posts one page of the feed carries, now that it is one date-ordered list. */
 const FEED_POSTS = 60;
@@ -499,7 +509,10 @@ meRouter.get(
         thumbnail: p.thumbnail ?? null,
         tags: p.tags ?? [],
         taggedProfilePictures: p.taggedProfilePictures ?? [],
-        viewsTotal: (likeByPost.get(String(p._id)) ?? 0) + p.noOfLikes,
+        /* the eye's own figure, not a like count. This feed was the last screen still
+           deriving it from likes, which is why liking here moved the eye even after the
+           world feed had stopped doing it. */
+        viewsTotal: p.noOfViews ?? 0,
         likesCount: likeByPost.get(String(p._id)) ?? 0,
         hatesCount: hateByPost.get(String(p._id)) ?? 0,
         likePercent: p.likePercent ?? null,

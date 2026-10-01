@@ -64,13 +64,16 @@ profilesRouter.get(
       Followership.countDocuments({ followedUser: user._id }),
       Subscription.countDocuments({ influencer: user._id }),
       Post.find({ influencer: user._id }, { _id: 1 }).lean(),
-      Post.aggregate<{ _id: null; total: number }>([
+      Post.aggregate<{ _id: null; total: number; views: number }>([
         { $match: { influencer: user._id } },
-        { $group: { _id: null, total: { $sum: '$noOfLikes' } } },
+        { $group: { _id: null, total: { $sum: '$noOfLikes' }, views: { $sum: '$noOfViews' } } },
       ]),
     ]);
     const likeRowCount = await Like.countDocuments({ post: { $in: postIds.map((p) => p._id) } });
     const likesTotal = likeRowCount + (likesAgg[0]?.total ?? 0);
+    /* the profile's own eye figure, summed the same way — kept beside likesTotal, which the
+       page's "Likes" stat still reads unchanged */
+    const viewsTotal = likesAgg[0]?.views ?? 0;
     const followersTotal = user.noOfFollowers + followershipCount + subscriptionCount;
 
     // Laravel stores network IDs in the CSV column — resolve to name/images/link
@@ -112,6 +115,7 @@ profilesRouter.get(
         networkDetails,
         followersTotal,
         likesTotal,
+        viewsTotal,
         viewerHasBlocked,
         viewerIsBlockedBy,
         viewerFollowing,
@@ -248,6 +252,8 @@ profilesRouter.get(
         imageVideo: p.imageVideo ?? null,
         thumbnail: p.thumbnail ?? null,
         noOfLikes: p.noOfLikes,
+        /* the eye on each tile of the grid */
+        views: p.noOfViews ?? 0,
         likesCount: likesMap.get(String(p._id)) ?? 0,
         hatesCount: hatesMap.get(String(p._id)) ?? 0,
         likePercent: p.likePercent ?? null,

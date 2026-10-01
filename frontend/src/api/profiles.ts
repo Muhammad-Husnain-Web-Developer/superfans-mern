@@ -28,6 +28,8 @@ export interface ProfileData {
   networkDetails: NetworkDetail[];
   followersTotal: number;
   likesTotal: number;
+  /** the profile's own eye total, summed over its posts */
+  viewsTotal?: number;
   viewerHasBlocked: boolean;
   viewerIsBlockedBy: boolean;
   viewerFollowing: boolean;
@@ -58,6 +60,8 @@ export interface ProfilePost {
   imageVideo: string | null;
   thumbnail: string | null;
   noOfLikes: number;
+  /** the eye: real impressions plus whatever the growth bot and the seed put there */
+  views?: number;
   /** real ❤️/💩 rows plus the admin-typed seed — the wall pill runs on these */
   likesCount?: number;
   hatesCount?: number;

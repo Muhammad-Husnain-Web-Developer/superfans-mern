@@ -44,6 +44,20 @@ const envSchema = z.object({
   /** Where Redsys sends the browser back / posts the async notification. */
   PUBLIC_APP_URL: z.string().optional().default('http://localhost:5173'),
   PUBLIC_API_URL: z.string().optional().default('http://localhost:5000'),
+
+  /**
+   * The growth bot's minute clock (see server.ts).
+   *
+   * Laravel ran `growth:process` from the system scheduler, so on a real server this belongs
+   * on and the default follows NODE_ENV. It is explicit and defaults to OFF everywhere else
+   * because a dev machine points at a copy of the live database: a bot left ticking there
+   * rewrites the client's own like and follower counts, which is not ours to do.
+   *
+   * A blank value counts as unset. Every other optional key here tolerates an empty string,
+   * and `.env.example` ships most of them blank — without this, copying that file and
+   * clearing the value stops the API booting at all rather than just leaving the bot off.
+   */
+  GROWTH_BOT: z.preprocess((v) => (v === '' ? undefined : v), z.enum(['on', 'off']).optional()),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -60,3 +74,5 @@ if (!parsed.success) {
 
 export const env = parsed.data;
 export const isProd = env.NODE_ENV === 'production';
+/** Growth bot: whatever GROWTH_BOT says, else on in production and off in dev/test. */
+export const growthBotEnabled = env.GROWTH_BOT ? env.GROWTH_BOT === 'on' : isProd;

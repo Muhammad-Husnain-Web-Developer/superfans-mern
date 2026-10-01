@@ -83,6 +83,10 @@ interface PoolPost {
   imageVideo?: string;
   thumbnail?: string;
   noOfLikes: number;
+  /* the eye's figure. Kept beside noOfLikes rather than replacing it: noOfLikes still
+     decides which posts reach the pool and how creators are tiered, and none of that
+     changes. */
+  noOfViews?: number;
   likePercent?: number | null;
   tags: string[];
   taggedProfilePictures: string[];
@@ -477,9 +481,11 @@ worldRouter.get(
         imageVideo: post.imageVideo ?? null,
         thumbnail: post.thumbnail ?? null,
         noOfLikes: post.noOfLikes,
+        /* the eye, and what likePercent measures its engagement against (David, 1 Oct 2026).
+           `likesTotal` stays beside it, unchanged, for anything still reading the old figure. */
+        views: post.noOfViews ?? 0,
         likesTotal: post.noOfLikes + (likesMap.get(String(post._id)) ?? 0),
-        /* the pill needs the real rows on their own; likesTotal carries the view
-           figure, which is a different number since the client split the two */
+        /* the pill needs the real rows on their own */
         likesCount: likesMap.get(String(post._id)) ?? 0,
         hatesCount: hatesMap.get(String(post._id)) ?? 0,
         likePercent: post.likePercent ?? null,

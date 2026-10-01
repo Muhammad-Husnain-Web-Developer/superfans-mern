@@ -67,6 +67,8 @@ interface FsPost {
   imageVideo: string | null;
   thumbnail: string | null;
   likesTotal: number;
+  /** the eye */
+  views?: number;
   likePercent?: number | null;
   likesCount: number;
   hatesCount: number;
@@ -750,7 +752,7 @@ export function PostFullscreen() {
   const isOwner = !!authUser && author?.id === authUser.id;
   const pct = likePercent(likes, hates, post?.likePercent, {
     id: post?.id,
-    views: post?.likesTotal,
+    views: post?.views ?? post?.likesTotal,
   });
   // Locked: reached (via swipe) a post the viewer can't see — show the subscribe/follow tile
   // instead of the media (David's "blocked post" full-screen state).
