@@ -167,7 +167,13 @@ function FeedCard({ post }: { post: FeedPost }) {
       clickTimer.current = null;
       setHeart(true);
       setTimeout(() => setHeart(false), 600);
-      doLike();
+      /* A double-click only ever likes — it never takes a like back. The viewer behaves
+         this way already (PostFullscreen.onMediaTap), and these cards used to toggle, so
+         the same gesture gave opposite results on the two screens and a second accidental
+         double-click quietly dropped the like. Undoing one is the pill's own job. The
+         heart and the sound still answer every double-click, liked or not. */
+      if (liked) feedback.onLiked();
+      else doLike();
     } else {
       /* noted in the click itself: once the double-click window has closed the
          page is laid out for the viewer and the position reads 0 */

@@ -442,10 +442,27 @@ meRouter.get(
       ]),
     ];
 
+    /* Suspended and deleted accounts drop out here — "Deleted or Suspended users: don't
+       appear in WORLD or Rankings" (David), and a feed is no different. The blade filtered
+       neither (user/feed.blade.php:1237 and :1535 are bare `where influencer_id`), so this
+       is deliberate; the world feed has matched `users.status = 'active'` all along.
+       These docs double as the author list below, so the later lookup is gone. */
+    const authors = creatorIds.length
+      ? await User.find(
+          { _id: { $in: creatorIds }, status: 'active' },
+          { usernameUrl: 1, profilePicture: 1, verified: 1 },
+        ).lean()
+      : [];
+    const visibleCreatorIds = authors.map((a) => String(a._id));
+
     /* One list, newest first. FEED_POSTS caps the page the way the per-creator five used
-       to cap it — a busy creator can now fill more of it, which is what date order means. */
-    const allPosts = creatorIds.length
-      ? await Post.find({ influencer: { $in: creatorIds } })
+       to cap it — a busy creator can now fill more of it, which is what date order means.
+       `visible` is the creator's own eye-slash: the blade left it out of this query, so a
+       post its author had switched off still reached every follower's feed (651 of them
+       were in that state). Laravel's own world honours it (world.blade `posts.visible = 1`)
+       — the feed simply never did. */
+    const allPosts = visibleCreatorIds.length
+      ? await Post.find({ influencer: { $in: visibleCreatorIds }, visible: true })
           .sort({ createdAt: -1 })
           .limit(FEED_POSTS)
           .lean()
@@ -455,7 +472,7 @@ meRouter.get(
     /* Batch: like/hate counts per post, the viewer's own votes, and author docs (avoids N
        queries). The rating pill on the feed cards runs on the same numbers the world feed
        and the walls carry. */
-    const [likeAgg, hateAgg, myLikes, myHates, authors] = await Promise.all([
+    const [likeAgg, hateAgg, myLikes, myHates] = await Promise.all([
       Like.aggregate<{ _id: unknown; count: number }>([
         { $match: { post: { $in: postIds } } },
         { $group: { _id: '$post', count: { $sum: 1 } } },
@@ -466,7 +483,6 @@ meRouter.get(
       ]),
       Like.find({ user: req.auth!.userId, post: { $in: postIds } }, { post: 1 }).lean(),
       Hate.find({ user: req.auth!.userId, post: { $in: postIds } }, { post: 1 }).lean(),
-      User.find({ _id: { $in: creatorIds } }, { usernameUrl: 1, profilePicture: 1, verified: 1 }).lean(),
     ]);
     const likeByPost = new Map(likeAgg.map((l) => [String(l._id), l.count]));
     const hateByPost = new Map(hateAgg.map((h) => [String(h._id), h.count]));

@@ -548,10 +548,29 @@ function toggleHate() {
     run();
   };
 
-  function fireHeart() {
-    toggleLike();
+  /** the big heart that flies over the card, whichever of the two below fired it */
+  function showHeart() {
     setHeartShow(true);
     setTimeout(() => setHeartShow(false), 600);
+  }
+
+  /* The media double-click only ever likes — it never takes a like back. The viewer
+     behaves this way already (PostFullscreen.onMediaTap), and these cards used to toggle,
+     so the same gesture gave opposite results on the two screens and a second accidental
+     double-click quietly dropped the like. The heart and the sound still answer every
+     double-click, liked or not. */
+  function fireHeart() {
+    if (liked) feedback.onLiked();
+    else toggleLike();
+    showHeart();
+  }
+
+  /* The pill's own heart is a deliberate press, so it works both ways — it is how a like
+     is taken back now that the double-click above never does. The pill used to call
+     fireHeart too, and that left a liked post with no way to unlike it from this page. */
+  function pressHeart() {
+    toggleLike();
+    showHeart();
   }
 
   /**
@@ -742,7 +761,7 @@ function toggleHate() {
           hated={hated}
           beat={feedback.beat}
           bounce={feedback.bounce}
-          onLike={guardGuest(fireHeart)}
+          onLike={guardGuest(pressHeart)}
           onHate={guardGuest(toggleHate)}
         />
       </div>
