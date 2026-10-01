@@ -386,6 +386,16 @@ export function LoggedInNav({
 
   const base = authUser.role === 'influencer' ? '/influencer' : '/user';
   const addPostFirst = authUser.role === 'influencer';
+  /**
+   * David, 1 Oct 2026: "Now they can Visit a user or navigate only for WORLD."
+   *
+   * A business account has no wall, no feed, no posts of its own and no control panel — its
+   * settings live in Super Ads' own Configuration — so the whole MY block and the three
+   * creator actions in the dropdown would point at pages it cannot open. It keeps WORLD, and
+   * that one goes to `/world` rather than `${base}/world`: `base` falls back to `/user` for
+   * any non-creator, and a business has no `/user` wall to prefix with.
+   */
+  const isBusiness = authUser.role === 'business';
 
   /**
    * The blades open both of these sidebar modals the same way
@@ -407,27 +417,58 @@ export function LoggedInNav({
   return (
     <>
       <li className={`${active === 'world' ? 'fh5co-active ' : ''}world_after`}>
-        <a href={`${base}/world`}>{t('world', { defaultValue: 'World' })}</a>
+        <a href={isBusiness ? '/world' : `${base}/world`}>{t('world', { defaultValue: 'World' })}</a>
       </li>
-      {/* feed_after / wall_after carry this item's own hover rule, the way world_after
-          already colours WORLD — the client picked a colour per destination */}
-      <li className={`${active === 'feed' ? 'fh5co-active ' : ''}feed_after`}>
-        <a href={`${base}/feed`}>{t('feed', { defaultValue: 'Feed' })}</a>
-      </li>
-      <li style={{ marginBottom: 5, marginTop: -5 }}>
-        <span style={{ fontSize: 13, color: '#c3c3c3', fontFamily: MONO_FONT }}>
-          {t('my', { defaultValue: 'My' })}
-        </span>
-      </li>
-      <li className={`${active === 'wall' ? 'fh5co-active ' : ''}wall_after`}>
-        <a href={base}>{t('wall', { defaultValue: 'Wall' })}</a>
-      </li>
-      <li className={active === 'posts' ? 'fh5co-active' : undefined}>
-        <a href={`${base}/posts`}>{t('posts', { defaultValue: 'Posts' })}</a>
-      </li>
+      {!isBusiness && (
+        <>
+          {/* feed_after / wall_after carry this item's own hover rule, the way world_after
+              already colours WORLD — the client picked a colour per destination */}
+          <li className={`${active === 'feed' ? 'fh5co-active ' : ''}feed_after`}>
+            <a href={`${base}/feed`}>{t('feed', { defaultValue: 'Feed' })}</a>
+          </li>
+          <li style={{ marginBottom: 5, marginTop: -5 }}>
+            <span style={{ fontSize: 13, color: '#c3c3c3', fontFamily: MONO_FONT }}>
+              {t('my', { defaultValue: 'My' })}
+            </span>
+          </li>
+          <li className={`${active === 'wall' ? 'fh5co-active ' : ''}wall_after`}>
+            <a href={base}>{t('wall', { defaultValue: 'Wall' })}</a>
+          </li>
+          <li className={active === 'posts' ? 'fh5co-active' : undefined}>
+            <a href={`${base}/posts`}>{t('posts', { defaultValue: 'Posts' })}</a>
+          </li>
+        </>
+      )}
       <br />
       <hr style={{ marginTop: hrMarginTop }} />
 
+      {/* David, 1 Oct 2026: a business wants no dropdown here — no Control Panel, no card,
+          no Add Post — and his mock puts the SW ADS mark in the space it leaves. So the
+          handle stays as plain text and the logo sits under it. The bell goes with the
+          dropdown, which costs nothing: partner requests are listed for the creator they
+          are sent to, so a business is never the one being notified
+          (notifications.routes.ts:134). */}
+      {isBusiness ? (
+        /* `business_li`, not `username_li`: that class is the dropdown's, and the theme hangs
+           `.username_li:hover { color: black }` off it — so hovering the logo darkened the
+           handle above it, which reads as "this is clickable" when it is no longer anything
+           of the sort. The font size it also carried is kept inline. */
+        <li className="business_li" style={{ fontSize: '80%' }}>
+          <p style={{ whiteSpace: 'nowrap', marginBottom: 10 }}>
+            <b>@</b>
+            <b>{authUser.usernameUrl ?? authUser.name}</b>
+          </p>
+          {/* `business-ads-logo` turns off two things the sidebar does to every link it
+              holds: the theme's animated 2px red rule on hover
+              (`#fh5co-aside #fh5co-main-menu ul li a:after`), which landed across the middle
+              of the image rather than under a line of text, and the handle's own hover
+              colour. 54% is the width the logo above it is drawn at (`.logo-flip`), so the
+              two marks match. */}
+          <a href="/super-ads" className="business-ads-logo">
+            <img src="/assets/images/logo-sw-ads.png" alt="Super Ads Center" style={{ width: '54%' }} />
+          </a>
+        </li>
+      ) : (
       <li className="username_li" style={{ fontSize: '80%' }}>
         <div className="">
           <p
@@ -486,6 +527,9 @@ export function LoggedInNav({
             {/* the blade leaves this one without a margin-top of its own; the
                 layout's `.control_panel_item { margin-top: 10px !important }`
                 supplies it either way, so the spacing holds in both orders */}
+            {/* the blade leaves this one without a margin-top of its own; the
+                layout's `.control_panel_item { margin-top: 10px !important }`
+                supplies it either way, so the spacing holds in both orders */}
             <p
               className="dropdown-item control_panel_item"
               style={COLLAPSE_ITEM}
@@ -517,6 +561,7 @@ export function LoggedInNav({
           </div>
         </div>
       </li>
+      )}
     </>
   );
 }

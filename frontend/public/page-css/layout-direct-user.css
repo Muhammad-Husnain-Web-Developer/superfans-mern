@@ -1616,3 +1616,28 @@ font-weight: 100 !important;
 .wall_after a:after {
   background-color: #5e3af1 !important;
 }
+
+/* ── the business sidebar's SW ADS mark ────────────────────────────────────────
+ * It is an image sitting in a menu that decorates its links: the theme draws an
+ * animated 2px red rule on hover (`#fh5co-aside #fh5co-main-menu ul li a:after`,
+ * style.css:148), which under a word reads as an underline but across a logo cuts
+ * it in half, and `.username_li:hover` recolours the handle with it. Both are
+ * switched off here, for this one link, the same way the typeahead rows above
+ * switch the rule off for themselves. !important because the theme selector
+ * carries two ids.
+ */
+.business-ads-logo:after,
+.business-ads-logo:hover:after {
+  display: none !important;
+  background: transparent !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.business-ads-logo,
+.business-ads-logo:hover,
+.business-ads-logo:focus {
+  border: 0 !important;
+  text-decoration: none !important;
+  background-color: transparent !important;
+}

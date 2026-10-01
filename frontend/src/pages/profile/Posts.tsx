@@ -226,7 +226,7 @@ export function Posts() {
                       style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
                       alt=""
                     />
-                    {t('follow', { defaultValue: 'Follow' })} <b>+</b> | <b>${profile.priceOfSubscription ?? ''}</b>
+                    {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> | <b>${profile.priceOfSubscription ?? ''}</b>
                   </span>
                 ) : (
                   <>

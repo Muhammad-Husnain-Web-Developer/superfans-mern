@@ -84,7 +84,7 @@ export function PostHeading({
   return (
     <p
       className="feed_posts_heading_p feed-heading-flex"
-      style={{ position: 'relative', top: 25, fontSize: 14, marginBottom: 12 }}
+      style={{ position: 'relative', top: 20, fontSize: 14, marginBottom: 12 }}
     >
       <span className={`feed_posts_heading_left${marquee ? ' is-overflowing' : ''}`}>
         <span

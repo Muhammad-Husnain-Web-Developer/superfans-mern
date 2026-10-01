@@ -1012,7 +1012,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                         style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
                         alt=""
                       />
-                      {t('follow', { defaultValue: 'Follow' })} <b>+</b> | <b>${profile.priceOfSubscription ?? ''}</b>
+                      {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> | <b>${profile.priceOfSubscription ?? ''}</b>
                     </span>
                     <button
                       className="btn btn-success play-sound1"
@@ -1400,9 +1400,15 @@ export function FollowButtons({
             | <b><i className="fa fa-check" style={{ fontSize: 17 }} aria-hidden="true"></i></b>
           </span>
         ) : (
+          /* This one charges — it opens the subscribe modal. The blade labels it
+             `content.follow` ("Seguir"), so it read as a free follow with a price stuck on
+             the end; David asked for the word to say what the button does (1 Oct 2026).
+             `subscribe_btn`, not `subscribe`: the latter is the longer "Suscribirse" of the
+             locked-post line, which at a two-digit price runs past the 226px button. The
+             free-follow buttons below keep `follow`, so the two cannot drift together. */
           <button type="button" className="btn btn-primary btn-outline" onClick={() => setSubModalOpen(true)} style={{ width: 226 }}>
             {superheroina}
-            {t('follow', { defaultValue: 'Follow' })} <b>+</b> | <b>${profile.priceOfSubscription}</b>
+            {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> | <b>${profile.priceOfSubscription}</b>
           </button>
         )
       ) : following ? (
