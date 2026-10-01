@@ -292,9 +292,10 @@ export function UserModalCenter({
                 </div>
               </div>
             </div>
-            <br />
-            {/* ---------- profile info ---------- */}
-            <br />
+            {/* David, 1 Oct 2026: a tightened HR in place of the two stray <br/> this seam
+                had — matched to the same fix on the other two control panels, closing the
+                bio section off from ESTADO without the shared HR's full default margins. */}
+            <hr style={{ ...HR, margin: '10px 0' }} />
             {/* ---------- ESTADO ----------
                 David, 30 Sep 2026: the reader picks their own dot, and it changes for
                 everyone the moment it is pressed. Saved through the same /me/settings
@@ -307,6 +308,10 @@ export function UserModalCenter({
               }}
               H3={H3}
             />
+            {/* the same rule, closing ESTADO off from PROFILE INFO the way every other
+                section in this panel is closed off (David, 1 Oct 2026) */}
+            <hr style={HR} />
+            {/* ---------- profile info ---------- */}
             <h3 style={H3}>{t('profile_info')}</h3>
 
             <div className="custom-file" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>

@@ -41,10 +41,20 @@ export const SAVE_BTN: CSSProperties = {
   cursor: 'pointer',
 };
 
+/* David, 1 Oct 2026: a deliberate step away from the blade, which lets this control run
+   the full width of the panel — he wants it cut back so the two Guardar buttons under it
+   are not stranded beside a long empty bar. It is a fixed width rather than fit-content
+   because Chrome gives input[type=file] a ~396px intrinsic width regardless of its label,
+   so neither fit-content nor max-content shrinks it. 208px is Chrome's own "Seleccionar
+   archivo" button plus this box's padding, so in Spanish — the only language the live site
+   runs in — the bar ends right where the button does, which is how David's screenshot
+   reads. The filename label truncates under the ellipsis already set below. maxWidth keeps
+   it inside the panel on a narrow phone. Shared by all three control panels. */
 export const FILE_INPUT: CSSProperties = {
   marginBottom: 15,
   padding: 8,
-  width: '100%',
+  width: 200,
+  maxWidth: '100%',
   boxSizing: 'border-box',
   color: 'white',
   backgroundColor: '#333',
@@ -402,7 +412,11 @@ export function ControlPanelModal({
                 </div>
               </div>
             </div>
-          <hr style={HR} />
+            {/* David, 1 Oct 2026: the gap down to ESTADO was the shared HR's own default
+                margins (1em top and bottom) stacked on top of H3's own marginTop — tightened
+                here, at this one seam, rather than on the shared constant every other
+                divider in the panel still uses. */}
+            <hr style={{ ...HR, margin: '10px 0' }} />
             {/* ---------- ESTADO ----------
                 David, 30 Sep 2026: the reader picks their own dot, and it changes for
                 everyone the moment it is pressed. Saved through the same /me/settings
@@ -415,6 +429,9 @@ export function ControlPanelModal({
               }}
               H3={H3}
             />
+            {/* the same rule, closing ESTADO off from PROFILE INFO the way every other
+                section in this panel is closed off (David, 1 Oct 2026) */}
+            <hr style={HR} />
             {/* ---------- profile info ---------- */}
             <h3 style={H3}>{t('profile_info', { defaultValue: 'Profile info' })}</h3>
 

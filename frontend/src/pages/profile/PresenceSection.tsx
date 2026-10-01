@@ -56,8 +56,12 @@ export function PresenceSection({
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '8px 14px',
+                /* David, 1 Oct 2026: a size down from the panel's own 16px — these three
+                   sit in a row and at the full body size they crowded the modal on a
+                   phone. The black/white treatment is untouched. */
+                gap: 6,
+                padding: '5px 10px',
+                fontSize: 14,
                 // borderRadius: 6,
                 border: 'none',
                 cursor: 'pointer',
@@ -72,11 +76,12 @@ export function PresenceSection({
               <span
                 style={{
                   display: 'inline-block',
-                  width: 12,
-                  height: 12,
+                  width: 10,
+                  height: 10,
                   borderRadius: '50%',
+                  /* David, 1 Oct 2026: full colour, no ring. The 1px shadow that used to
+                     sit here read as a grey border on the red and yellow dots. */
                   background: o.colour,
-                  boxShadow: '0 0 0 1px rgba(0,0,0,0.25)',
                   flex: 'none',
                 }}
               />

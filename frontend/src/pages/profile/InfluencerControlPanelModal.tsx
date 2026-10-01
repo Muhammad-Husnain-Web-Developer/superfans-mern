@@ -323,9 +323,11 @@ export function InfluencerControlPanelModal({
                 </div>
               </div>
             </div>
-          <hr style={HR} />
-            {/* ---------- profile info ---------- */}
-           
+            {/* David, 1 Oct 2026: the gap down to ESTADO was the shared HR's own default
+                margins (1em top and bottom) stacked on top of H3's own marginTop — tightened
+                here, at this one seam, rather than on the shared constant every other
+                divider in the panel still uses. */}
+            <hr style={{ ...HR, margin: '10px 0' }} />
             {/* ---------- ESTADO ----------
                 David, 30 Sep 2026: the reader picks their own dot, and it changes for
                 everyone the moment it is pressed. Saved through the same /me/settings
@@ -338,6 +340,10 @@ export function InfluencerControlPanelModal({
               }}
               H3={H3}
             />
+            {/* the same rule, closing ESTADO off from PROFILE INFO the way every other
+                section in this panel is closed off (David, 1 Oct 2026) */}
+            <hr style={HR} />
+            {/* ---------- profile info ---------- */}
             <h3 style={H3}>{t('profile_info', { defaultValue: 'Profile info' })}</h3>
 
             <div className="custom-file" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
