@@ -1,5 +1,5 @@
 {
-    "add_title": "Add Story:",
+    "add_title": "Add Diary:",
     "select_file": "Select File:",
     "camera": "Camera",
     "edit": "Edit",
@@ -17,14 +17,14 @@
     "rotate": "Rotate",
     "edit_text": "Edit text",
     "remove": "Remove",
-    "share": "Share URL Story",
-    "delete": "Delete Story",
-    "delete_confirm": "Delete this Story?",
+    "share": "Share Diary URL",
+    "delete": "Delete Diary",
+    "delete_confirm": "Delete this Diary?",
     "cancel": "Cancel",
-    "empty": "No stories right now.",
+    "empty": "No diaries right now.",
     "record": "Video",
     "stop": "Stop",
-    "video_too_long": "A story video can be at most {{seconds}} seconds — this one is {{actual}}s.",
-    "publish_failed": "Could not publish this story.",
+    "video_too_long": "A diary video can be at most {{seconds}} seconds — this one is {{actual}}s.",
+    "publish_failed": "Could not publish this diary.",
     "camera_denied": "No camera available, or permission was refused."
 }

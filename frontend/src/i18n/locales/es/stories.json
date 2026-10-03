@@ -1,5 +1,5 @@
 {
-    "add_title": "Añadir Storie:",
+    "add_title": "Añadir diario:",
     "select_file": "Seleccionar archivo:",
     "camera": "Cámara",
     "edit": "Editar",
@@ -17,14 +17,14 @@
     "rotate": "Girar",
     "edit_text": "Editar texto",
     "remove": "Quitar",
-    "share": "Compartir url Storie",
-    "delete": "Eliminar Storie",
-    "delete_confirm": "¿Eliminar esta Storie?",
+    "share": "Compartir URL del diario",
+    "delete": "Eliminar diario",
+    "delete_confirm": "¿Eliminar este diario?",
     "cancel": "Cancelar",
-    "empty": "No hay stories ahora mismo.",
+    "empty": "No hay diarios ahora mismo.",
     "record": "Vídeo",
     "stop": "Parar",
-    "video_too_long": "Un vídeo de Storie puede durar como máximo {{seconds}} segundos — este dura {{actual}}s.",
-    "publish_failed": "No se ha podido publicar esta Storie.",
+    "video_too_long": "Un vídeo del diario puede durar como máximo {{seconds}} segundos — este dura {{actual}} s.",
+    "publish_failed": "No se ha podido publicar este diario.",
     "camera_denied": "No hay cámara disponible o se ha denegado el permiso."
 }

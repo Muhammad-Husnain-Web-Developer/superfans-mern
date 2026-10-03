@@ -1,5 +1,5 @@
 {
-    "add_title": "Storie toevoegen:",
+    "add_title": "Dagboek toevoegen:",
     "select_file": "Bestand kiezen:",
     "camera": "Camera",
     "edit": "Bewerken",
@@ -17,14 +17,14 @@
     "rotate": "Draaien",
     "edit_text": "Tekst bewerken",
     "remove": "Verwijderen",
-    "share": "Storie-url delen",
-    "delete": "Storie verwijderen",
-    "delete_confirm": "Deze Storie verwijderen?",
+    "share": "Dagboek-URL delen",
+    "delete": "Dagboek verwijderen",
+    "delete_confirm": "Dit dagboek verwijderen?",
     "cancel": "Annuleren",
-    "empty": "Op dit moment geen stories.",
+    "empty": "Op dit moment geen dagboeken.",
     "record": "Video",
     "stop": "Stoppen",
-    "video_too_long": "Een storievideo mag hoogstens {{seconds}} seconden duren — deze is {{actual}}s.",
-    "publish_failed": "Deze story kon niet worden geplaatst.",
+    "video_too_long": "Een dagboekvideo mag hoogstens {{seconds}} seconden duren — deze is {{actual}} s.",
+    "publish_failed": "Dit dagboek kon niet worden geplaatst.",
     "camera_denied": "Geen camera beschikbaar, of toestemming geweigerd."
 }

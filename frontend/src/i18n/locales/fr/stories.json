@@ -1,5 +1,5 @@
 {
-    "add_title": "Ajouter une Storie :",
+    "add_title": "Ajouter un journal :",
     "select_file": "Choisir un fichier :",
     "camera": "Caméra",
     "edit": "Éditer",
@@ -17,14 +17,14 @@
     "rotate": "Pivoter",
     "edit_text": "Modifier le texte",
     "remove": "Retirer",
-    "share": "Partager l’url de la Storie",
-    "delete": "Supprimer la Storie",
-    "delete_confirm": "Supprimer cette Storie ?",
+    "share": "Partager l’URL du journal",
+    "delete": "Supprimer le journal",
+    "delete_confirm": "Supprimer ce journal ?",
     "cancel": "Annuler",
-    "empty": "Aucune storie pour le moment.",
+    "empty": "Aucun journal pour le moment.",
     "record": "Vidéo",
     "stop": "Arrêter",
-    "video_too_long": "Une vidéo de Storie dure au maximum {{seconds}} secondes — celle-ci fait {{actual}}s.",
-    "publish_failed": "Impossible de publier cette Storie.",
+    "video_too_long": "Une vidéo du journal dure au maximum {{seconds}} secondes — celle-ci dure {{actual}} s.",
+    "publish_failed": "Impossible de publier ce journal.",
     "camera_denied": "Aucune caméra disponible, ou permission refusée."
 }

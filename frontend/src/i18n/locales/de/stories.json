@@ -1,5 +1,5 @@
 {
-    "add_title": "Storie hinzufügen:",
+    "add_title": "Tagebuch hinzufügen:",
     "select_file": "Datei auswählen:",
     "camera": "Kamera",
     "edit": "Bearbeiten",
@@ -17,14 +17,14 @@
     "rotate": "Drehen",
     "edit_text": "Text bearbeiten",
     "remove": "Entfernen",
-    "share": "Storie-URL teilen",
-    "delete": "Storie löschen",
-    "delete_confirm": "Diese Storie löschen?",
+    "share": "Tagebuch-URL teilen",
+    "delete": "Tagebuch löschen",
+    "delete_confirm": "Dieses Tagebuch löschen?",
     "cancel": "Abbrechen",
-    "empty": "Gerade gibt es keine Stories.",
+    "empty": "Gerade gibt es keine Tagebücher.",
     "record": "Video",
     "stop": "Stopp",
-    "video_too_long": "Ein Storie-Video darf höchstens {{seconds}} Sekunden lang sein — dieses ist {{actual}}s lang.",
-    "publish_failed": "Diese Storie konnte nicht gepostet werden.",
+    "video_too_long": "Ein Tagebuch-Video darf höchstens {{seconds}} Sekunden lang sein — dieses ist {{actual}} s lang.",
+    "publish_failed": "Dieses Tagebuch konnte nicht gepostet werden.",
     "camera_denied": "Keine Kamera verfügbar oder Zugriff verweigert."
 }

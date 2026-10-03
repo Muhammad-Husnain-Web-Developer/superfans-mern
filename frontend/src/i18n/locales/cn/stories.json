@@ -1,5 +1,5 @@
 {
-    "add_title": "添加快拍：",
+    "add_title": "添加日记：",
     "select_file": "选择文件：",
     "camera": "相机",
     "edit": "编辑",
@@ -17,14 +17,14 @@
     "rotate": "旋转",
     "edit_text": "编辑文字",
     "remove": "删除",
-    "share": "分享快拍链接",
-    "delete": "删除快拍",
-    "delete_confirm": "要删除这条快拍吗？",
+    "share": "分享日记链接",
+    "delete": "删除日记",
+    "delete_confirm": "要删除这条日记吗？",
     "cancel": "取消",
-    "empty": "目前没有快拍。",
+    "empty": "目前没有日记。",
     "record": "视频",
     "stop": "停止",
-    "video_too_long": "快拍视频最长 {{seconds}} 秒 — 这条为 {{actual}} 秒。",
-    "publish_failed": "无法发布这条快拍。",
+    "video_too_long": "日记视频最长 {{seconds}} 秒 — 这条为 {{actual}} 秒。",
+    "publish_failed": "无法发布这条日记。",
     "camera_denied": "没有可用的相机，或权限被拒绝。"
 }
