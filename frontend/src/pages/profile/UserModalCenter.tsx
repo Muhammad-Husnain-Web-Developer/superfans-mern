@@ -17,6 +17,9 @@ import {
 import { soundEffectsEnabled, setSoundEffectsEnabled } from '../../utils/soundEffects';
 import { playModalOpenSound } from '../../utils/modalSounds';
 import { PresenceSection } from './PresenceSection';
+/* the PAYMENTS block, shared with the creator panel so a change lands in both */
+import { EarningsRow, PartnershipButton, PartnershipModal } from './EarningsSection';
+import { WithdrawModal } from './InfluencerControlPanelModal';
 import type { UserPresence } from '../../context/AuthContext';
 import { useCropUpload } from './ControlPanelCropModal';
 
@@ -72,6 +75,17 @@ export function UserModalCenter({
   const [followerships, setFollowerships] = useState<RelationRow[]>([]);
 
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
+  /* the PAYMENTS block's two dialogs, the same pair the creator panel opens */
+  const [withdrawOpen, setWithdrawOpen] = useState(false);
+  const [partnershipOpen, setPartnershipOpen] = useState(false);
+  const [earnings, setEarnings] = useState(Math.round((profile.earnings ?? 0) * 100) / 100);
+  const earningsDisplay = String(earnings).includes('.') ? String(earnings) : `${earnings}.00`;
+  const videoAds = Math.round((profile.videoAdsEarnings ?? 0) * 100) / 100;
+  const videoAdsDisplay = String(videoAds).includes('.') ? String(videoAds) : `${videoAds}.00`;
+  /* a normal user's threshold is counted in followers, not subscribers */
+  const partnershipButton = (
+    <PartnershipButton threshold={t('notavailable10k_button')} onClick={() => setPartnershipOpen(true)} />
+  );
 
   /* selecting a profile/cover picture opens the cropper (250 min, 1095×1080 output) */
   const { onFileChange, cropNode } = useCropUpload((filename, kind) => {
@@ -553,19 +567,25 @@ export function UserModalCenter({
             {/* ---------- payments (earnings only; bank/paypal commented out in the blade) ---------- */}
             <hr style={HR} />
             <h3 style={H3}>{t('payments')}</h3>
-            <div className="container-fluid" style={{ paddingLeft: 0 }}>
-              <div className="row pb-3">
-                <div className="col-xs-6">
-                  <div className="form-group" style={{ display: 'flex' }}>
-                    <span style={{ color: '#fff', fontWeight: 900 }}>{t('earnings_video_views')} $0.00</span>
-                  </div>
-                </div>
-                <div className="col-xs-6" style={{ textAlign: 'end', paddingRight: 22 }}>
-                  <button type="button" className="launch_sub_modal save_btn" style={SAVE_BTN}>
-                    {t('notavailable10k_button')}
+            {/* David's mock for a normal user, 1 Oct 2026: the same block the creator gets,
+                minus the subscriptions line — a normal user has no subscribers — and with the
+                threshold counted in followers rather than subscribers. */}
+            <div style={{ marginTop: 20 }}>
+              <EarningsRow
+                label={t('total_earnings')}
+                amount={`$${earningsDisplay}`}
+                action={
+                  <button type="button" className="save_btn" style={SAVE_BTN} onClick={() => setWithdrawOpen(true)}>
+                    {t('withdraw_button_cpanel', { defaultValue: 'Withdraw money' })}
                   </button>
-                </div>
-              </div>
+                }
+              />
+              <EarningsRow
+                label={tUi('video_ads_earnings')}
+                amount={`$${videoAdsDisplay}`}
+                action={partnershipButton}
+              />
+              <EarningsRow label={t('earnings_video_views')} amount="$0.00" action={partnershipButton} />
             </div>
 
             {/* ---------- account info ---------- */}
@@ -847,6 +867,23 @@ export function UserModalCenter({
       )}
 
       {cropNode}
+
+      {/* the PAYMENTS block's two dialogs. `hasPayout` is false here on purpose: this panel
+          carries no bank or PayPal field — the blade comments them out for a normal user —
+          so the withdraw dialog tells them to set a payout method first, which is true. */}
+      {withdrawOpen && (
+        <WithdrawModal
+          earnings={earnings}
+          hasPayout={false}
+          onClose={() => setWithdrawOpen(false)}
+          onDone={(newBalance) => {
+            setEarnings(newBalance);
+            setWithdrawOpen(false);
+            setFlash({ ok: true, text: tUi('withdraw_sent') });
+          }}
+        />
+      )}
+      {partnershipOpen && <PartnershipModal onClose={() => setPartnershipOpen(false)} />}
     </div>
   );
 }

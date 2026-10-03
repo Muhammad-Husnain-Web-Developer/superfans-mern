@@ -6,6 +6,14 @@ export const rankingsRouter = Router();
 
 const PROJECTION = { usernameUrl: 1, profilePicture: 1, noOfFollowers: 1, verified: 1 } as const;
 
+/* "Deleted or Suspended users: don't appear in WORLD or Rankings" (David, 1 Oct 2026).
+   The world feed already matches `user.status === 'active'` (world.routes.ts); the leagues
+   did not, and a suspended account was standing at rank 1. Laravel does not filter either
+   (RankingController@index is a bare `User::orderByDesc`), so this is deliberate.
+   It belongs on the count as well as the rows: the windows are positions in this list, and
+   `totalUsers` decides whether the bronze league exists at all. */
+const VISIBLE = { status: 'active' } as const;
+
 interface RankUser {
   usernameUrl?: string;
   profilePicture?: string;
@@ -31,7 +39,7 @@ rankingsRouter.get(
   asyncHandler(async (_req, res) => {
     const sort = { noOfFollowers: -1 as const };
     const q = (skip: number, limit: number) =>
-      User.find({}, PROJECTION).sort(sort).skip(skip).limit(limit).lean();
+      User.find(VISIBLE, PROJECTION).sort(sort).skip(skip).limit(limit).lean();
 
     const [superMagic, superLeague, diamondLeague, emeraldLeague, goldLeague, silverLeague, totalUsers] =
       await Promise.all([
@@ -41,7 +49,7 @@ rankingsRouter.get(
         q(150, 100),
         q(250, 250),
         q(500, 500),
-        User.countDocuments(),
+        User.countDocuments(VISIBLE),
       ]);
 
     const bronzeLeague = totalUsers <= 1000 ? [] : await q(1000, 4);
@@ -67,12 +75,12 @@ rankingsRouter.get(
   '/bronze',
   asyncHandler(async (req, res) => {
     const offset = Number(req.query.offset) || 1000;
-    const total = await User.countDocuments();
+    const total = await User.countDocuments(VISIBLE);
     if (offset >= total) {
       res.status(204).end();
       return;
     }
-    const users = await User.find({}, PROJECTION)
+    const users = await User.find(VISIBLE, PROJECTION)
       .sort({ noOfFollowers: -1 })
       .skip(offset)
       .limit(20)

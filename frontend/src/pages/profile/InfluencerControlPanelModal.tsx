@@ -21,6 +21,8 @@ import { playModalOpenSound } from '../../utils/modalSounds';
 import { PresenceSection } from './PresenceSection';
 import type { UserPresence } from '../../context/AuthContext';
 import { SubscriberListModal } from './SubscriberListModal';
+/* the PAYMENTS block, shared with the normal user's panel so a change lands in both */
+import { EarningsRow, PartnershipButton, PartnershipModal } from './EarningsSection';
 
 /**
  * Creator control panel — port of #exampleModalCenter's `@else` branch
@@ -167,6 +169,11 @@ export function InfluencerControlPanelModal({
       setFlash({ ok: false, text: tUi('network_add_failed') });
     }
   }
+
+  /* a creator's threshold is counted in subscribers; the fan panel passes its own */
+  const partnershipButton = (
+    <PartnershipButton threshold={t('notavailable265_button')} onClick={() => setPartnershipOpen(true)} />
+  );
 
   /* blade: a col-md-9 field beside a col-md-3 save button */
   const row = (field: ReactNode, onSave: () => void, key?: string, marginTop = 0) => (
@@ -586,75 +593,32 @@ export function InfluencerControlPanelModal({
             <h3 style={H3}>{t('payments')}</h3>
 
             {/* earnings is read-only in the blade (the input is commented out): a
-                label with the rounded balance beside a withdraw button. */}
-            <div className="container-fluid" style={{ paddingLeft: 0, marginTop: 20 }}>
-              <div className="row pb-3">
-                <div className="col-xs-6">
-                  <div className="form-group" style={{ display: 'flex' }}>
-                    <label style={{ color: 'white' }}>
-                      {t('earnings')} ${earningsDisplay}
-                    </label>
-                  </div>
-                </div>
-                <div className="col-xs-6" style={{ textAlign: 'end', paddingRight: 22 }}>
+                label with the rounded balance beside a withdraw button.
+
+                David's mock of 1 Oct 2026 puts a partnership button on BOTH of the locked
+                earnings lines, not just the last — each is its own source of income, so each
+                says what unlocks it. */}
+            <div style={{ marginTop: 20 }}>
+              <EarningsRow
+                label={t('total_earnings')}
+                amount={`$${earningsDisplay}`}
+                action={
                   <button type="button" className="save_btn" style={SAVE_BTN} onClick={() => setWithdrawOpen(true)}>
                     {t('withdraw_button_cpanel', { defaultValue: 'Withdraw money' })}
                   </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="container-fluid" style={{ paddingLeft: 0 }}>
-              <div className="row pb-3">
-                <div className="col-xs-12">
-                  <div className="form-group" style={{ display: 'flex' }}>
-                    <label style={{ color: 'white' }}>
-                      {tUi('video_ads_earnings')} ${videoAdsDisplay}
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="container-fluid" style={{ paddingLeft: 0 }}>
-              <div className="row pb-3">
-                {/* <div className="col-xs-6">
-                  <div className="form-group" style={{ display: 'flex' }}>
-                    <label style={{ color: 'white' }}>{t('subscriber_history')}</label>
-                  </div>
-                </div> */}
-                <div className="col-xs-6" style={{ textAlign: 'end', paddingRight: 22 }}>
-                  {/* <button
-                    type="button"
-                    className="launch_subscriber_list_modal launch_sub_modal save_btn"
-                    style={SAVE_BTN}
-                    onClick={() => setSubListOpen(true)}
-                  >
-                    {t('see_all_button_cpanel')}
-                  </button> */}
-                </div>
-              </div>
-            </div>
-
-          {}
-
-            <div className="container-fluid" style={{ paddingLeft: 0 }}>
-              <div className="row pb-3">
-                <div className="col-xs-6">
-                  <div className="form-group" style={{ display: 'flex' }}>
-                    <span style={{ color: '#fff', fontWeight: 900 }}>
-                      {t('earnings_video_views')} $0.00
-                    </span>
-                  </div>
-                </div>
-                <div className="col-xs-6" style={{ textAlign: 'end', paddingRight: 22 }}>
-                  <button type="button" className="partnership-btn" onClick={() => setPartnershipOpen(true)}>
-                    <span>{t('notavailable10k_title2')}</span>
-                    <hr style={{ marginTop: 0, marginBottom: 0 }} />
-                    {t('notavailable10k_button')}
-                  </button>
-                </div>
-              </div>
+                }
+              />
+              {/* His mock carries this line between the total and the two locked ones. Nothing
+                  on the account tracks it yet — there is `earnings` and `videoAdsEarnings` and
+                  no third field — so it reads $0.00, exactly as the video-views line below has
+                  always done. Wire it to a real figure when there is one to wire. */}
+              <EarningsRow label={t('subscriptions_earnings')} amount="$0.00" />
+              <EarningsRow
+                label={tUi('video_ads_earnings')}
+                amount={`$${videoAdsDisplay}`}
+                action={partnershipButton}
+              />
+              <EarningsRow label={t('earnings_video_views')} amount="$0.00" action={partnershipButton} />
             </div>
 
             <h3 style={H3}>{t('payment_methods')}</h3>
@@ -896,99 +860,8 @@ export function InfluencerControlPanelModal({
    styled as `.partnership-btn` in styles/footer-modals.css — it needs a :hover, and an
    inline style object cannot carry one. */
 
-/**
- * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
- *
- * The blade also carries a stray "Send Welcome Email" link to example@email.com inside this
- * box; it is placeholder debris, not something a creator should be shown, so it is left out.
- */
-/**
- * "Ask Partnership" — port of #askPartnershipOverlay in layouts_influencer/footer.blade.php.
- */
-function PartnershipModal({ onClose }: { onClose: () => void }) {
-  const { t } = useTranslation('content');
-  const { user } = useAuth();
-
-  const emailSubject = encodeURIComponent('Partnership for generate incomes Ads in Video');
-  const emailBody = encodeURIComponent(
-    `Hello,👋 my name is ${user?.name || '......'} and  I request a Partnership for activate the Tool of EARNINGS WITH ADS.`
-  );
-  const mailtoLink = `mailto:superfansworldapp@gmail.com?subject=${emailSubject}&body=${emailBody}`;
-
-  return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.7)',
-        zIndex: 999999999,
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
-          width: '90%',
-          maxWidth: 380,
-          padding: '28px 22px',
-          borderRadius: 7,
-          textAlign: 'center',
-          position: 'relative',
-          color: '#fff',
-          background: '#8a2be2',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <span
-          onClick={onClose}
-          style={{ position: 'absolute', top: 12, right: 14, fontSize: 24, cursor: 'pointer', opacity: 0.7 }}
-        >
-          &times;
-        </span>
-        <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 18, color: 'white' }}>
-          {t('notavailable10k_title')}
-        </h3>
-        <p style={{ fontSize: 17, lineHeight: 1.5, marginBottom: 14, fontWeight: 600 }}>
-          {t('notavailable10k_message')}
-        </p>
-
-        {/* OK Button – opens email with pre-filled subject & body */}
-        <a
-          href={mailtoLink}
-          onClick={() => setTimeout(onClose, 300)}
-          style={{
-            display: 'inline-block',
-            marginTop: 18,
-            background: 'limegreen',
-            color: 'white',
-            padding: '10px 40px',
-            fontSize: '0.9em',
-            fontWeight: 600,
-            cursor: 'pointer',
-            border: '3px solid green',
-            fontFamily:
-              'Consolas, Menlo, Monaco, "Lucida Console", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace',
-            textDecoration: 'none',
-            transition: 'background-color 0.5s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'green';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'limegreen';
-          }}
-        >
-          OK
-        </a>
-      </div>
-    </div>
-  );
-}
-
 /** Withdraw-earnings modal — port of #withdraw_earnings_modal (≥$50, payout method set). */
-function WithdrawModal({
+export function WithdrawModal({
   earnings,
   hasPayout,
   onClose,

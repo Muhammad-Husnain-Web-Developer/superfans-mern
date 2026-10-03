@@ -844,19 +844,20 @@ input.login-modal-input:focus {
   }
 }
 
-/* "Vincular partnership" — the black two-line button beside the video-views figure in the
+/* "Vincular partnership" — the two-line button beside each locked earnings figure in the
  * creator's control panel (.open-btn, layouts_influencer/footer.blade.php:2776).
  *
- * The blade gives it no hover state at all. David asked for one (28 Sep 2026): white
- * ground with red lettering on hover, which is the pair every other button in this panel
- * already uses at rest.
+ * The blade gives it no hover state at all. David asked for one (28 Sep 2026), and on
+ * 1 Oct 2026 for it the other way round from how it first went in: white ground with red
+ * lettering at rest — the pair every other button in this panel already uses — turning
+ * black on hover.
  *
  * It lives here rather than in an inline style object because an inline `background`
  * always beats a `:hover` rule, so the hover could never take.
  */
 .partnership-btn {
-  background: #000000;
-  color: #ffffff;
+  background: #ffffff;
+  color: red;
   padding: 3px 15px;
   font-weight: bold;
   border: 0;
@@ -867,14 +868,14 @@ input.login-modal-input:focus {
 
 .partnership-btn:hover,
 .partnership-btn:focus-visible {
-  background: #ffffff;
-  color: red;
+  background: #000000;
+  color: #ffffff;
 }
 
-/* The rule between the button's two lines takes the text's colour, so it reads white on
-   the black ground and red on the hovered white one, matching the mockup's red underline.
-   The whole shorthand is needed, not just the colour: an <hr> defaults to `border-style:
-   inset`, which Chrome paints its own flat grey however the colour is set. */
+/* The rule between the button's two lines takes the text's colour, so it reads red on the
+   white ground and white on the hovered black one. The whole shorthand is needed, not just
+   the colour: an <hr> defaults to `border-style: inset`, which Chrome paints its own flat
+   grey however the colour is set. */
 .partnership-btn hr {
   /* the browser's own stylesheet puts `color: gray` on every <hr>, which is what
      currentColor would otherwise resolve to; this hands it back to the button */
@@ -882,4 +883,23 @@ input.login-modal-input:focus {
   border: 0;
   border-top: 6px solid currentColor;
   opacity: 1;
+}
+
+/* The three buttons down the right of PAYMENTS — Withdraw money and the two locked
+ * "Vincular partnership" marks — are one column of controls, so they are drawn one width.
+ * Left to themselves each sized to its own text and the column read as three unrelated
+ * things (David, 1 Oct 2026).
+ *
+ * The box sets the width and the buttons fill it; 260px is what the partnership button
+ * needs to keep its three lines without wrapping further, and the column is wide enough
+ * to hold it at every width this modal is drawn at.
+ */
+.earnings-action {
+  display: inline-block;
+  width: 100%;
+  max-width: 260px;
+}
+
+.earnings-action > button {
+  width: 100%;
 }
