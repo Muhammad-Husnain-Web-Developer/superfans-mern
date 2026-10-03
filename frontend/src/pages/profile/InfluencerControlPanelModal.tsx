@@ -330,11 +330,8 @@ export function InfluencerControlPanelModal({
                 </div>
               </div>
             </div>
-            {/* David, 1 Oct 2026: the gap down to ESTADO was the shared HR's own default
-                margins (1em top and bottom) stacked on top of H3's own marginTop — tightened
-                here, at this one seam, rather than on the shared constant every other
-                divider in the panel still uses. */}
-            <hr style={{ ...HR, margin: '10px 0' }} />
+            {/* No rule between the bio and ESTADO — David asked for this one seam to be
+                left open (3 Oct 2026). Every other divider in the panel still uses HR. */}
             {/* ---------- ESTADO ----------
                 David, 30 Sep 2026: the reader picks their own dot, and it changes for
                 everyone the moment it is pressed. Saved through the same /me/settings

@@ -1399,6 +1399,14 @@ export function FollowButtons({
   return (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
       {isOwner ? (
+        /* A creator with a price reads their own button the way their fans read it —
+           "Subscribe + | $0.99" rather than "Follow +". David asked for this (3 Oct 2026):
+           the price belongs on the button, where everyone else sees it, not only in the
+           stats line. The blade renders "Follow +" here, so this is a deliberate departure.
+           What the button DOES is unchanged: on your own profile it opens the control
+           panel, which is where the price is set — so the figure and the place to change
+           it are now the same control. A creator with no price, and every normal user,
+           keeps "Follow +": there is no figure to show. */
         <button
           type="button"
           className="btn btn-primary btn-outline"
@@ -1406,7 +1414,16 @@ export function FollowButtons({
           style={{ width: 226 }}
         >
           {superheroina}
-          {t('follow', { defaultValue: 'Follow' })} <b>+</b>
+          {isPaidCreator ? (
+            <>
+              {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> |{' '}
+              <b>${profile.priceOfSubscription}</b>
+            </>
+          ) : (
+            <>
+              {t('follow', { defaultValue: 'Follow' })} <b>+</b>
+            </>
+          )}
         </button>
       ) : isPaidCreator ? (
         subscribed ? (

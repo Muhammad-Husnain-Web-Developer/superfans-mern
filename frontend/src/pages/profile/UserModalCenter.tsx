@@ -306,10 +306,8 @@ export function UserModalCenter({
                 </div>
               </div>
             </div>
-            {/* David, 1 Oct 2026: a tightened HR in place of the two stray <br/> this seam
-                had — matched to the same fix on the other two control panels, closing the
-                bio section off from ESTADO without the shared HR's full default margins. */}
-            <hr style={{ ...HR, margin: '10px 0' }} />
+            {/* No rule between the bio and ESTADO — David asked for this one seam to be
+                left open (3 Oct 2026). Every other divider in the panel still uses HR. */}
             {/* ---------- ESTADO ----------
                 David, 30 Sep 2026: the reader picks their own dot, and it changes for
                 everyone the moment it is pressed. Saved through the same /me/settings
