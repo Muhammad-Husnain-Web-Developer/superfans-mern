@@ -35,6 +35,12 @@ h2#pageTitle { font-weight: 700; font-size: 1.8rem; margin-bottom: 20px; }
 }
 .ad-card-icons { display: flex; justify-content: center; align-items: center; gap: 4px; font-size: 24px; line-height: 1; margin-bottom: 8px; }
 .ad-card-icons img { width: 28px; height: 28px; object-fit: contain; }
+/* the card goes black on hover: a dark logo hands over to its light version */
+.ad-card-icons .icon-hover { display: none; }
+.ad-card:hover .ad-card-icons .icon-normal,
+.ad-card:focus-visible .ad-card-icons .icon-normal { display: none; }
+.ad-card:hover .ad-card-icons .icon-hover,
+.ad-card:focus-visible .ad-card-icons .icon-hover { display: inline-block; }
 .ad-card h4 { font-weight: bold; font-size: 1.1rem; }
 .ad-card p { margin-top: 8px; font-size: 0.9rem; color: #555; font-weight: 550; font-family: Helvetica, Arial, sans-serif !important; }
 .ad-card:hover { background: #000; color: #fff; text-decoration: none; border: 6px solid #000; }
