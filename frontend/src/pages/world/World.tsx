@@ -32,12 +32,15 @@ import { ControlPanelHost } from '../profile/ControlPanelHost';
 import { AddPostHost } from '../profile/AddPostHost';
 import { StreamModal } from '../../components/StreamModal';
 import { FlipLogo } from '../../components/FlipLogo';
-/* The hardcoded network slider of world.blade.php (11 items, per-item icon styles) */
+/* The hardcoded network slider of world.blade.php (11 items, per-item icon styles), plus the
+   four David added on 1 Oct 2026 — the slider is the showcase, so a network a creator can
+   pick belongs in it. The images come from networkLogo by name; `img` is only the legacy
+   bitmap it falls back to, which the four new ones have none of and do not need. */
 const WORLD_NETWORKS: { name: string; href: string; img: string }[] = [
   { name: 'TikTok', href: 'https://www.tiktok.com/', img: 'b05db292060a4b42799ad7abaf5d6130.png' },
   { name: 'Twitch', href: 'https://www.twitch.tv/', img: 'twitch_.png' },
   { name: 'Youtube', href: 'https://www.youtube.com/', img: 'Youtube_logo.png' },
-  { name: 'Twitter', href: 'https://twitter.com/', img: 'twitter-logo-6.png' },
+  { name: 'X', href: 'https://x.com/', img: 'twitter-logo-6.png' },
   { name: 'Netflix', href: 'https://www.netflix.com/', img: 'netflix_logo_icon_170919.png' },
   { name: 'Spotify', href: 'https://www.spotify.com/', img: 'spotify-logoEdited.png' },
   { name: 'iTunes', href: 'https://www.apple.com/itunes/', img: 'ituneslogo.png' },
@@ -45,6 +48,10 @@ const WORLD_NETWORKS: { name: string; href: string; img: string }[] = [
   { name: 'Discord', href: 'https://discord.com/', img: 'Discord-Logo.png' },
   { name: 'Amazon', href: 'https://www.amazon.com/', img: 'Logotipo-Amazon.jpg' },
   { name: 'Instagram', href: 'https://www.instagram.com/', img: 'Instagram_icon.png' },
+  { name: 'AliExpress', href: 'https://www.aliexpress.com/', img: '' },
+  { name: 'Temu', href: 'https://www.temu.com/', img: '' },
+  { name: 'Vinted', href: 'https://www.vinted.es/', img: '' },
+  { name: 'WhatsApp', href: 'https://www.whatsapp.com/', img: '' },
 ];
 
 export function WorldSidebar({

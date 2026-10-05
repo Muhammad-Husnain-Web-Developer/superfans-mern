@@ -1,17 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 26.5.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 500 500" style="enable-background:new 0 0 500 500;" xml:space="preserve">
-<style type="text/css">
-	.st0{fill:#E4E4E4;}
-	.st1{fill:none;}
-	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#7D7D7D;}
-</style>
-<rect x="0" class="st0" width="500" height="500"/>
-<g>
-	<polygon class="st1" points="174.13,164.53 303.04,334.8 325.87,334.8 196.96,164.53 	"/>
-	<polygon class="st1" points="317.6,144.42 206.98,144.42 259.26,213.48 	"/>
-	<path class="st2" d="M277.04,236.94l78.16-92.53h-37.6l-58.34,69.06l-52.28-69.06h-73.32l86.94,114.83l-81.38,96.33h37.6
-		l61.55-72.86l54.65,72.19h73.32l-89.46-118.17L277.04,236.94z M325.87,334.8h-22.83L174.13,164.53h22.83L325.87,334.8z"/>
-</g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+<rect width="500" height="500" fill="#E4E4E4"/>
+<svg x="60" y="85" width="380" height="330" viewBox="0 0 938 847"><g transform="translate(0.000000,847.000000) scale(0.100000,-0.100000)"
+fill="#000000" stroke="none">
+<path d="M0 8448 c0 -15 621 -835 1749 -2313 1710 -2238 1749 -2290 1732
+-2310 -98 -110 -3310 -3805 -3315 -3814 -5 -8 178 -11 711 -10 l718 0 1295
+1480 c712 813 1295 1479 1297 1479 1 0 511 -666 1134 -1480 l1132 -1480 1444
+0 c794 0 1443 3 1443 6 0 3 -825 1095 -1832 2427 -1008 1331 -1836 2426 -1840
+2432 -5 8 590 692 1567 1805 866 985 1575 1794 1575 1796 0 2 -323 4 -717 3
+l-718 0 -1194 -1350 c-657 -742 -1197 -1349 -1200 -1349 -3 0 -465 608 -1026
+1350 l-1020 1349 -1467 1 -1468 0 0 -22z m2543 -830 c19 -24 1181 -1557 2582
+-3408 l2547 -3365 -393 -3 -393 -2 -22 22 c-20 22 -5181 6758 -5197 6786 -7 9
+80 12 417 12 l425 0 34 -42z"/>
+</g></svg>
 </svg>
