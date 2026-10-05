@@ -64,7 +64,11 @@ const TYPE_FIELDS: Record<string, TypeField[]> = {
   tiktok: [{ key: 'tiktok_username', label: 'TikTok username', placeholder: '@username' }],
   twitch: [{ key: 'twitch_username', label: 'Twitch username', placeholder: 'username' }],
   amazon: [{ key: 'amazon_url', label: 'Amazon URL', placeholder: 'https://amazon…', type: 'url' }],
-  spotify: [{ key: 'spotify_url', label: 'Spotify URL', placeholder: 'https://spotify…', type: 'url' }],
+  'aliexpress-temu': [
+    { key: 'aliexpress_temu_url', label: 'AliExpress or Temu URL', placeholder: 'https://aliexpress… / https://temu…', type: 'url' },
+  ],
+  ecommerce: [{ key: 'ecommerce_url', label: 'E-commerce URL', placeholder: 'https://…', type: 'url' }],
+  spotify: [{ key: 'spotify_url', label: 'Spotify or iTunes URL', placeholder: 'https://spotify… / https://music.apple…', type: 'url' }],
   youtube: [{ key: 'youtube_url', label: 'YouTube URL', placeholder: 'https://youtube…', type: 'url' }],
 };
 

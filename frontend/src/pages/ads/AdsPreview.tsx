@@ -19,14 +19,14 @@ interface PreviewAd extends AdCardItem {
   approved: boolean;
 }
 
-/* Every type the system can sell — the thirteen in the backend's AD_TYPES. Two of them,
+/* Every type the system can sell — the fifteen in the backend's AD_TYPES. Two of them,
    calls and messages, have never been bought, so no real ad exists to look at; the samples
    row below draws one of each so the page can still answer "what will this look like".
    (The Ads Center's fourteenth card, Super Video, is sold as website-visits and so is not a
    type of its own.) */
 const ALL_TYPES = [
   'promote-post', 'profile-followers', 'messages', 'instagram', 'tiktok', 'twitch',
-  'youtube', 'amazon', 'spotify', 'website-visits', 'calls', 'whatsapp',
+  'youtube', 'amazon', 'aliexpress-temu', 'ecommerce', 'spotify', 'website-visits', 'calls', 'whatsapp',
   'clients-form',
 ];
 

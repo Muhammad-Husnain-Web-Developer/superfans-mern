@@ -112,26 +112,34 @@ interface AdCard {
   min: number;
   max: number;
   audience: number;
-  emoji: string;
+  /** emoji, or a logo path (starts with `/`) — drawn side by side above the title */
+  icons: string[];
   title: string;
   desc: string;
 }
 
+const LOGO = '/brand/networks/scroll';
+
+/* Order, wording and logos from David's "New SUPER ADS CENTER" screenshot (Oct 2026). The ids
+   stay what the logic below keys on, so the two SUPERWORLD cards swap places without changing
+   what either one does. */
 const CARDS: AdCard[] = [
-  { id: 1, type: 'promote-post', min: 15, max: 5000, audience: 650000, emoji: '📢🦸🏻‍♀️', title: 'Promote a SUPERWORLD Post', desc: 'Boost your SUPERWORLD Content to reach more fans.' },
-  { id: 2, type: 'profile-followers', min: 15, max: 5000, audience: 650000, emoji: '🌐🦸🏻‍♀️', title: 'More Followers on SUPERWORLD Profile', desc: 'Boost your SUPERWORLD Profile to reach more fans.' },
-  { id: 3, type: 'messages', min: 15, max: 5000, audience: 150000, emoji: '✉️🦸🏻‍♀️', title: 'Receive More Cards', desc: 'Button that drive users to message you in your SUPERWORLD inbox.' },
-  { id: 4, type: 'instagram', min: 15, max: 5000, audience: 560000, emoji: '📷', title: 'Promote Instagram Content', desc: 'Boost your Instagram posts directly from Super Ads Center.' },
-  { id: 5, type: 'tiktok', min: 15, max: 5000, audience: 560000, emoji: '🎶', title: 'Promote TikTok Content', desc: 'Boost your Instagram posts directly from Super Ads Center.' },
-  { id: 6, type: 'twitch', min: 15, max: 5000, audience: 115000, emoji: '👾', title: 'Promote Twitch Content', desc: 'Boost your Twitch streams posts directly from Super Ads Center.' },
-  { id: 7, type: 'youtube', min: 15, max: 5000, audience: 560000, emoji: '🔴', title: 'Promote Youtube Content', desc: 'Boost your Instagram posts directly from Super Ads Center.' },
-  { id: 8, type: 'amazon', min: 15, max: 5000, audience: 920000, emoji: '🛒', title: 'Get More Amazon Sales', desc: 'Drive people to visit your Amazon list or landing page through ads.' },
-  { id: 9, type: 'spotify', min: 15, max: 5000, audience: 920000, emoji: '🎙️', title: 'Get More Spotify Reproductions', desc: 'Drive people to visit your Spotify music list through ads.' },
-  { id: 10, type: 'website-visits', min: 15, max: 5000, audience: 920000, emoji: '🔗', title: 'Get More Website Visits', desc: 'Drive people to visit your website or landing page through ads.' },
-  { id: 12, type: 'whatsapp', min: 15, max: 5000, audience: 92000, emoji: '🟢', title: 'Get More WhatsApp Messages', desc: 'Run an ad with a button that lets users send you messages on WhatsApp.' },
-  { id: 11, type: 'calls', min: 15, max: 5000, audience: 75000, emoji: '📞', title: 'Receive More Calls', desc: 'Create an ad that encourages your audience to call you directly.' },
-  { id: 13, type: 'clients-form', min: 75, max: 25000, audience: 300000, emoji: '📝', title: 'Get More Potential Clients', desc: 'Create a Formulary that collects contact details from potential clients.' },
-  { id: 14, type: 'website-visits', min: 500, max: 40000, audience: 1380000, emoji: '🪄🎬', title: 'Super Video', desc: 'Reproduce a full screen video. Only for big companies.' },
+  { id: 2, type: 'profile-followers', min: 15, max: 5000, audience: 650000, icons: ['📢', '🦸🏻‍♀️'], title: 'More Followers on SUPERWORLD Profile', desc: 'Boost your SUPERWORLD Profile to reach more fans.' },
+  { id: 1, type: 'promote-post', min: 15, max: 5000, audience: 650000, icons: ['📷', '🦸🏻‍♀️'], title: 'Promote a SUPERWORLD Post', desc: 'Boost your SUPERWORLD Content to reach more fans.' },
+  { id: 3, type: 'messages', min: 15, max: 5000, audience: 150000, icons: ['✉️', '🦸🏻‍♀️'], title: 'Receive More Cards', desc: 'Button that drive users to message you in your SUPERWORLD inbox.' },
+  { id: 4, type: 'instagram', min: 15, max: 5000, audience: 560000, icons: [`${LOGO}/instagram.svg`], title: 'Promote Instagram Content', desc: 'Boost your Instagram posts directly from Super Ads Center.' },
+  { id: 5, type: 'tiktok', min: 15, max: 5000, audience: 560000, icons: [`${LOGO}/tiktok.svg`], title: 'Promote TikTok Content', desc: 'Boost your TikTok posts directly from Super Ads Center.' },
+  { id: 6, type: 'twitch', min: 15, max: 5000, audience: 115000, icons: [`${LOGO}/twitch.svg`], title: 'Promote Twitch Content', desc: 'Boost your Twitch streams posts directly from Super Ads Center.' },
+  { id: 7, type: 'youtube', min: 15, max: 5000, audience: 560000, icons: [`${LOGO}/youtube.svg`], title: 'Promote Youtube Content', desc: 'Boost your Youtube videos directly from Super Ads Center.' },
+  { id: 8, type: 'amazon', min: 15, max: 5000, audience: 920000, icons: [`${LOGO}/amazon.svg`], title: 'Get More Amazon Sales', desc: 'Drive people to visit your Amazon list' },
+  { id: 15, type: 'aliexpress-temu', min: 15, max: 5000, audience: 920000, icons: ['/brand/ads/aliexpress.svg', '/brand/ads/temu.svg'], title: 'Get More AliExpress o Temu Sales', desc: 'Drive people to visit your Ali-Express and Temu list.' },
+  { id: 16, type: 'ecommerce', min: 15, max: 5000, audience: 920000, icons: ['🛒'], title: 'Get More E-commerce Sales', desc: 'Drive people to visit your E-commerce or landing page' },
+  { id: 9, type: 'spotify', min: 15, max: 5000, audience: 920000, icons: ['🎙️', `${LOGO}/itunes.svg`, `${LOGO}/spotify.svg`], title: 'Get More Spotify o iTunes Reproductions', desc: 'Drive people to visit your Spotify music list' },
+  { id: 10, type: 'website-visits', min: 15, max: 5000, audience: 920000, icons: ['🌐', '🔗'], title: 'Get More Website Visits', desc: 'Drive people to visit your website or landing page' },
+  { id: 12, type: 'whatsapp', min: 15, max: 5000, audience: 92000, icons: ['/brand/ads/whatsapp.svg'], title: 'Get More WhatsApp Messages', desc: 'Run an ad with a button that lets users send you messages on WhatsApp.' },
+  { id: 11, type: 'calls', min: 15, max: 5000, audience: 75000, icons: ['📞'], title: 'Receive More Calls', desc: 'Create an ad that encourages your audience to call you directly.' },
+  { id: 13, type: 'clients-form', min: 75, max: 25000, audience: 300000, icons: ['📝'], title: 'Get More Potential Clients', desc: 'Create a Formulary that collects contact details from potential clients.' },
+  { id: 14, type: 'website-visits', min: 500, max: 40000, audience: 1380000, icons: ['🪄', '🎬'], title: 'Super Video', desc: 'Reproduce a full screen video. Only for big companies.' },
 ];
 
 /* the country and city lists come from /api/geo, via data/geo */
@@ -329,7 +337,11 @@ export function AdsCenter() {
                 onCardClick(c);
               }}
             >
-              <div style={{ fontSize: 28 }}>{c.emoji}</div>
+              <div className="ad-card-icons">
+                {c.icons.map((icon) =>
+                  icon.startsWith('/') ? <img key={icon} src={icon} alt="" /> : <span key={icon}>{icon}</span>,
+                )}
+              </div>
               <h4>{c.title}</h4>
               <p>{c.desc}</p>
             </a>
@@ -698,7 +710,9 @@ function CreateAdModal({
   };
   const plainInput: Record<number, [string, string]> = {
     8: ['amazon_url', 'Amazon URL (https://...)'],
-    9: ['spotify_url', 'Spotify URL (https://...)'],
+    15: ['aliexpress_temu_url', 'AliExpress or Temu URL (https://...)'],
+    16: ['ecommerce_url', 'E-commerce URL (https://...)'],
+    9: ['spotify_url', 'Spotify or iTunes URL (https://...)'],
     10: ['website_url', 'Website URL (https://...)'],
   };
   const isPhone = card.id === 11 || card.id === 12;

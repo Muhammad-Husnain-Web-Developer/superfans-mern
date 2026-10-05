@@ -54,6 +54,8 @@ const AUDIENCE_MAP: Record<string, number> = {
   twitch: 115000,
   youtube: 560000,
   amazon: 920000,
+  'aliexpress-temu': 920000,
+  ecommerce: 920000,
   spotify: 920000,
   'website-visits': 920000,
   calls: 75000,
@@ -967,6 +969,16 @@ async function buildAd(
       title = 'Amazon Ads';
       mediaName = 'blue24Twitch.png';
       link = str(body.amazon_url);
+      break;
+    case 'aliexpress-temu':
+      title = 'AliExpress & Temu Ads';
+      mediaName = 'blue24Twitch.png';
+      link = str(body.aliexpress_temu_url);
+      break;
+    case 'ecommerce':
+      title = 'E-commerce Ads';
+      mediaName = 'blue24Twitch.png';
+      link = str(body.ecommerce_url);
       break;
     case 'spotify':
       title = 'Spotify Ads';

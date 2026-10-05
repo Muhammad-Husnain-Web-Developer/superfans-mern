@@ -20,6 +20,8 @@ export const AD_TYPES = [
   'youtube',
   'spotify',
   'amazon',
+  'aliexpress-temu',
+  'ecommerce',
   'calls',
   'whatsapp',
   'website-visits',
