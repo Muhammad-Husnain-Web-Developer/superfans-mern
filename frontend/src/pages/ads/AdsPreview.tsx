@@ -11,7 +11,7 @@ import { AddPostHost } from '../profile/AddPostHost';
 import { WorldSidebar } from '../world/World';
 import { observeNewVideos } from '../../utils/video';
 import { rememberScroll, useScrollMemory } from '../../utils/useScrollMemory';
-import type { WorldStep } from '../../utils/worldSequence';
+import { fullscreenIdOf, toSteps, type WorldStep } from '../../utils/worldSequence';
 import '../../styles/ad-card.css';
 
 /**
@@ -108,8 +108,9 @@ export function AdsPreview() {
 
   function openFullscreen(run: PreviewAd[], ad: PreviewAd) {
     rememberScroll();
-    const steps: WorldStep[] = run.map((a) => ({ ...a, type: 'ad' as const }));
-    navigate(`/user/post_detail/${ad.id}`, {
+    /* a promoted post is walked as the post itself, the way WORLD walks it */
+    const steps: WorldStep[] = toSteps(run.map((a) => ({ ...a, type: 'ad' })));
+    navigate(`/user/post_detail/${fullscreenIdOf(ad)}`, {
       state: { world: steps, worldPage: 1, worldLastPage: 1 },
     });
   }

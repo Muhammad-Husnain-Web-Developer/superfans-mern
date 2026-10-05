@@ -23,6 +23,7 @@ import {
 } from '../../components/AdCard';
 import '../../styles/ad-card.css';
 import { PhoneField } from '../../components/PhoneField';
+import { useAuth } from '../../context/AuthContext';
 
 /** The three cards that promote an existing post rather than an upload (Ads Center 1-3). */
 function usesPostPickerType(adType: string): boolean {
@@ -124,6 +125,52 @@ function AdButtonPreview({
           </span>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * The promote-post preview: the picked post as it will stand, with the 👁️ and ❤️💩 a post
+ * carries under it rather than a button (David's mockup, 5 Oct 2026). The tag above it says
+ * which of the two "Post as" choices is ticked — both tags as an ad, only the @nickname as a
+ * normal post. Not pressable: the real row lives on the post.
+ */
+function PromotePostPreview({
+  src,
+  isVideo,
+  promoteAs,
+  handle,
+}: {
+  src: string;
+  isVideo: boolean;
+  promoteAs: 'ad' | 'post' | null;
+  handle: string | null;
+}) {
+  return (
+    <div className="ads-cta-preview work-item">
+      {promoteAs && (
+        <div className="ads-promote-tag">
+          {promoteAs === 'ad' && <span className="ads-promote-tag-label">Super Ads</span>}
+          {handle && <span>@{handle}</span>}
+        </div>
+      )}
+      <div className="ad-media">
+        {src ? (
+          isVideo ? (
+            <video className="img-responsive posttt-img" src={src} muted loop autoPlay playsInline controls={false} />
+          ) : (
+            <img src={src} alt="" className="img-responsive posttt-img" />
+          )
+        ) : (
+          <div className="ads-cta-preview-empty">Pick a post above to see it here</div>
+        )}
+      </div>
+      <div className="ads-promote-stats" aria-hidden="true">
+        <span>👁️</span>
+        <span>
+          ❤️ <img src="/brand/caca.webp" alt="" />
+        </span>
+      </div>
     </div>
   );
 }
@@ -456,6 +503,7 @@ export function AdsCenter() {
           onClose={() => setCard(null)}
           /* the post the Boost modal was opened for, if the route carried one */
           initialPostId={boostPostId}
+          actingForHandle={data?.actingFor?.usernameUrl ?? null}
           /* so the live preview draws the button this advertiser's ad will actually carry */
           advertiserPaid={isPaidAdvertiser({
             role: data?.role,
@@ -580,10 +628,13 @@ function CreateAdModal({
   onClose,
   advertiserPaid = false,
   initialPostId,
+  actingForHandle = null,
 }: {
   card: AdCard;
   onClose: () => void;
   advertiserPaid?: boolean;
+  /** the linked account's @nickname, when a business is working inside one */
+  actingForHandle?: string | null;
   /** preselected post, when the centre was opened from Boost Your Post */
   initialPostId?: string;
 }) {
@@ -613,6 +664,12 @@ function CreateAdModal({
   /* which button design, on the types that offer more than one (Spotify & iTunes, Amazon) */
   const variants = AD_BUTTON_VARIANTS[card.type];
   const [buttonVariant, setButtonVariant] = useState<string | null>(null);
+  /* promote-post: "Post as:" — an ad with the tags, or an ordinary post (+11%) */
+  const isPromotePost = card.type === 'promote-post';
+  const [promoteAs, setPromoteAs] = useState<'ad' | 'post' | null>(null);
+  /* the @nickname the promoted post will carry — the linked account's, when working in one */
+  const { user: authUser } = useAuth();
+  const advertiserHandle = actingForHandle ?? authUser?.usernameUrl ?? null;
   const [busy, setBusy] = useState(false);
   /* what went wrong, in the modal. Without this the submit failed in silence: the button
      stopped spinning and nothing else happened, so a rejected video looked like a dead form. */
@@ -675,6 +732,10 @@ function CreateAdModal({
       setError('Choose the button for your ad.');
       return;
     }
+    if (isPromotePost && !promoteAs) {
+      setError('Choose how to post it: as an Ad with Tags marks, or as a normal Post.');
+      return;
+    }
     setError(null);
     setBusy(true);
     try {
@@ -700,6 +761,7 @@ function CreateAdModal({
       body.button_size = buttonPosition === 'outside' ? OUTSIDE_LOCKED_SIZE : buttonSize;
       body.button_position = buttonPosition;
       if (buttonVariant) body.button_variant = buttonVariant;
+      if (isPromotePost && promoteAs) body.promote_as = promoteAs;
       body.show_advertiser_tag = showAdvertiserTag;
 
       if (card.type === 'clients-form') {
@@ -763,8 +825,11 @@ function CreateAdModal({
               Get More Spotify Reproductions
             </h2>
           )}
+          {/* the promote-post modal leads with its own card's marks, as David drew it */}
           {!isFormulary && card.type !== 'spotify' && (
-            <h2 style={{ fontWeight: 800, fontSize: 28 }}>📢 {card.title}</h2>
+            <h2 style={{ fontWeight: 800, fontSize: 28 }}>
+              {isPromotePost ? card.icons.join('') : '📢'} {card.title}
+            </h2>
           )}
 
           <form onSubmit={submit}>
@@ -879,8 +944,12 @@ function CreateAdModal({
 
             {/* How the call to action is drawn. It is asked here rather than decided for the
                 advertiser because the right size and place depend on the artwork — a face in
-                the lower third wants the button at the top, and the other way round. */}
+                the lower third wants the button at the top, and the other way round.
+                A promoted post has no button any more (David, 5 Oct 2026), so it is asked
+                how the post is to be shown instead. */}
             <div className="ads-cta-choice">
+              {!isPromotePost && (
+              <>
               <h5 className="mb-2">Button on your ad</h5>
               <div className="ads-cta-row">
                 {/* David, 4 Oct 2026: "If we select outside, size gets blocked: small."
@@ -941,18 +1010,64 @@ function CreateAdModal({
                 Show my logo and username on tag post in WORLD and WALLS
                 <small> (this doesn&apos;t affect the full screen viewer)</small>
               </label>
+              </>
+              )}
 
               {/* the choice, shown on the advertiser's own artwork where there is any */}
-              <AdButtonPreview
-                src={previewSrc}
-                isVideo={previewIsVideo}
-                adType={card.type}
-                size={buttonPosition === 'outside' ? OUTSIDE_LOCKED_SIZE : buttonSize}
-                position={buttonPosition}
-                buttonAction={card.type === 'clients-form' ? buttonAction : null}
-                advertiserPaid={advertiserPaid}
-                buttonVariant={buttonVariant}
-              />
+              {isPromotePost ? (
+                <PromotePostPreview
+                  src={previewSrc}
+                  isVideo={previewIsVideo}
+                  promoteAs={promoteAs}
+                  handle={advertiserHandle}
+                />
+              ) : (
+                <AdButtonPreview
+                  src={previewSrc}
+                  isVideo={previewIsVideo}
+                  adType={card.type}
+                  size={buttonPosition === 'outside' ? OUTSIDE_LOCKED_SIZE : buttonSize}
+                  position={buttonPosition}
+                  buttonAction={card.type === 'clients-form' ? buttonAction : null}
+                  advertiserPaid={advertiserPaid}
+                  buttonVariant={buttonVariant}
+                />
+              )}
+
+              {/* "Post as:" — (a) an ad, in the ad slots, with the Super Ads and @nickname tags;
+                  (b) an ordinary post in WORLD, no tag at all, at 11% more. Either way the bot
+                  adds the 👥 estimate below to the post's views over the campaign's days. */}
+              {isPromotePost && (
+                <div className="ads-post-as">
+                  <h5>Post as:</h5>
+                  <div className="ads-variant-row">
+                    <label className="ads-variant-check">
+                      <input
+                        type="checkbox"
+                        checked={promoteAs === 'ad'}
+                        onChange={(e) => {
+                          setPromoteAs(e.target.checked ? 'ad' : null);
+                          setError(null);
+                        }}
+                      />
+                      <span className="ads-post-as-name">As an Ad with Tags marks</span>
+                    </label>
+                    <label className="ads-variant-check">
+                      <input
+                        type="checkbox"
+                        checked={promoteAs === 'post'}
+                        onChange={(e) => {
+                          setPromoteAs(e.target.checked ? 'post' : null);
+                          setError(null);
+                        }}
+                      />
+                      <span className="ads-post-as-name">
+                        As a normal Post <small>(+11% Expensive)</small>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* location (all types) */}
@@ -971,7 +1086,13 @@ function CreateAdModal({
             <div className="field mt-3">
               <label style={{ fontSize: 16 }}>Amount</label>
               <input type="range" min={card.min} max={card.max} step={1} value={amount} style={{ ['--value' as string]: `${((amount - card.min) / (card.max - card.min)) * 100}%` }} onChange={(e) => setAmount(Number(e.target.value))} />
-              <div className="value">${amount}</div>
+              <div className="value">
+                ${amount}
+                {/* the surcharge, shown before paying — the server charges the same figure */}
+                {isPromotePost && promoteAs === 'post' && (
+                  <small className="ads-surcharge"> +11% = ${(Math.round(amount * 111) / 100).toFixed(2)}</small>
+                )}
+              </div>
               <div className="value">👥 {estimated.toLocaleString()}</div>
             </div>
 

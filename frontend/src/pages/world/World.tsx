@@ -24,7 +24,7 @@ import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { SwalResult } from '../profile/Profile';
 import '../../styles/profile-page.css';
 import '../../styles/world-page.css';
-import { toSteps, WORLD_SEED, type WorldStep } from '../../utils/worldSequence';
+import { fullscreenIdOf, toSteps, WORLD_SEED, type WorldStep } from '../../utils/worldSequence';
 import '../../styles/report-menu.css';
 import '../../styles/logo-spin.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
@@ -937,7 +937,7 @@ export function World() {
                         onOpenFullscreen={() => {
                           rememberScroll();
                           markFeedReturn();
-                          navigate(`/user/post_detail/${item.id}`, {
+                          navigate(`/user/post_detail/${fullscreenIdOf(item)}`, {
                             state: { world: worldRun, worldPage: page, worldLastPage: lastPage },
                           });
                         }}

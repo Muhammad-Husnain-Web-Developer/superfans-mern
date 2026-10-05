@@ -23,6 +23,21 @@ export interface IAd {
    *  box on the create form, so every ad already bought keeps the single tag it has. The
    *  full-screen viewer ignores it: there the handle is in the bottom bar already. */
   showAdvertiserTag?: boolean;
+  /** promote-post only — how the post is shown (David, 5 Oct 2026, "Post as:"):
+   *  `ad`   in the ad slots, the post's own 👁️ and ❤️💩 under it, "Super Ads" + @nickname tag;
+   *  `post` in WORLD as an ordinary post, no tag, nobody can tell it is paid (+11% price).
+   *  Unset on older rows, which are `ad`. */
+  promoteAs?: 'ad' | 'post';
+  /** the days bought, and the window they run in once the ad goes live (promotion.ts sets
+   *  the window the first minute the ad is seen active). No days → no window, runs on as
+   *  every ad did before this existed. */
+  campaignDays?: number | null;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
+  /** promote-post only — the views the advertiser was quoted (the form's 👥 estimate), and
+   *  how many the bot has added to the post so far. Spread evenly across the window. */
+  boostViews?: number;
+  boostViewsGiven?: number;
   status: boolean;
   approved: boolean;
   amount?: number;
@@ -45,6 +60,12 @@ const adSchema = new Schema<IAd>(
     buttonPosition: { type: String, enum: ['top', 'center', 'bottom', 'outside'], default: 'bottom' },
     buttonVariant: String,
     showAdvertiserTag: { type: Boolean, default: false },
+    promoteAs: { type: String, enum: ['ad', 'post'] },
+    campaignDays: { type: Number, default: null },
+    startsAt: { type: Date, default: null },
+    endsAt: { type: Date, default: null },
+    boostViews: { type: Number, default: 0 },
+    boostViewsGiven: { type: Number, default: 0 },
     status: { type: Boolean, default: false, index: true },
     approved: { type: Boolean, default: false },
     amount: Number,

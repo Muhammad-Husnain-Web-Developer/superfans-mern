@@ -1,4 +1,4 @@
-import type { AdCardItem } from '../components/AdCard';
+import { isPromotedPost, type AdCardItem } from '../components/AdCard';
 
 /**
  * The run of the World feed the full-screen viewer walks when it is opened from the wall.
@@ -45,8 +45,19 @@ export function isAdId(id: string): boolean {
  */
 export function toSteps(items: ({ type?: string; id: string } & AdCardItem)[]): WorldStep[] {
   return items.map((i) =>
-    i.type === 'ad' ? ({ ...i, type: 'ad' } as WorldStep) : { type: 'post', id: i.id },
+    i.type === 'ad' && !isPromotedPost(i)
+      ? ({ ...i, type: 'ad' } as WorldStep)
+      : { type: 'post', id: fullscreenIdOf(i) },
   );
+}
+
+/**
+ * Where a tile opens in the reel. A promoted post opens as the post itself — its own rail of
+ * ❤️💩, its own comments — because what was bought is that post being seen; every other ad
+ * opens as its ad slide, and a post as itself.
+ */
+export function fullscreenIdOf(item: { id: string } & Pick<AdCardItem, 'adType' | 'postId' | 'post'>): string {
+  return isPromotedPost(item) ? (item.postId as string) : item.id;
 }
 
 /**

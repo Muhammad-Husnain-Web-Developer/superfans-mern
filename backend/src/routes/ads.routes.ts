@@ -16,6 +16,7 @@ import {
   vipAccessRequestAdmin,
 } from '../services/adEmails.js';
 import { env } from '../config/env.js';
+import { promotedPostStats } from '../utils/ad-tiles.js';
 import { User } from '../models/User.js';
 import { Post } from '../models/Post.js';
 import { Followership } from '../models/Followership.js';
@@ -69,6 +70,22 @@ const BUTTON_VARIANTS: Partial<Record<string, string[]>> = {
   spotify: ['spotify', 'itunes'],
   amazon: ['amazon-yellow', 'amazon-white', 'amazon-mono'],
 };
+
+/** How a promote-post ad is shown — "Post as:" on the form. Anything but `post` is `ad`. */
+function promoteAsOf(type: string, body: Record<string, unknown>): 'ad' | 'post' | undefined {
+  if (type !== 'promote-post') return undefined;
+  return body.promote_as === 'post' ? 'post' : 'ad';
+}
+
+/** "As a normal Post" costs 11% more than the amount on the slider (David, 5 Oct 2026). */
+const NORMAL_POST_SURCHARGE = 0.11;
+
+/** What the advertiser is charged: the slider's amount, plus the surcharge where it applies. */
+function chargedAmount(type: string, body: Record<string, unknown>): number {
+  const base = Number(body.amount) || 0;
+  const total = promoteAsOf(type, body) === 'post' ? base * (1 + NORMAL_POST_SURCHARGE) : base;
+  return Math.round(total * 100) / 100;
+}
 
 /** Ad types only business accounts may use — Laravel 403s normal users on these (restrict_super_ads). */
 const BUSINESS_ONLY_TYPES = new Set(['clients-form', 'website-visits']);
@@ -282,6 +299,7 @@ adsRouter.get(
       {
         media: 1, link: 1, adType: 1, user: 1, status: 1, approved: 1, createdAt: 1,
         buttonSize: 1, buttonPosition: 1, buttonVariant: 1, showAdvertiserTag: 1,
+        promoteAs: 1, endsAt: 1,
       },
     )
       .sort({ createdAt: -1, mysqlId: -1 })
@@ -362,6 +380,15 @@ adsRouter.get(
     ).lean();
     const wording = new Map(forms.map((f) => [String(f.ad), f.buttonAction ?? null]));
 
+    /* promote-post tiles draw their post's own 👁️ and ❤️💩, as on WORLD */
+    const postStats = await promotedPostStats(
+      ads.flatMap((a) => {
+        const pid = previewPostIds.get(String(a._id));
+        return a.adType === 'promote-post' && pid ? [pid] : [];
+      }),
+      req.auth!.userId,
+    );
+
     res.json({
       success: true,
       /* so the page can say how many it is not showing */
@@ -405,6 +432,13 @@ adsRouter.get(
             : null,
           /* the post a picker ad promotes, so the creative opens it full screen */
           postId: previewPostIds.get(String(a._id)) ?? null,
+          promoteAs: a.adType === 'promote-post' ? a.promoteAs ?? 'ad' : null,
+          post:
+            a.adType === 'promote-post'
+              ? postStats.get(previewPostIds.get(String(a._id)) ?? '') ?? null
+              : null,
+          /* the campaign's window, once it has gone live */
+          endsAt: a.endsAt ?? null,
         };
       }),
     });
@@ -561,8 +595,11 @@ adsRouter.post(
   requireAuth,
   asyncHandler(async (req, res) => {
     if (!paymentProvider.ready) throw ApiError.badRequest('Payments are not configured');
-    const amount = Number(req.body.amount);
-    if (!amount || amount < 1) throw ApiError.badRequest('A valid amount is required');
+    if (!Number(req.body.amount) || Number(req.body.amount) < 1) {
+      throw ApiError.badRequest('A valid amount is required');
+    }
+    /* the surcharge is worked out here, never taken from the browser */
+    const amount = chargedAmount(String(req.params.type), req.body);
     const me = await User.findById(req.auth!.userId);
     if (!me) throw ApiError.unauthorized();
 
@@ -1080,6 +1117,12 @@ async function buildAd(
   const rawVariant = str(body.button_variant);
   const buttonVariant = variants?.includes(rawVariant) ? rawVariant : variants?.[0];
 
+  /* promote-post: the views quoted on the form — the 👥 estimate, from the slider's own
+     amount, not the surcharged one — are what the bot delivers over the campaign */
+  const promoteAs = promoteAsOf(t, body);
+  const boostViews =
+    t === 'promote-post' ? Math.round((amount / 1000) * (AUDIENCE_MAP['promote-post'] ?? 0)) : 0;
+
   const ad = await Ad.create({
     mysqlId: (highestAd?.mysqlId ?? 0) + 1,
     user: userId,
@@ -1089,11 +1132,15 @@ async function buildAd(
     buttonSize,
     buttonPosition,
     buttonVariant,
+    promoteAs,
+    campaignDays,
+    boostViews,
     /* a checkbox, so an unticked box arrives as nothing at all rather than as false */
     showAdvertiserTag: truthy(body.show_advertiser_tag),
     status: false,
     approved: false,
-    amount,
+    /* what is paid, surcharge included — My Ads and "pay existing" read it back */
+    amount: chargedAmount(t, body),
     impressions: 0,
     clicks: 0,
     country: str(body.country) || undefined,

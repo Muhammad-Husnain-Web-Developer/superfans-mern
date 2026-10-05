@@ -12,6 +12,7 @@ import { buildAdTiles, sampleAds } from '../utils/ad-tiles.js';
 import { currentLocks, postReachesCountry, type ReachUser, type ViewerPlace } from '../utils/worldReach.js';
 import { placeFromRequest } from '../utils/geo.js';
 import { logger } from '../config/logger.js';
+import { livePromotedPostIds } from '../utils/promotion.js';
 
 export const worldRouter = Router();
 
@@ -318,7 +319,39 @@ worldRouter.get(
     const seed = Number(req.query.seed);
     const ordered =
       Number.isFinite(seed) && seed !== 0 ? shuffleWithSeed(reachable, seed) : reachable;
-    const pagePosts = ordered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+    let pagePosts = ordered.slice((currentPage - 1) * PER_PAGE, currentPage * PER_PAGE);
+
+    /**
+     * A post bought "As a normal Post" (Ads Center, promote-post) — one on each page while its
+     * campaign runs, drawn exactly like the posts around it: no Super Ads tag, nothing to tell
+     * it was paid for (David, 5 Oct 2026). It is placed outside the pool's own rules (the 1,000
+     * likes, two per creator, the country rule): the advertiser has paid for it to be seen.
+     *
+     * Which one, and where on the page, come from the visit's seed and the page number, so a
+     * page asked for twice is the same page. Never on a page with no posts of its own, so the
+     * feed still ends where it ends, and never a post that is already on the page. A failure
+     * here leaves the page as it was.
+     */
+    if (pagePosts.length > 0) {
+      try {
+        const onPage = new Set(pagePosts.map((p) => String(p._id)));
+        const candidates = (await livePromotedPostIds()).filter((id) => !onPage.has(String(id)));
+        if (candidates.length > 0) {
+          const rand = seededRandom((Number.isFinite(seed) && seed !== 0 ? seed : 1) + currentPage * 7919);
+          const pick = candidates[Math.floor(rand() * candidates.length)];
+          const promoted = await Post.findOne({ _id: pick, visible: true }).lean<PoolPost>();
+          const author = promoted
+            ? await User.exists({ _id: promoted.influencer, status: 'active' })
+            : null;
+          if (promoted && author) {
+            const at = Math.floor(rand() * (pagePosts.length + 1));
+            pagePosts = [...pagePosts.slice(0, at), promoted, ...pagePosts.slice(at)];
+          }
+        }
+      } catch (err) {
+        logger.warn({ err }, 'promoted post skipped for this WORLD page');
+      }
+    }
 
     // === enrichment (postUsers, hates, liked, following) ===
     const influencerIds = [...new Set(pagePosts.map((p) => String(p.influencer)))];

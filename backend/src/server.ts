@@ -5,6 +5,7 @@ import { env, growthBotEnabled } from './config/env.js';
 import { initRealtime } from './services/realtime.js';
 import { logger } from './config/logger.js';
 import { runGrowthTick } from './routes/admin.routes.js';
+import { runPromotionTick } from './utils/promotion.js';
 
 async function main() {
   await connectDB();
@@ -46,6 +47,19 @@ async function main() {
   } else {
     logger.info('growth bot: off (set GROWTH_BOT=on to enable)');
   }
+
+  /* Paid ads' own clock — campaign windows, a promoted post's bought views, switching an ad
+     off when its days are up (utils/promotion.ts). Not behind GROWTH_BOT: this is what an
+     advertiser has paid for, and it only ever touches ads bought with days on them, so a dev
+     copy of the live database has nothing for it to change. */
+  const promotionTimer = setInterval(() => {
+    void runPromotionTick()
+      .then((r) => {
+        if (r.started || r.viewed || r.ended) logger.info(r, 'promotion tick');
+      })
+      .catch((err) => logger.error({ err }, 'promotion tick failed'));
+  }, 60_000);
+  promotionTimer.unref();
 
   const shutdown = async (signal: string) => {
     logger.info(`${signal} received — shutting down`);

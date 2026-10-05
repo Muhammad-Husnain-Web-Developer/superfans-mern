@@ -5,6 +5,71 @@ import { User } from '../models/User.js';
 import { PremiumAccess } from '../models/PremiumAccess.js';
 import { Followership } from '../models/Followership.js';
 import { Subscription } from '../models/Subscription.js';
+import { Like } from '../models/Like.js';
+import { Hate } from '../models/Hate.js';
+
+/** The match that keeps an ad out once its campaign window has passed (utils/promotion.ts). */
+export function notEnded(now = new Date()) {
+  return { $or: [{ endsAt: null }, { endsAt: { $exists: false } }, { endsAt: { $gt: now } }] };
+}
+
+/** What a promoted post's tile shows under it — the post's own 👁️ and ❤️💩, as on WORLD. */
+export interface PromotedPostStats {
+  views: number;
+  likesCount: number;
+  hatesCount: number;
+  likePercent: number | null;
+  viewerLiked: boolean;
+  viewerHated: boolean;
+}
+
+/**
+ * The 👁️ and ❤️💩 figures of the posts promote-post ads point at, in one query per concern.
+ * The same numbers a WORLD card carries, so liking the post from its ad is liking the post.
+ */
+export async function promotedPostStats(
+  postIds: string[],
+  viewerId?: string | null,
+): Promise<Map<string, PromotedPostStats>> {
+  const ids = [...new Set(postIds)].map((id) => new Types.ObjectId(id));
+  if (ids.length === 0) return new Map();
+  const [posts, likeCounts, hateCounts, liked, hated] = await Promise.all([
+    Post.find({ _id: { $in: ids } }, { noOfViews: 1, noOfLikes: 1, likePercent: 1 })
+      .setOptions({ withMissing: true })
+      .lean(),
+    Like.aggregate<{ _id: Types.ObjectId; cnt: number }>([
+      { $match: { post: { $in: ids } } },
+      { $group: { _id: '$post', cnt: { $sum: 1 } } },
+    ]),
+    Hate.aggregate<{ _id: Types.ObjectId; cnt: number }>([
+      { $match: { post: { $in: ids } } },
+      { $group: { _id: '$post', cnt: { $sum: 1 } } },
+    ]),
+    viewerId ? Like.find({ user: viewerId, post: { $in: ids } }, { post: 1 }).lean() : [],
+    viewerId ? Hate.find({ user: viewerId, post: { $in: ids } }, { post: 1 }).lean() : [],
+  ]);
+  const likes = new Map(likeCounts.map((r) => [String(r._id), r.cnt]));
+  const hates = new Map(hateCounts.map((r) => [String(r._id), r.cnt]));
+  const likedSet = new Set(liked.map((r) => String(r.post)));
+  const hatedSet = new Set(hated.map((r) => String(r.post)));
+  return new Map(
+    posts.map((p) => {
+      const id = String(p._id);
+      return [
+        id,
+        {
+          /* the same fallback the WORLD card makes for a post with no views recorded */
+          views: p.noOfViews ?? p.noOfLikes ?? 0,
+          likesCount: likes.get(id) ?? 0,
+          hatesCount: hates.get(id) ?? 0,
+          likePercent: p.likePercent ?? null,
+          viewerLiked: likedSet.has(id),
+          viewerHated: hatedSet.has(id),
+        },
+      ];
+    }),
+  );
+}
 
 /**
  * The "Super Ads" tile, built once for everywhere it stands.
@@ -37,6 +102,7 @@ interface AdRow {
   buttonSize?: string;
   buttonPosition?: string;
   buttonVariant?: string;
+  promoteAs?: string;
   user?: Types.ObjectId;
   showAdvertiserTag?: boolean;
   createdAt?: Date;
@@ -57,12 +123,17 @@ export interface AdTile {
   createdAt: Date | null;
   advertiser: unknown;
   postId: string | null;
+  promoteAs: string | null;
+  /** promote-post only: the post's own figures, drawn under the tile in place of a button */
+  post: PromotedPostStats | null;
 }
 
 /** `count` random active ads, in the order they came out of the sample. */
 export async function sampleAds(count: number): Promise<AdRow[]> {
   return Ad.aggregate<AdRow>([
-    { $match: { status: true } },
+    /* not past its campaign days, and not bought "As a normal Post" — that one is dealt into
+       WORLD as an ordinary post instead (world.routes.ts), never into an ad slot */
+    { $match: { status: true, promoteAs: { $ne: 'post' }, ...notEnded() } },
     /* A suspended or deleted advertiser has to leave the wall with everyone else. The posts
        already do — buildPool only draws from active accounts — but the ad tile carries the
        advertiser's @handle, avatar and a Follow/Subscribe button leading to a profile that
@@ -78,7 +149,7 @@ export async function sampleAds(count: number): Promise<AdRow[]> {
        `showAdvertiserTag` whether the tile carries their logo beside "Super Ads". */
     {
       $project: {
-        media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1, buttonVariant: 1, user: 1,
+        media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1, buttonVariant: 1, promoteAs: 1, user: 1,
         showAdvertiserTag: 1, createdAt: 1,
       },
     },
@@ -160,8 +231,17 @@ export async function buildAdTiles(ads: AdRow[], viewerId?: string | null): Prom
       : [],
   );
 
-  return ads.map((ad, i) => {
+  const postIdOf = ads.map((_, i) => {
     const ref = adRefs[i];
+    return ref?.id ?? (ref?.mysqlId ? legacyMap.get(ref.mysqlId) ?? null : null);
+  });
+  /* the promoted posts' own 👁️ and ❤️💩 — promote-post tiles carry those, not a button */
+  const stats = await promotedPostStats(
+    ads.flatMap((a, i) => (a.adType === 'promote-post' && postIdOf[i] ? [postIdOf[i] as string] : [])),
+    viewerId,
+  );
+
+  return ads.map((ad, i) => {
     return {
       type: 'ad' as const,
       id: `ad_${String(ad._id)}`,
@@ -188,7 +268,9 @@ export async function buildAdTiles(ads: AdRow[], viewerId?: string | null): Prom
       /* the post a picker ad promotes. buildAd writes `${APP}/post/<id>` as the link for
          those three types, so the id is already here — the tile opens it full screen when
          the creative itself is clicked. */
-      postId: ref?.id ?? (ref?.mysqlId ? legacyMap.get(ref.mysqlId) ?? null : null),
+      postId: postIdOf[i],
+      promoteAs: ad.adType === 'promote-post' ? ad.promoteAs ?? 'ad' : null,
+      post: ad.adType === 'promote-post' && postIdOf[i] ? stats.get(postIdOf[i] as string) ?? null : null,
     };
   });
 }

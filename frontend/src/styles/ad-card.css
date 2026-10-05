@@ -890,6 +890,67 @@
   pointer-events: none;
 }
 
+/* ---------------------------- promote-post: "Post as:" and its preview ----
+   Measured off David's mockup (5 Oct 2026): "Post as:" bold, the two choices in a light
+   20-22px face on the same white 32px boxes the button choices use, the 11% note small
+   beside the second. */
+.ads-post-as {
+  margin-top: 14px;
+  text-align: left;
+}
+.ads-post-as h5 {
+  font-weight: 800;
+  font-size: 20px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.ads-post-as-name {
+  font-family: 'Montserrat', 'Segoe UI', Roboto, Arial, sans-serif;
+  font-size: 20px;
+  color: #fff;
+  line-height: 1.2;
+}
+.ads-post-as-name small {
+  font-size: 12px;
+  opacity: 0.85;
+}
+.ads-surcharge {
+  display: block;
+  font-size: 12px;
+  opacity: 0.85;
+}
+/* the preview's tag line — both tags as an ad, the @nickname alone as a normal post */
+.ads-promote-tag {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  background: darkgray;
+  border: 3px solid lightgray;
+  color: #000;
+  font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 13px;
+}
+.ads-promote-tag-label {
+  color: #000;
+}
+/* 👁️ at the left, ❤️💩 at the right, under the picture — as the mockup has them */
+.ads-promote-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px 0;
+  font-size: 22px;
+  line-height: 1;
+}
+.ads-promote-stats img {
+  width: 24px;
+  height: 24px;
+  vertical-align: middle;
+}
+
 .ads-modal-brand-title {
   display: flex;
   align-items: center;

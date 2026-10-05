@@ -7,8 +7,11 @@ import { PremiumFanModal } from './PremiumFanModal';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { SubscribeModal } from '../pages/profile/SubscribeModal';
-import { assetImage, isVideoFile, videoMime } from '../utils/format';
+import { assetImage, formatNumberRounded, isVideoFile, likePercent, videoMime } from '../utils/format';
 import { VolumeButton } from './VolumeButton';
+import { RatingPill } from './RatingPill';
+import { useRegisterModal } from './RegisterModal';
+import { useRatingFeedback } from '../utils/useRatingFeedback';
 
 /**
  * One Super Ads tile, as it appears on the World feed and the walls.
@@ -58,6 +61,27 @@ export interface AdCardItem {
   showAdvertiserTag?: boolean;
   /** when the ad was bought; the date under the advertiser's name in the reel */
   createdAt?: string | null;
+  /** promote-post only: shown as an ad (`ad`) or as an ordinary post (`post`) */
+  promoteAs?: 'ad' | 'post' | null;
+  /** promote-post only: the post's own 👁️ and ❤️💩, drawn under the tile instead of a button */
+  post?: {
+    views: number;
+    likesCount: number;
+    hatesCount: number;
+    likePercent: number | null;
+    viewerLiked: boolean;
+    viewerHated: boolean;
+  } | null;
+}
+
+/**
+ * A promote-post ad with its post in hand. David, 5 Oct 2026: "Now don't have button — we just
+ * promote a post with the 👁️ VIEWS and ❤️💩 as a normal post". Such a tile carries no call to
+ * action; the post's own figures stand under it, and its creative opens the post itself.
+ * One with no post on record (a migrated row whose post is gone) keeps the old button.
+ */
+export function isPromotedPost(item: Pick<AdCardItem, 'adType' | 'postId' | 'post'>): boolean {
+  return item.adType === 'promote-post' && !!item.postId && !!item.post;
 }
 
 /** The advertiser picks both of these on the create form. */
@@ -413,7 +437,14 @@ export function AdCard({
   /* The advertiser's own tag beside "Super Ads". Theirs to ask for — off on every ad bought
      before the box existed — and the reel never carries it: there the handle is already in
      the bottom bar, which is what David meant by "this don't affect on Full screen viewer". */
-  const doubleTag = !isFullscreen && item.showAdvertiserTag === true && !!handle;
+  /* A promoted post bought "As an Ad with Tags marks" always carries both tags — "with the
+     SUPER ADS Tag and the @nickname tag". Bought "As a normal Post" it carries only the
+     @nickname, like any post: WORLD draws those as ordinary posts, and the preview page,
+     which draws every ad as a tile, should still show it the way it will be seen. */
+  const promoted = isPromotedPost(item);
+  const asNormalPost = promoted && item.promoteAs === 'post';
+  const doubleTag =
+    !isFullscreen && !!handle && (item.showAdvertiserTag === true || promoted);
   const wallCta = (
     <AdCta
       action={action}
@@ -440,7 +471,7 @@ export function AdCard({
       {!isFullscreen && (
         <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ position: 'relative', fontSize: 14 }}>
           <HandleMarquee
-            leading={<span className="ad-card-super-ads-label">Super Ads</span>}
+            leading={asNormalPost ? undefined : <span className="ad-card-super-ads-label">Super Ads</span>}
             handles={
               doubleTag
                 ? [{ usernameUrl: handle as string, profilePicture: item.advertiser?.profilePicture ?? null }]
@@ -505,11 +536,16 @@ export function AdCard({
 
         {/* on the creative, at the size and place the advertiser chose — the wall only,
             and not when they asked for the button to stand outside it */}
-        {!isFullscreen && !ctaOutside && wallCta}
+        {!isFullscreen && !ctaOutside && !promoted && wallCta}
       </div>
 
       {/* under the tile, at the right, where a post carries its rating pill */}
-      {ctaOutside && <div className="ad-cta-outside-row">{wallCta}</div>}
+      {ctaOutside && !promoted && <div className="ad-cta-outside-row">{wallCta}</div>}
+
+      {/* a promoted post's own 👁️ and ❤️💩, where a WORLD post carries them */}
+      {promoted && !isFullscreen && item.post && item.postId && (
+        <PromotedPostStats postId={item.postId} stats={item.post} />
+      )}
 
       {/* preview page only, under the tile rather than in its heading: in the heading it
           took the room "Super Ads" and the handle scroll in, so the tile stopped reading
@@ -554,8 +590,8 @@ export function AdCard({
           {/* the label and the button wrap to the next line together, as one unit, rather
               than splitting across two lines of their own on a narrow phone */}
           <span className="ad-fs-tag-actions">
-            <span className="ad-fs-tag">Super Ads</span>
-            <AdCta action={action} label={ctaLabel} href={href} onClick={onClick} inBar />
+            {!asNormalPost && <span className="ad-fs-tag">Super Ads</span>}
+            {!promoted && <AdCta action={action} label={ctaLabel} href={href} onClick={onClick} inBar />}
           </span>
         </div>
       )}
@@ -720,6 +756,95 @@ const inner = markFirst ? (
     >
       {inner}
     </a>
+  );
+}
+
+/**
+ * The row a WORLD post carries under its picture — 👁️ views, then ❤️ · %Liked/Hated · 💩 —
+ * for a promoted post's tile. The figures are the post's own and the buttons act on the post,
+ * so a like given to the ad is a like on the post. Same endpoints, same feedback, same guest
+ * rule as WorldPostCard; a double-click on the picture is not wired here, since the picture
+ * opens the post, where it is.
+ */
+function PromotedPostStats({ postId, stats }: { postId: string; stats: NonNullable<AdCardItem['post']> }) {
+  const { user: authUser } = useAuth();
+  const registerModal = useRegisterModal();
+  const feedback = useRatingFeedback();
+  const [liked, setLiked] = useState(stats.viewerLiked);
+  const [hated, setHated] = useState(stats.viewerHated);
+  const [likes, setLikes] = useState(stats.likesCount);
+  const [hates, setHates] = useState(stats.hatesCount);
+
+  const guardGuest = (run: () => void) => () => {
+    if (!authUser) {
+      registerModal.open();
+      return;
+    }
+    run();
+  };
+
+  /* the server's answer settles both halves, whichever was pressed */
+  const settle = (d: { status: string; likesCount: number; hatesCount: number }) => {
+    setLikes(d.likesCount);
+    setHates(d.hatesCount);
+  };
+
+  function toggleLike() {
+    feedback.onLiked();
+    const before = { liked, hated };
+    setLiked(!liked);
+    if (!liked) setHated(false);
+    api
+      .post<{ data: { status: string; likesCount: number; hatesCount: number } }>(`/posts/${postId}/like-toggle`)
+      .then((r) => {
+        const nowLiked = r.data.data.status === 'post liked';
+        setLiked(nowLiked);
+        if (nowLiked) setHated(false);
+        settle(r.data.data);
+      })
+      .catch(() => {
+        setLiked(before.liked);
+        setHated(before.hated);
+      });
+  }
+
+  function toggleHate() {
+    feedback.onHated();
+    const before = { liked, hated };
+    setHated(!hated);
+    if (!hated) setLiked(false);
+    api
+      .post<{ data: { status: string; likesCount: number; hatesCount: number } }>(`/me/hate/${postId}`)
+      .then((r) => {
+        const nowHated = r.data.data.status === 'post hated';
+        setHated(nowHated);
+        if (nowHated) setLiked(false);
+        settle(r.data.data);
+      })
+      .catch(() => {
+        setLiked(before.liked);
+        setHated(before.hated);
+      });
+  }
+
+  return (
+    <div className="stats-wrapper has-actions">
+      <div className="view-count">
+        <span className="eye-icon">👁️</span>
+        <span className="number_of_post_likes" style={liked ? { color: '#da1212' } : undefined}>
+          {formatNumberRounded(stats.views)}
+        </span>
+      </div>
+      <RatingPill
+        pct={likePercent(likes, hates, stats.likePercent, { id: postId, views: stats.views })}
+        liked={liked}
+        hated={hated}
+        beat={feedback.beat}
+        bounce={feedback.bounce}
+        onLike={guardGuest(toggleLike)}
+        onHate={guardGuest(toggleHate)}
+      />
+    </div>
   );
 }
 
