@@ -36,6 +36,7 @@ interface AdRow {
   adType?: string;
   buttonSize?: string;
   buttonPosition?: string;
+  buttonVariant?: string;
   user?: Types.ObjectId;
   showAdvertiserTag?: boolean;
   createdAt?: Date;
@@ -51,6 +52,7 @@ export interface AdTile {
   adType: string | null;
   buttonSize: string;
   buttonPosition: string;
+  buttonVariant: string | null;
   showAdvertiserTag: boolean;
   createdAt: Date | null;
   advertiser: unknown;
@@ -76,7 +78,7 @@ export async function sampleAds(count: number): Promise<AdRow[]> {
        `showAdvertiserTag` whether the tile carries their logo beside "Super Ads". */
     {
       $project: {
-        media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1, user: 1,
+        media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1, buttonVariant: 1, user: 1,
         showAdvertiserTag: 1, createdAt: 1,
       },
     },
@@ -175,6 +177,8 @@ export async function buildAdTiles(ads: AdRow[], viewerId?: string | null): Prom
       /* how big the advertiser asked for the button, and where on the creative */
       buttonSize: ad.buttonSize ?? 'medium',
       buttonPosition: ad.buttonPosition ?? 'bottom',
+      /* which design of the type's button, where the advertiser had a choice */
+      buttonVariant: ad.buttonVariant ?? null,
       /* the double tag, and the date it carries in the full-screen bottom bar */
       showAdvertiserTag: ad.showAdvertiserTag === true,
       createdAt: ad.createdAt ?? null,

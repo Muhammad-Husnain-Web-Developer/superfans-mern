@@ -52,6 +52,8 @@ export interface AdCardItem {
   /** how big the advertiser asked for the button, and where on the creative */
   buttonSize?: AdButtonSize | null;
   buttonPosition?: AdButtonPosition | null;
+  /** which of the type's button designs was ticked (spotify / amazon), see AD_BUTTON_VARIANTS */
+  buttonVariant?: string | null;
   /** the advertiser's logo and @handle beside "Super Ads" on the wall — their own choice */
   showAdvertiserTag?: boolean;
   /** when the ad was bought; the date under the advertiser's name in the reel */
@@ -72,9 +74,15 @@ export const AD_BUTTON_POSITIONS: AdButtonPosition[] = ['top', 'center', 'bottom
 /** `outside` is drawn small and nothing else; the form greys the size out to say so. */
 export const OUTSIDE_LOCKED_SIZE: AdButtonSize = 'small';
 
-/** The client's six calls to action. */
-export type AdAction = 'more-details' | 'call' | 'send-card' | 'subscribe' | 'follow' | 'whatsapp';
+/** The client's six calls to action, and the branded buttons he drew for the outward types
+    (Oct 2026). The branded ones all lead to the ad's own link, as More details does. */
+export type AdAction =
+  | 'more-details' | 'call' | 'send-card' | 'subscribe' | 'follow' | 'whatsapp'
+  | 'instagram' | 'website' | 'tiktok' | 'twitch' | 'youtube' | 'itunes' | 'spotify'
+  | 'ecommerce' | 'amazon-yellow' | 'amazon-white' | 'amazon-mono';
 
+/* His wording, in his languages — "Visitar Twitch" and "Ver Youtube" are Spanish on his
+   own buttons, the rest English, and the Amazon/E-commerce ones read Comprar. */
 export const AD_ACTION_LABEL: Record<AdAction, string> = {
   'more-details': 'More details',
   call: 'Call',
@@ -82,6 +90,25 @@ export const AD_ACTION_LABEL: Record<AdAction, string> = {
   subscribe: 'Subscribe',
   follow: 'Follow',
   whatsapp: 'Whatsapp',
+  instagram: 'Visit Instagram',
+  website: 'Visit Website',
+  tiktok: 'Visit TikTok',
+  twitch: 'Visitar Twitch',
+  youtube: 'Ver Youtube',
+  itunes: 'Listen on iTunes',
+  spotify: 'Listen on Spotify',
+  ecommerce: 'Comprar',
+  'amazon-yellow': 'Comprar en Amazon',
+  'amazon-white': 'Comprar en Amazon',
+  'amazon-mono': 'Comprar en Amazon',
+};
+
+/** The types whose create form lets the advertiser tick one of several button designs —
+    "New Checkbox for select Button, same price" — in the order the form lists them. An ad
+    with no choice on record draws the type's own button (Spotify), else the first. */
+export const AD_BUTTON_VARIANTS: Partial<Record<string, AdAction[]>> = {
+  spotify: ['itunes', 'spotify'],
+  amazon: ['amazon-yellow', 'amazon-white', 'amazon-mono'],
 };
 
 /**
@@ -89,8 +116,28 @@ export const AD_ACTION_LABEL: Record<AdAction, string> = {
  * does not choose this on most types — the type already says what the ad is for — so the
  * mapping lives here and the tile stays honest about where its button leads.
  */
-export function adAction(adType: string | null | undefined): AdAction {
+export function adAction(adType: string | null | undefined, buttonVariant?: string | null): AdAction {
+  const variants = adType ? AD_BUTTON_VARIANTS[adType] : undefined;
+  if (variants) {
+    return (
+      variants.find((v) => v === buttonVariant) ??
+      variants.find((v) => v === adType) ??
+      variants[0]
+    );
+  }
   switch (adType) {
+    case 'instagram':
+      return 'instagram';
+    case 'website-visits':
+      return 'website';
+    case 'tiktok':
+      return 'tiktok';
+    case 'twitch':
+      return 'twitch';
+    case 'youtube':
+      return 'youtube';
+    case 'ecommerce':
+      return 'ecommerce';
     case 'calls':
       return 'call';
     case 'whatsapp':
@@ -102,9 +149,8 @@ export function adAction(adType: string | null | undefined): AdAction {
          which, since it depends on the advertiser and not on the type. */
       return 'follow';
     default:
-      /* youtube, website-visits, instagram, tiktok, twitch, amazon, spotify,
-         promote-post and anything migrated without a type all lead outward. YouTube was
-         Subscribe for a while; the client moved it back here. */
+      /* aliexpress-temu, promote-post and anything migrated without a type lead outward
+         under the plain button */
       return 'more-details';
   }
 }
@@ -118,8 +164,9 @@ export function adAction(adType: string | null | undefined): AdAction {
 export function resolveAdAction(
   adType: string | null | undefined,
   advertiserPaid: boolean,
+  buttonVariant?: string | null,
 ): AdAction {
-  const base = adAction(adType);
+  const base = adAction(adType, buttonVariant);
   return base === 'follow' && advertiserPaid ? 'subscribe' : base;
 }
 
@@ -254,7 +301,7 @@ export function AdCard({
     : null;
 
   const advertiserPaid = isPaidAdvertiser(item.advertiser);
-  const action = resolveAdAction(item.adType, advertiserPaid);
+  const action = resolveAdAction(item.adType, advertiserPaid, item.buttonVariant);
 
   /* already following / subscribed — the button has nothing left to ask for */
   const [done, setDone] = useState(
@@ -400,7 +447,6 @@ export function AdCard({
                 : []
             }
           />
-          {showType && <TypeTag adType={item.adType} />}
         </p>
       )}
 
@@ -464,6 +510,15 @@ export function AdCard({
 
       {/* under the tile, at the right, where a post carries its rating pill */}
       {ctaOutside && <div className="ad-cta-outside-row">{wallCta}</div>}
+
+      {/* preview page only, under the tile rather than in its heading: in the heading it
+          took the room "Super Ads" and the handle scroll in, so the tile stopped reading
+          the way it does on WORLD */}
+      {showType && !isFullscreen && (
+        <div className="ad-type-caption">
+          <TypeTag adType={item.adType} />
+        </div>
+      )}
 
       {/* The reel's bottom bar, built like the one a post carries (PostFullscreen): the
           advertiser's logo, their name over the ad's date, the "Super Ads" label beside
@@ -540,7 +595,30 @@ export function AdCard({
     a red flag on Subscribe and Follow, a green disc on Whatsapp, and an emoji on the
     other three. The flag and the disc are drawn rather than borrowed from an emoji font,
     which renders them differently on every machine. */
+/* the branded buttons' marks: the network's own logo, or the emoji the client drew */
+const BRAND_MARK: Partial<Record<AdAction, string>> = {
+  instagram: '/brand/networks/scroll/instagram.svg',
+  tiktok: '/brand/networks/scroll/tiktok.svg',
+  twitch: '/brand/ads/twitch-white.svg',
+  youtube: '/brand/networks/scroll/youtube.svg',
+  itunes: '/brand/networks/scroll/itunes.svg',
+  spotify: '/brand/ads/spotify.svg',
+  'amazon-yellow': '/brand/networks/scroll/amazon.svg',
+  'amazon-white': '/brand/networks/scroll/amazon.svg',
+  'amazon-mono': '/brand/networks/scroll/amazon.svg',
+  website: '\u{1F310}',
+  ecommerce: '\u{1F6D2}',
+};
+
 export function CtaMark({ action }: { action: AdAction }) {
+  const brand = BRAND_MARK[action];
+  if (brand) {
+    return (
+      <span className="cta-mark" aria-hidden="true">
+        {brand.startsWith('/') ? <img src={brand} alt="" /> : brand}
+      </span>
+    );
+  }
   if (action === 'subscribe' || action === 'follow') {
     return (
       <span className="cta-mark" aria-hidden="true">

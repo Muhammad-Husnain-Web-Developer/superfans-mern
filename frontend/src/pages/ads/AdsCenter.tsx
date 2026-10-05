@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
@@ -11,6 +11,7 @@ import { PostPicker } from './PostPicker';
 import { assetImage, isVideoFile } from '../../utils/format';
 import {
   AD_ACTION_LABEL,
+  AD_BUTTON_VARIANTS,
   AD_BUTTON_POSITIONS,
   AD_BUTTON_SIZES,
   OUTSIDE_LOCKED_SIZE,
@@ -41,6 +42,7 @@ function AdButtonPreview({
   position,
   buttonAction,
   advertiserPaid = false,
+  buttonVariant = null,
 }: {
   /** the uploaded file as a data URL, or the picked post's own media URL */
   src: string;
@@ -51,9 +53,28 @@ function AdButtonPreview({
   buttonAction: string | null;
   /** the advertiser is a creator who charges, so this ad will read Subscribe */
   advertiserPaid?: boolean;
+  /** the button design ticked, on a type that offers several */
+  buttonVariant?: string | null;
 }) {
-  const action = resolveAdAction(adType, advertiserPaid);
+  const action = resolveAdAction(adType, advertiserPaid, buttonVariant);
   const label = buttonAction || AD_ACTION_LABEL[action];
+  /* Nothing ticked yet on a type with a choice: every design is shown, one under the other
+     with an "o" between them, the way David drew the Spotify & iTunes preview. */
+  const variants = AD_BUTTON_VARIANTS[adType];
+  const choices = variants && !buttonVariant ? variants : null;
+  const stack = choices && (
+    <div className={`ads-cta-variant-stack pos-${position}`}>
+      {choices.map((v, i) => (
+        <Fragment key={v}>
+          {i > 0 && <span className="ads-cta-variant-or">o</span>}
+          <span className={`ad-cta-btn cta-${v} size-${size}`}>
+            <CtaMark action={v} />
+            <span>{AD_ACTION_LABEL[v]}</span>
+          </span>
+        </Fragment>
+      ))}
+    </div>
+  );
   return (
     <div className="ads-cta-preview work-item">
       <div className="ad-media">
@@ -84,16 +105,18 @@ function AdButtonPreview({
         )}
         {/* the real mark, not a stand-in: the point of the preview is to show the button
             the advertiser will actually get, and the mark is half of what it looks like */}
-        {position !== 'outside' && (
+        {stack && position !== 'outside' && stack}
+        {!stack && position !== 'outside' && (
           <span className={`ad-cta-btn cta-${action} size-${size} pos-${position}`}>
             <CtaMark action={action} />
             <span>{label}</span>
           </span>
         )}
       </div>
+      {stack && position === 'outside' && <div className="ad-cta-outside-row">{stack}</div>}
       {/* `outside` stands under the creative, so the preview has to show it there too —
           drawn inside the picture it would have said the opposite of what it does */}
-      {position === 'outside' && (
+      {!stack && position === 'outside' && (
         <div className="ad-cta-outside-row">
           <span className={`ad-cta-btn cta-${action} pos-outside`}>
             <CtaMark action={action} />
@@ -134,7 +157,7 @@ const CARDS: AdCard[] = [
   { id: 8, type: 'amazon', min: 15, max: 5000, audience: 920000, icons: [`${LOGO}/amazon.svg`], title: 'Get More Amazon Sales', desc: 'Drive people to visit your Amazon list' },
   { id: 15, type: 'aliexpress-temu', min: 15, max: 5000, audience: 920000, icons: ['/brand/ads/aliexpress.svg', '/brand/ads/temu.svg'], title: 'Get More AliExpress o Temu Sales', desc: 'Drive people to visit your Ali-Express and Temu list.' },
   { id: 16, type: 'ecommerce', min: 15, max: 5000, audience: 920000, icons: ['🛒'], title: 'Get More E-commerce Sales', desc: 'Drive people to visit your E-commerce or landing page' },
-  { id: 9, type: 'spotify', min: 15, max: 5000, audience: 920000, icons: ['🎙️', `${LOGO}/itunes.svg`, `${LOGO}/spotify.svg`], title: 'Get More Spotify o iTunes Reproductions', desc: 'Drive people to visit your Spotify music list' },
+  { id: 9, type: 'spotify', min: 15, max: 5000, audience: 920000, icons: ['🎙️', `${LOGO}/itunes.svg`, '/brand/ads/spotify.svg'], title: 'Get More Spotify o iTunes Reproductions', desc: 'Drive people to visit your Spotify music list' },
   { id: 10, type: 'website-visits', min: 15, max: 5000, audience: 920000, icons: ['🌐', '🔗'], title: 'Get More Website Visits', desc: 'Drive people to visit your website or landing page' },
   { id: 12, type: 'whatsapp', min: 15, max: 5000, audience: 92000, icons: ['/brand/ads/whatsapp.svg'], title: 'Get More WhatsApp Messages', desc: 'Run an ad with a button that lets users send you messages on WhatsApp.' },
   { id: 11, type: 'calls', min: 15, max: 5000, audience: 75000, icons: ['📞'], title: 'Receive More Calls', desc: 'Create an ad that encourages your audience to call you directly.' },
@@ -587,6 +610,9 @@ function CreateAdModal({
   /* the advertiser's logo and handle beside "Super Ads" on WORLD and the walls — off by
      default, so an advertiser has to ask for their name on the tile rather than find it there */
   const [showAdvertiserTag, setShowAdvertiserTag] = useState(false);
+  /* which button design, on the types that offer more than one (Spotify & iTunes, Amazon) */
+  const variants = AD_BUTTON_VARIANTS[card.type];
+  const [buttonVariant, setButtonVariant] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   /* what went wrong, in the modal. Without this the submit failed in silence: the button
      stopped spinning and nothing else happened, so a rejected video looked like a dead form. */
@@ -645,6 +671,10 @@ function CreateAdModal({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!terms) return;
+    if (variants && !buttonVariant) {
+      setError('Choose the button for your ad.');
+      return;
+    }
     setError(null);
     setBusy(true);
     try {
@@ -669,6 +699,7 @@ function CreateAdModal({
          is sent rather than whatever the advertiser had picked before switching */
       body.button_size = buttonPosition === 'outside' ? OUTSIDE_LOCKED_SIZE : buttonSize;
       body.button_position = buttonPosition;
+      if (buttonVariant) body.button_variant = buttonVariant;
       body.show_advertiser_tag = showAdvertiserTag;
 
       if (card.type === 'clients-form') {
@@ -723,7 +754,18 @@ function CreateAdModal({
       <div className="ads-modal-box" onClick={(e) => e.stopPropagation()}>
         <div style={{ background: '#111', border: '7px solid #111', color: '#fff', borderRadius: 18, padding: '32px 28px', textAlign: 'center' }}>
           <button className="close-modal-btn" onClick={onClose}>✖</button>
-          {!isFormulary && <h2 style={{ fontWeight: 800, fontSize: 28 }}>📢 {card.title}</h2>}
+          {/* the Spotify & iTunes modal carries both logos in place of the megaphone, and
+              keeps the shorter title David wrote on it */}
+          {!isFormulary && card.type === 'spotify' && (
+            <h2 className="ads-modal-brand-title">
+              <img src="/brand/ads/spotify.svg" alt="" />
+              <img src="/brand/networks/scroll/itunes.svg" alt="" />
+              Get More Spotify Reproductions
+            </h2>
+          )}
+          {!isFormulary && card.type !== 'spotify' && (
+            <h2 style={{ fontWeight: 800, fontSize: 28 }}>📢 {card.title}</h2>
+          )}
 
           <form onSubmit={submit}>
             {/* type-specific fields */}
@@ -749,6 +791,33 @@ function CreateAdModal({
               <div className="input-group my-3 w-75 mx-auto">
                 <span className="input-group-text" style={{ background: '#f0f0f0', fontWeight: 600 }}>{lockedPrefix[card.id][1]}</span>
                 <input className="form-control" placeholder="username" value={fields[lockedPrefix[card.id][0]] ?? ''} onChange={(e) => setField(lockedPrefix[card.id][0], e.target.value)} required />
+              </div>
+            )}
+
+            {/* one box per button design; ticking one unticks the others. Spotify's are
+                named, Amazon's three are shown as the buttons themselves. Same price. */}
+            {variants && (
+              <div className="ads-variant-row w-75 mx-auto">
+                {variants.map((v) => (
+                  <label key={v} className="ads-variant-check">
+                    <input
+                      type="checkbox"
+                      checked={buttonVariant === v}
+                      onChange={(e) => {
+                        setButtonVariant(e.target.checked ? v : null);
+                        setError(null);
+                      }}
+                    />
+                    {card.type === 'spotify' ? (
+                      <span className="ads-variant-name">{v === 'itunes' ? 'iTunes' : 'Spotify'}</span>
+                    ) : (
+                      <span className={`ad-cta-btn cta-${v} pos-outside`}>
+                        <CtaMark action={v} />
+                        <span>{AD_ACTION_LABEL[v]}</span>
+                      </span>
+                    )}
+                  </label>
+                ))}
               </div>
             )}
 
@@ -882,6 +951,7 @@ function CreateAdModal({
                 position={buttonPosition}
                 buttonAction={card.type === 'clients-form' ? buttonAction : null}
                 advertiserPaid={advertiserPaid}
+                buttonVariant={buttonVariant}
               />
             </div>
 

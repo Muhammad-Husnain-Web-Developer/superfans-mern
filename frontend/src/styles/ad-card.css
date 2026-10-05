@@ -444,6 +444,50 @@
 .ad-cta-btn.cta-follow       { width: calc(42.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
 .ad-cta-btn.cta-whatsapp     { width: calc(46.7% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
 
+/* ------------------------------------------- the branded buttons (Oct 2026) ----
+ * Measured off David's eleven button images (633px crops). Every one carries a 10px border,
+ * and 10px is what the 1.7cqw border above comes to on a 588px card, so the crops are read
+ * against a 588px card: width = box / 588, lettering = its px / 5.88 in cqw, height from the
+ * box's own ratio. Marks and gaps are in `em`, so they follow the lettering into the reel's
+ * bar and the outside row, where the size is fixed in px. `--mark` is the logo's square
+ * box; each SVG has its own empty margin, already allowed for in the figure. */
+.ad-cta-btn.cta-instagram,
+.ad-cta-btn.cta-tiktok,
+.ad-cta-btn.cta-twitch,
+.ad-cta-btn.cta-youtube,
+.ad-cta-btn.cta-itunes,
+.ad-cta-btn.cta-spotify,
+.ad-cta-btn.cta-amazon-mono {
+  font-family: Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono',
+    'DejaVu Sans Mono', 'Courier New', monospace;
+  font-weight: 700;
+}
+.ad-cta-btn.cta-website,
+.ad-cta-btn.cta-ecommerce,
+.ad-cta-btn.cta-amazon-yellow,
+.ad-cta-btn.cta-amazon-white {
+  font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
+  font-weight: 600;
+}
+.ad-cta-btn.cta-website { font-weight: 700; }
+
+/*                                  width            height   lettering              mark / gap */
+.ad-cta-btn.cta-instagram     { width: calc(62.6% * var(--cta-scale)); aspect-ratio: 1 / 0.217; font-size: clamp(7px, calc(5.27cqw * var(--cta-scale)), 40px); --mark: 1.7em;  gap: 0.35em; }
+.ad-cta-btn.cta-website       { width: calc(68.4% * var(--cta-scale)); aspect-ratio: 1 / 0.234; font-size: clamp(7px, calc(4.93cqw * var(--cta-scale)), 40px); gap: 0.15em; }
+.ad-cta-btn.cta-tiktok        { width: calc(69.7% * var(--cta-scale)); aspect-ratio: 1 / 0.215; font-size: clamp(7px, calc(5.27cqw * var(--cta-scale)), 40px); --mark: 1.32em; gap: 0.85em; }
+.ad-cta-btn.cta-twitch        { width: calc(56.1% * var(--cta-scale)); aspect-ratio: 1 / 0.236; font-size: clamp(7px, calc(5.27cqw * var(--cta-scale)), 40px); --mark: 1.16em; gap: 0.3em; }
+.ad-cta-btn.cta-youtube       { width: calc(58.8% * var(--cta-scale)); aspect-ratio: 1 / 0.205; font-size: clamp(7px, calc(5.27cqw * var(--cta-scale)), 40px); --mark: 1.6em;  gap: 0.47em; }
+.ad-cta-btn.cta-itunes        { width: calc(68.5% * var(--cta-scale)); aspect-ratio: 1 / 0.208; font-size: clamp(7px, calc(4.76cqw * var(--cta-scale)), 36px); --mark: 1.5em;  gap: 0.98em; }
+.ad-cta-btn.cta-spotify       { width: calc(61.9% * var(--cta-scale)); aspect-ratio: 1 / 0.212; font-size: clamp(7px, calc(4.76cqw * var(--cta-scale)), 36px); --mark: 1.36em; gap: 0.59em; }
+.ad-cta-btn.cta-ecommerce     { width: calc(64.8% * var(--cta-scale)); aspect-ratio: 1 / 0.239; font-size: clamp(7px, calc(4.25cqw * var(--cta-scale)), 34px); gap: 1.1em; }
+.ad-cta-btn.cta-amazon-yellow { width: calc(60.2% * var(--cta-scale)); aspect-ratio: 1 / 0.237; font-size: clamp(7px, calc(4.25cqw * var(--cta-scale)), 34px); --mark: 1.76em; gap: 0.98em; }
+.ad-cta-btn.cta-amazon-white  { width: calc(76.7% * var(--cta-scale)); aspect-ratio: 1 / 0.202; font-size: clamp(7px, calc(4.25cqw * var(--cta-scale)), 34px); --mark: 2.28em; gap: 0.96em; }
+.ad-cta-btn.cta-amazon-mono   { width: calc(60.4% * var(--cta-scale)); aspect-ratio: 1 / 0.237; font-size: clamp(7px, calc(4.76cqw * var(--cta-scale)), 36px); --mark: 1.57em; gap: 0.2em; }
+
+/* the two emoji marks, at the size they stand beside the lettering on the cards */
+.ad-cta-btn.cta-website .cta-mark { font-size: 0.85em; }
+.ad-cta-btn.cta-ecommerce .cta-mark { font-size: 1.3em; }
+
 /* ----------------------------------------- the button in the reel's bottom bar ----
  * David, 4 Oct 2026: "SIZE BUTTONS SELECTED IN MODAL don't affect on FULL SCREEN... always
  * same size of buttons (Follow+, Subscribe+)". Out of the creative there is nothing to
@@ -571,6 +615,48 @@
   color: #000;
 }
 
+/* the branded buttons, sampled off David's images */
+.ad-cta-btn.cta-instagram { background: #fe0058; border-color: #ff3418; color: #fff; }
+.ad-cta-btn.cta-website { background: #0063ff; border-color: #0f1eff; color: #fff; }
+.ad-cta-btn.cta-tiktok { background: #8cfffa; border-color: #ff0058; color: #000; }
+.ad-cta-btn.cta-twitch { background: #7918fb; border-color: #4d0bcf; color: #fff; }
+.ad-cta-btn.cta-youtube { background: #eb1c24; border-color: #89001c; color: #fff; }
+/* pink on the left half of the frame, cyan on the right — the iTunes card's two-tone edge */
+.ad-cta-btn.cta-itunes {
+  background: #e6e6e6;
+  border-color: #f895bc;
+  border-image: linear-gradient(to right, #f895bc 50%, #8dfefb 50%) 1;
+  color: #000;
+}
+.ad-cta-btn.cta-spotify { background: #009f00; border-color: #0cd245; color: #000; }
+.ad-cta-btn.cta-ecommerce,
+.ad-cta-btn.cta-amazon-white { background: #fff; border-color: #575757; color: #575757; }
+.ad-cta-btn.cta-amazon-yellow { background: #ffca18; border-color: #fe7f26; color: #000; }
+.ad-cta-btn.cta-amazon-mono { background: #ffca18; border-color: #fe7f26; color: #625632; }
+
+/* `.ad-media` / `.ads-cta-preview` too: the tile's and the preview's own `.ad-media img`
+   rules stretch every picture to the card's width, and the logo would go with them */
+.ad-cta-btn .cta-mark img,
+.ad-media .ad-cta-btn .cta-mark img,
+.ads-cta-preview .ad-cta-btn .cta-mark img {
+  display: block;
+  float: none;
+  width: var(--mark, 1.4em);
+  max-width: none;
+  height: var(--mark, 1.4em);
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+}
+/* in the reel's bar and the outside row the lettering is a fixed 13-14px, where the larger
+   logos would outgrow the button — held to one size there */
+.ad-cta-btn.ad-cta-bar .cta-mark img,
+.ad-cta-btn.pos-outside .cta-mark img {
+  width: 1.5em;
+  height: 1.5em;
+}
+
 /* The mark rides with the lettering: measured on the client's Follow card, the flag and the
    words start on the very same line (both at y=679) and stand to the same height. Sizing it
    in `em` keeps that true whatever size a given button's words are set at. */
@@ -602,9 +688,13 @@
 /* Nothing is restated for the phone: every size above is a share of the creative, so the
    button shrinks with the card on its own. */
 
-/* preview page only: which type of ad this tile is */
+/* preview page only: which type of ad this tile is, on its own line under the tile */
+.ad-type-caption {
+  margin: 6px 0 4px;
+  text-align: center;
+}
 .ad-type-tag {
-  margin-left: 6px;
+  display: inline-block;
   padding: 1px 7px;
   border-radius: 10px;
   background: #000;
@@ -724,6 +814,96 @@
 /* the preview's button is for looking at, not for pressing */
 .ads-cta-preview .ad-cta-btn {
   pointer-events: none;
+}
+
+/* Every design of a type with a choice, before one is ticked: stacked, with an "o" between
+   (David's Spotify & iTunes preview). The stack takes the place the single button would. */
+.ads-cta-variant-stack {
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.ads-cta-variant-stack.pos-bottom { bottom: 5%; }
+.ads-cta-variant-stack.pos-top { top: 5%; }
+.ads-cta-variant-stack.pos-center { top: 50%; transform: translateY(-50%); }
+.ad-cta-outside-row .ads-cta-variant-stack {
+  position: static;
+  align-items: flex-end;
+}
+.ads-cta-preview .ads-cta-variant-stack .ad-cta-btn {
+  position: static;
+  transform: none;
+}
+.ads-cta-variant-or {
+  font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 1;
+  color: #222;
+}
+
+/* the create form's button-design boxes: a plain white square and the name beside it, in
+   the lettering the rest of the modal's headings use */
+.ads-variant-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+.ads-variant-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  cursor: pointer;
+}
+.ads-variant-check input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff center / 22px no-repeat;
+  cursor: pointer;
+}
+.ads-variant-check input:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 12.5l5 5L20 6.5' fill='none' stroke='%238a2be2' stroke-width='3.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.ads-variant-name {
+  font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
+  font-weight: 700;
+  font-size: 19px;
+  color: #fff;
+}
+/* Amazon's three designs stand beside their boxes as the buttons themselves */
+.ads-variant-check .ad-cta-btn {
+  pointer-events: none;
+}
+
+.ads-modal-brand-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 28px;
+}
+.ads-modal-brand-title img {
+  width: 46px;
+  height: 46px;
+}
+.ads-modal-brand-title img:last-of-type {
+  margin-right: 8px;
 }
 
 /* the create form's own error line, above the Empezar campaña button */

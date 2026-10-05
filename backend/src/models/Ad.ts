@@ -14,6 +14,10 @@ export interface IAd {
    *  this one puts it under the tile at the right, where a post carries its rating pill. The
    *  create form locks the size to `small` when it is chosen (David, 4 Oct 2026). */
   buttonPosition?: 'top' | 'center' | 'bottom' | 'outside';
+  /** Which of a type's button designs the advertiser ticked — `itunes`/`spotify` on a
+   *  spotify ad, `amazon-yellow`/`amazon-white`/`amazon-mono` on an amazon one. Unset on
+   *  every other type, and on older rows, which draw the type's first design. */
+  buttonVariant?: string;
   /** The advertiser's own logo and @handle beside the "Super Ads" label, on WORLD and the
    *  walls — the double tag David asked for (4 Oct 2026). Off unless the advertiser ticks the
    *  box on the create form, so every ad already bought keeps the single tag it has. The
@@ -39,6 +43,7 @@ const adSchema = new Schema<IAd>(
     link: String,
     buttonSize: { type: String, enum: ['small', 'medium', 'large'], default: 'medium' },
     buttonPosition: { type: String, enum: ['top', 'center', 'bottom', 'outside'], default: 'bottom' },
+    buttonVariant: String,
     showAdvertiserTag: { type: Boolean, default: false },
     status: { type: Boolean, default: false, index: true },
     approved: { type: Boolean, default: false },

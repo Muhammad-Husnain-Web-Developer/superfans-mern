@@ -1,7 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { AdCard, AD_ACTION_LABEL, adAction, type AdCardItem } from '../../components/AdCard';
 import { PageLoader } from '../../components/PageLoader';
+import { NavToggle } from '../../components/NavToggle';
+import { MobileFooterMenu } from '../../components/MobileFooterMenu';
+import { GuestHeader } from '../profile/ProfileSidebar';
+import { ControlPanelHost } from '../profile/ControlPanelHost';
+import { AddPostHost } from '../profile/AddPostHost';
+import { WorldSidebar } from '../world/World';
+import { observeNewVideos } from '../../utils/video';
+import { rememberScroll, useScrollMemory } from '../../utils/useScrollMemory';
+import type { WorldStep } from '../../utils/worldSequence';
 import '../../styles/ad-card.css';
 
 /**
@@ -36,6 +46,10 @@ export function AdsPreview() {
   const [hidden, setHidden] = useState(0);
   const [type, setType] = useState<string>('all');
   const [samples, setSamples] = useState(false);
+  const navigate = useNavigate();
+  /* the World sidebar's two dialogs, mounted here as World mounts them */
+  const [controlPanelOpen, setControlPanelOpen] = useState(false);
+  const [addPostOpen, setAddPostOpen] = useState(false);
 
   useEffect(() => {
     document.title = 'Superfans | All Ads Preview';
@@ -82,9 +96,47 @@ export function AdsPreview() {
     })) as PreviewAd[];
   }, [ads]);
 
+  /* Ads go live only once they are paid for on the server, so this page is where the client
+     tries them first — it has to behave as WORLD does, not just look like it. A click on
+     the creative opens the full-screen reel there; here the reel walks the ads on this page,
+     and nothing else (page 1 of 1, so it never fetches WORLD posts to append). The reel
+     knows an ad by the feed's `ad_<id>`, so the ids are given that shape before the tiles
+     are drawn. */
+  const asTiles = (list: PreviewAd[]) => list.map((a) => ({ ...a, id: `ad_${a.adId ?? a.id}` }));
+  const shownTiles = useMemo(() => asTiles(shown), [shown]);
+  const sampleRun = useMemo(() => asTiles(sampleTiles), [sampleTiles]);
+
+  function openFullscreen(run: PreviewAd[], ad: PreviewAd) {
+    rememberScroll();
+    const steps: WorldStep[] = run.map((a) => ({ ...a, type: 'ad' as const }));
+    navigate(`/user/post_detail/${ad.id}`, {
+      state: { world: steps, worldPage: 1, worldLastPage: 1 },
+    });
+  }
+
+  /* the wall's clips play as WORLD's do — the same observer, started on whatever is drawn */
+  useEffect(() => {
+    observeNewVideos();
+  }, [shownTiles, samples]);
+
+  /* back from the reel to the row the client was looking at */
+  useScrollMemory(!!ads && shownTiles.length > 0);
+
   if (!ads) return <PageLoader />;
 
   return (
+    <div id="fh5co-page">
+      <NavToggle />
+      <MobileFooterMenu />
+      <GuestHeader usernameUrl="" />
+      {/* WORLD's own sidebar and layout sheet, so the tiles stand in the same column at the
+          same width, under the same grey heading, as they do there */}
+      <WorldSidebar
+        onControlPanel={() => setControlPanelOpen(true)}
+        onAddPost={() => setAddPostOpen(true)}
+      />
+      <ControlPanelHost open={controlPanelOpen} onClose={() => setControlPanelOpen(false)} />
+      <AddPostHost open={addPostOpen} onClose={() => setAddPostOpen(false)} />
     <div id="fh5co-main">
       <div className="fh5co-narrow-content ads-preview-grid">
         <center>
@@ -138,8 +190,13 @@ export function AdsPreview() {
             </h5>
             <div className="row animate-box" style={{ display: 'block', flexWrap: 'wrap' }}>
               <div id="post-container">
-                {sampleTiles.map((ad) => (
-                  <AdCard key={ad.id} item={ad} showType />
+                {sampleRun.map((ad) => (
+                  <AdCard
+                    key={ad.id}
+                    item={ad}
+                    showType
+                    onOpenFullscreen={() => openFullscreen(sampleRun, ad)}
+                  />
                 ))}
               </div>
             </div>
@@ -149,11 +206,15 @@ export function AdsPreview() {
 
         {/* the World's own row/col grid, so a tile sits exactly where it would there */}
         <div className="row animate-box" style={{ display: 'block', flexWrap: 'wrap' }}>
-          {shown.length > 0 ? (
+          {shownTiles.length > 0 ? (
             <div id="post-container">
-              {shown.map((ad) => (
+              {shownTiles.map((ad) => (
                 <div key={ad.id} style={{ display: 'contents' }}>
-                  <AdCard item={ad} showType />
+                  <AdCard
+                    item={ad}
+                    showType
+                    onOpenFullscreen={() => openFullscreen(shownTiles, ad)}
+                  />
                 </div>
               ))}
             </div>
@@ -179,24 +240,32 @@ export function AdsPreview() {
               profile, on <code>profile-followers</code> ads
             </li>
             <li>
-              <b>{AD_ACTION_LABEL[adAction('youtube')]}</b> — goes to the advertiser's profile,
-              on <code>youtube</code> ads (card 7, "Promote Youtube Content")
+              <b>{AD_ACTION_LABEL[adAction('messages')]}</b> — opens a message to the
+              advertiser, on <code>messages</code> ads
             </li>
             <li>
-              <b>{AD_ACTION_LABEL[adAction('messages')]}</b> — on <code>messages</code> ads.{' '}
-              <i>Waiting on the client: what this should actually send.</i>
-            </li>
-            <li>
-              <b>{AD_ACTION_LABEL[adAction('website-visits')]}</b> — opens the ad's own link;
-              every other type
+              <b>{AD_ACTION_LABEL[adAction('instagram')]}</b>,{' '}
+              <b>{AD_ACTION_LABEL[adAction('website-visits')]}</b>,{' '}
+              <b>{AD_ACTION_LABEL[adAction('tiktok')]}</b>,{' '}
+              <b>{AD_ACTION_LABEL[adAction('twitch')]}</b>,{' '}
+              <b>{AD_ACTION_LABEL[adAction('youtube')]}</b>,{' '}
+              <b>{AD_ACTION_LABEL[adAction('spotify')]}</b> / <b>{AD_ACTION_LABEL[adAction('spotify', 'itunes')]}</b>,{' '}
+              <b>{AD_ACTION_LABEL[adAction('ecommerce')]}</b>,{' '}
+              <b>{AD_ACTION_LABEL[adAction('amazon')]}</b> and{' '}
+              <b>{AD_ACTION_LABEL[adAction('promote-post')]}</b> — open the ad's own link
             </li>
             <li>
               <code>clients-form</code> ads keep their own tile and the advertiser's own
               wording, and open the questionnaire in place
             </li>
+            <li>
+              Clicking the picture opens the ad full screen, as on WORLD; the full-screen
+              scroll walks the ads on this page
+            </li>
           </ul>
         </div>
       </div>
+    </div>
     </div>
   );
 }

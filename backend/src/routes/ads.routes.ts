@@ -64,6 +64,12 @@ const AUDIENCE_MAP: Record<string, number> = {
   'super-video': 1380000,
 };
 
+/** The types whose create form offers a choice of button design; the first is the default. */
+const BUTTON_VARIANTS: Partial<Record<string, string[]>> = {
+  spotify: ['spotify', 'itunes'],
+  amazon: ['amazon-yellow', 'amazon-white', 'amazon-mono'],
+};
+
 /** Ad types only business accounts may use — Laravel 403s normal users on these (restrict_super_ads). */
 const BUSINESS_ONLY_TYPES = new Set(['clients-form', 'website-visits']);
 
@@ -275,7 +281,7 @@ adsRouter.get(
       {},
       {
         media: 1, link: 1, adType: 1, user: 1, status: 1, approved: 1, createdAt: 1,
-        buttonSize: 1, buttonPosition: 1, showAdvertiserTag: 1,
+        buttonSize: 1, buttonPosition: 1, buttonVariant: 1, showAdvertiserTag: 1,
       },
     )
       .sort({ createdAt: -1, mysqlId: -1 })
@@ -375,6 +381,7 @@ adsRouter.get(
           approved: !!a.approved,
           buttonSize: a.buttonSize ?? 'medium',
           buttonPosition: a.buttonPosition ?? 'bottom',
+          buttonVariant: a.buttonVariant ?? null,
           /* the preview wall exists to answer "what will this ad look like", so it has to
              carry the double tag and the date the real tile carries */
           showAdvertiserTag: a.showAdvertiserTag === true,
@@ -1068,6 +1075,10 @@ async function buildAd(
      rule is applied here so an ad posted straight to the API cannot carry a mismatch. */
   const buttonSize: BtnSize =
     buttonPosition === 'outside' ? 'small' : SIZES.includes(rawSize) ? rawSize : 'medium';
+  /* the button design ticked on the form, kept only where the type offers that choice */
+  const variants = BUTTON_VARIANTS[t];
+  const rawVariant = str(body.button_variant);
+  const buttonVariant = variants?.includes(rawVariant) ? rawVariant : variants?.[0];
 
   const ad = await Ad.create({
     mysqlId: (highestAd?.mysqlId ?? 0) + 1,
@@ -1077,6 +1088,7 @@ async function buildAd(
     link: link ?? undefined,
     buttonSize,
     buttonPosition,
+    buttonVariant,
     /* a checkbox, so an unticked box arrives as nothing at all rather than as false */
     showAdvertiserTag: truthy(body.show_advertiser_tag),
     status: false,
