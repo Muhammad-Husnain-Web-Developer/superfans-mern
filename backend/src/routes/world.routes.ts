@@ -5,29 +5,15 @@ import { optionalAuth } from '../middleware/auth.js';
 import { Post } from '../models/Post.js';
 import { resolveTaggedAvatars } from '../utils/tagged-avatars.js';
 import { User } from '../models/User.js';
-import { PremiumAccess } from '../models/PremiumAccess.js';
 import { Like } from '../models/Like.js';
 import { Hate } from '../models/Hate.js';
 import { Followership } from '../models/Followership.js';
-import { Subscription } from '../models/Subscription.js';
-import { Ad } from '../models/Ad.js';
+import { buildAdTiles, sampleAds } from '../utils/ad-tiles.js';
 import { currentLocks, postReachesCountry, type ReachUser, type ViewerPlace } from '../utils/worldReach.js';
 import { placeFromRequest } from '../utils/geo.js';
 import { logger } from '../config/logger.js';
 
 export const worldRouter = Router();
-
-/** buildAd writes `<app>/post/<id>` for the three picker types (promote-post,
-    profile-followers, messages); anything else is an outward link and has no post.
-    Ads migrated from Laravel carry the MySQL row number there instead — `/post/714` —
-    which is resolved against Post.mysqlId rather than left to fail. */
-function promotedPostRef(link: string | null | undefined): { id?: string; mysqlId?: number } {
-  const href = link ?? '';
-  const oid = /\/post\/([a-f0-9]{24})(?:[/?#]|$)/i.exec(href);
-  if (oid) return { id: oid[1] };
-  const legacy = /\/post\/(\d+)(?:[/?#]|$)/.exec(href);
-  return legacy ? { mysqlId: Number(legacy[1]) } : {};
-}
 
 const PER_PAGE = 15;
 const MAX_FEED_POSTS = 300;
@@ -373,102 +359,10 @@ worldRouter.get(
       followingSet = new Set(following.map((f) => String(f.followedUser)));
     }
 
-    // === ads: 3 random active, injected after every 6th post ===
-    const ads = await Ad.aggregate<{
-      _id: Types.ObjectId;
-      media: string;
-      link?: string;
-      adType?: string;
-      buttonSize?: string;
-      buttonPosition?: string;
-      user?: Types.ObjectId;
-    }>([
-      { $match: { status: true } },
-      /* A suspended or deleted advertiser has to leave the wall with everyone else. The
-         posts already do — buildPool only draws from active accounts — but the ad tile
-         carries the advertiser's @handle, avatar and a Follow/Subscribe button leading to
-         a profile that now refuses the visit, so an ad was a way back onto WORLD for an
-         account that had been taken off it.
-         Most migrated ads have no advertiser on record at all (56 of the 73 active ones
-         here), and those are legitimate — the test only drops an ad that names an owner
-         who is no longer active, or whose row has gone entirely. */
-      { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'owner' } },
-      { $match: { $or: [{ user: null }, { 'owner.status': 'active' }] } },
-      { $sample: { size: 3 } },
-      { $project: { media: 1, link: 1, adType: 1, buttonSize: 1, buttonPosition: 1, user: 1 } },
-    ]);
-
-    /* the advertisers behind those ads, for the tiles that lead back into the app */
-    const adOwnerIds = ads.map((a) => a.user).filter(Boolean) as Types.ObjectId[];
-    const adOwnerDocs = adOwnerIds.length
-      ? await User.find(
-          { _id: { $in: adOwnerIds } },
-          /* role + price say whether this advertiser is followed or subscribed to — a
-             `profile-followers` ad's button is Follow on a free account and Subscribe on
-             a creator who charges, the same test the profile and the viewer make */
-          { usernameUrl: 1, name: 1, profilePicture: 1, chatToggle: 1, role: 1, priceOfSubscription: 1 },
-        ).lean()
-      : [];
-    /* which of these advertisers this viewer has already bought priority access to */
-    const adPaidTo = new Set(
-      req.auth && adOwnerIds.length
-        ? (
-            await PremiumAccess.find(
-              { user: req.auth.userId, influencer: { $in: adOwnerIds } },
-              { influencer: 1 },
-            ).lean()
-          ).map((r) => String(r.influencer))
-        : [],
-    );
-    /* what this viewer already is to each advertiser, so the tile knows whether to offer
-       the button at all */
-    const [adFollowed, adSubscribed] = req.auth && adOwnerIds.length
-      ? await Promise.all([
-          Followership.find(
-            { followerUser: req.auth.userId, followedUser: { $in: adOwnerIds } },
-            { followedUser: 1 },
-          ).lean().then((rows) => new Set(rows.map((r) => String(r.followedUser)))),
-          Subscription.find(
-            { user: req.auth.userId, influencer: { $in: adOwnerIds } },
-            { influencer: 1 },
-          ).lean().then((rows) => new Set(rows.map((r) => String(r.influencer)))),
-        ])
-      : [new Set<string>(), new Set<string>()];
-
-    /* the posts those picker ads promote, the migrated ones looked up by their old row
-       number in one query rather than one per ad */
-    const adRefs = ads.map((a) => promotedPostRef(a.link));
-    const legacyIds = [...new Set(adRefs.map((r) => r.mysqlId).filter((n): n is number => !!n))];
-    const legacyMap = new Map<number, string>(
-      legacyIds.length
-        ? (await Post.find({ mysqlId: { $in: legacyIds } }, { mysqlId: 1 })
-            .setOptions({ withMissing: true })
-            .lean()).map((d) => [d.mysqlId as number, String(d._id)])
-        : [],
-    );
-    const promotedPostId = (i: number): string | null => {
-      const ref = adRefs[i];
-      if (ref?.id) return ref.id;
-      return ref?.mysqlId ? legacyMap.get(ref.mysqlId) ?? null : null;
-    };
-
-    const adOwners = new Map(
-      adOwnerDocs.map((u) => [
-        String(u._id),
-        {
-          id: String(u._id),
-          usernameUrl: u.usernameUrl ?? null,
-          name: u.name ?? null,
-          profilePicture: u.profilePicture ?? null,
-          chatToggle: u.chatToggle !== false,
-          viewerPremium: adPaidTo.has(String(u._id)),
-          role: u.role ?? null,
-          priceOfSubscription: u.priceOfSubscription ?? null,
-          viewerFollowing: adFollowed.has(String(u._id)),
-          viewerSubscribed: adSubscribed.has(String(u._id)),
-        },
-      ]),
-    );
+    /* === ads: 3 random active, injected after every 6th post ===
+       The tile itself is built by ad-tiles.ts, which the posts wall reads too — the two
+       surfaces drew different tiles from different queries before that. */
+    const adTiles = await buildAdTiles(await sampleAds(3), req.auth?.userId ?? null);
 
     const taggedAvatars = await resolveTaggedAvatars(pagePosts);
 
@@ -504,32 +398,8 @@ worldRouter.get(
           : null,
       });
       if ((index + 1) % 6 === 0) {
-        const adIndex = Math.floor((index + 1) / 6) - 1;
-        if (ads[adIndex]) {
-          items.push({
-            type: 'ad',
-            id: `ad_${String(ads[adIndex]._id)}`,
-            media: ads[adIndex].media,
-            /* an old messages ad holds a mailto: to its advertiser; their address is not
-               the feed's to publish, and the tile navigates in-app instead */
-            link: /^mailto:/i.test(ads[adIndex].link ?? '') ? '' : ads[adIndex].link ?? '#',
-            /* the blade branches on the ad's own type here: a clients-form ad draws its
-               lead form in the tile rather than a link, so the feed has to say which is
-               which and give the plain id the formulary is looked up by */
-            adId: String(ads[adIndex]._id),
-            adType: ads[adIndex].adType ?? null,
-            /* how big the advertiser asked for the button, and where on the creative */
-            buttonSize: ads[adIndex].buttonSize ?? 'medium',
-            buttonPosition: ads[adIndex].buttonPosition ?? 'bottom',
-            /* who the ad belongs to — a Send Card writes to them, and Follow/Subscribe
-               lead to their profile */
-            advertiser: adOwners.get(String(ads[adIndex].user ?? '')) ?? null,
-            /* the post a picker ad promotes. buildAd writes `${APP}/post/<id>` as the
-               link for those three types, so the id is already here — the tile opens it
-               full screen when the creative itself is clicked. */
-            postId: promotedPostId(adIndex),
-          });
-        }
+        const tile = adTiles[Math.floor((index + 1) / 6) - 1];
+        if (tile) items.push(tile);
       }
     });
 

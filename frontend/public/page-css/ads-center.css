@@ -187,6 +187,22 @@ input[type="range"]::-webkit-slider-thumb {
 .ads-sidebar .upper-links a.active { background: #5e3af1; color: #fff; }
 @media (max-width: 900px) { .ads-sidebar { position: relative; width: 100%; } }
 
+/* The small round logout button (David, 5 Oct 2026 — see AdsSidebar.tsx for the full note).
+   `.power-btn` (parity.css) is 35x35; "smaller" is this sidebar's own request, so it is
+   scaled down here rather than touched globally, which would also resize every other
+   sidebar's button he did not ask to change. */
+.ads-power-btn-row { text-align: center; margin: 18px 0 20px; }
+.ads-sidebar .ads-power-btn.power-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0 !important;
+  font-size: 11px;
+  line-height: 1;
+}
+
 /* On a phone the banner's row layout collapses: the button keeps its natural width and
    the sentence is squeezed into whatever is left — measured at 123px wide and 432 tall on
    a 390px screen. It stacks instead, which the blade never does because its Ads Center has

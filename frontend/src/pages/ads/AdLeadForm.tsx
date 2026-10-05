@@ -151,7 +151,10 @@ export function AdLeadForm({
           {header}
           <div className="lead-form-creative">
             {isVideoFile(media ?? '') ? (
-              <video controls loop muted playsInline>
+              /* the same rule as every other ad creative: no native bar, it plays itself,
+                 and muted is the no-volume (David, 4 Oct 2026). This one sits behind the
+                 lead form, which is why it was missed when the tiles were settled. */
+              <video autoPlay loop muted playsInline>
                 <source src={assetImage(media!)} type={videoMime(media!)} />
               </video>
             ) : (

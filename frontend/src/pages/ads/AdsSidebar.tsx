@@ -40,7 +40,18 @@ export function AdsSidebar({
         <a href="#" onClick={(e) => { e.preventDefault(); setModal('search'); }}>🔍 Search</a>
         <a href="#" onClick={(e) => { e.preventDefault(); setModal('config'); }}>⚙️ Configuration</a>
         <a href="#" onClick={(e) => { e.preventDefault(); setModal('help'); }}>❓ Help</a>
-        <Link to="/business/logout">⏻ Logout</Link>
+      </div>
+
+      {/* David, 5 Oct 2026: "Change logout button per our logout button (smaller)." The
+          blade's own sidebar has this as a fourth plain-text row too (sidebar.blade.php:173,
+          "⏻ Logout") — this is his own deviation, not a porting gap. "Our logout button" is
+          the round red power-off circle every other sidebar already carries
+          (ProfileSidebar.tsx's `.power-btn`, from parity.css) — `ads-power-btn` here is that
+          same shape sized down, since he asked for smaller than the 35px original. */}
+      <div className="ads-power-btn-row">
+        <Link className="btn btn-danger power-btn ads-power-btn" to="/business/logout" title="Logout">
+          <i className="fa fa-power-off" aria-hidden="true"></i>
+        </Link>
       </div>
 
       {modal && <AdsModal type={modal} user={user} onClose={() => setModal(null)} />}

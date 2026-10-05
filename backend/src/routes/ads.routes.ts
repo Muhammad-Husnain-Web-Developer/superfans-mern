@@ -273,7 +273,7 @@ adsRouter.get(
       {},
       {
         media: 1, link: 1, adType: 1, user: 1, status: 1, approved: 1, createdAt: 1,
-        buttonSize: 1, buttonPosition: 1,
+        buttonSize: 1, buttonPosition: 1, showAdvertiserTag: 1,
       },
     )
       .sort({ createdAt: -1, mysqlId: -1 })
@@ -373,6 +373,10 @@ adsRouter.get(
           approved: !!a.approved,
           buttonSize: a.buttonSize ?? 'medium',
           buttonPosition: a.buttonPosition ?? 'bottom',
+          /* the preview wall exists to answer "what will this ad look like", so it has to
+             carry the double tag and the date the real tile carries */
+          showAdvertiserTag: a.showAdvertiserTag === true,
+          createdAt: a.createdAt ?? null,
           buttonAction: wording.get(String(a._id)) ?? null,
           advertiser: owner
             ? {
@@ -890,6 +894,10 @@ async function buildAd(
   const amount = Number(body.amount) || 0;
   const campaignDays = body.campaign_days ? Number(body.campaign_days) : null;
   const str = (v: unknown): string => (typeof v === 'string' ? v : v == null ? '' : String(v));
+  /* A checkbox reaches here as a JSON boolean from the Ads Center and as 'on'/'1'/'true'
+     from a multipart form, so both spellings have to count. */
+  const truthy = (v: unknown): boolean =>
+    v === true || v === 1 || ['1', 'true', 'on', 'yes'].includes(str(v).toLowerCase());
 
   let title = str(body.ad_name) || 'Untitled Ad';
   let mediaName: string | null = null;
@@ -1037,13 +1045,17 @@ async function buildAd(
 
   /* the two the advertiser sets on the form; anything else falls back to the drawn default */
   const SIZES = ['small', 'medium', 'large'] as const;
-  const POSITIONS = ['top', 'center', 'bottom'] as const;
+  const POSITIONS = ['top', 'center', 'bottom', 'outside'] as const;
   type BtnSize = (typeof SIZES)[number];
   type BtnPos = (typeof POSITIONS)[number];
   const rawSize = str(body.button_size) as BtnSize;
   const rawPos = str(body.button_position) as BtnPos;
-  const buttonSize: BtnSize = SIZES.includes(rawSize) ? rawSize : 'medium';
   const buttonPosition: BtnPos = POSITIONS.includes(rawPos) ? rawPos : 'bottom';
+  /* `outside` stands the button under the tile rather than on the creative, and at that size
+     there is nothing to scale it against — the form locks the choice to small, and the same
+     rule is applied here so an ad posted straight to the API cannot carry a mismatch. */
+  const buttonSize: BtnSize =
+    buttonPosition === 'outside' ? 'small' : SIZES.includes(rawSize) ? rawSize : 'medium';
 
   const ad = await Ad.create({
     mysqlId: (highestAd?.mysqlId ?? 0) + 1,
@@ -1053,6 +1065,8 @@ async function buildAd(
     link: link ?? undefined,
     buttonSize,
     buttonPosition,
+    /* a checkbox, so an unticked box arrives as nothing at all rather than as false */
+    showAdvertiserTag: truthy(body.show_advertiser_tag),
     status: false,
     approved: false,
     amount,

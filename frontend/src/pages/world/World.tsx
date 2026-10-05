@@ -775,6 +775,8 @@ function toggleHate() {
 export function World() {
   const { t } = useTranslation('content');
   const { t: tReport } = useTranslation('report');
+  /* the ad tiles open the reel from here; the post tiles carry their own */
+  const navigate = useNavigate();
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
   const [addPostOpen, setAddPostOpen] = useState(false);
   const { t: tUi } = useTranslation('ui');
@@ -927,7 +929,19 @@ export function World() {
                   const worldRun = toSteps(items);
                   return items.map((item) =>
                     item.type === 'ad' ? (
-                      <AdCard key={item.id} item={item} />
+                      <AdCard
+                        key={item.id}
+                        item={item}
+                        /* the ad opens full screen where it stands in the run, so the reel
+                           carries on into the posts around it rather than starting over */
+                        onOpenFullscreen={() => {
+                          rememberScroll();
+                          markFeedReturn();
+                          navigate(`/user/post_detail/${item.id}`, {
+                            state: { world: worldRun, worldPage: page, worldLastPage: lastPage },
+                          });
+                        }}
+                      />
                     ) : (
                       <WorldPostCard
                         key={item.id}

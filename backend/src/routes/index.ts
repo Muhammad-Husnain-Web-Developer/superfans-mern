@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { optionalAuth } from '../middleware/auth.js';
 import mongoose from 'mongoose';
 import { authRouter } from './auth.routes.js';
 import { uploadsRouter } from './uploads.routes.js';
@@ -52,15 +53,18 @@ apiRouter.use('/', streamRouter);
 // Random active ads for feed injection (mirrors Laravel: ads where status=1, inRandomOrder, take N)
 apiRouter.get(
   '/ads/random',
+  optionalAuth,
   asyncHandler(async (req, res) => {
     const count = Math.min(Number(req.query.count) || 5, 20);
-    const { Ad } = await import('../models/Ad.js');
-    const ads = await Ad.aggregate<{ media: string; link?: string; mysqlId: number }>([
-      { $match: { status: true } },
-      { $sample: { size: count } },
-      { $project: { media: 1, link: 1, mysqlId: 1 } },
-    ]);
-    res.json({ success: true, data: ads.map((a) => ({ id: a.mysqlId, media: a.media, link: a.link ?? '#' })) });
+    /* The posts wall reads this. It used to answer with the creative and a link and nothing
+       else, so the wall's tile could name no advertiser and draw no button — the ad stood
+       there as a bare picture while the same ad on WORLD carried its call to action. It now
+       returns the tile WORLD draws, built by the one builder both of them share. `optionalAuth`
+       because the button has to know what this viewer already is to the advertiser; a guest
+       simply gets the unanswered version. */
+    const { buildAdTiles, sampleAds } = await import('../utils/ad-tiles.js');
+    const tiles = await buildAdTiles(await sampleAds(count), req.auth?.userId ?? null);
+    res.json({ success: true, data: tiles });
   }),
 );
 

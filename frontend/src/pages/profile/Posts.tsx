@@ -4,59 +4,21 @@ import { useScrollMemory } from '../../utils/useScrollMemory';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, fetchProfilePosts, type ProfileData, type ProfilePost } from '../../api/profiles';
-import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage } from '../../utils/format';
 import { observeNewVideos } from '../../utils/video';
 import { useAuth } from '../../context/AuthContext';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
-import { VolumeButton } from '../../components/VolumeButton';
 import { useRegisterModal } from '../../components/RegisterModal';
 import { PageLoader } from '../../components/PageLoader';
 import { NavToggle } from '../../components/NavToggle';
 import { MobileFooterMenu } from '../../components/MobileFooterMenu';
 import { Bio, EarnSection, PostItem, ProfilePageFooter } from './Profile';
+import { AdCard, type AdCardItem } from '../../components/AdCard';
 import { AddPostHost } from './AddPostHost';
 import { ControlPanelHost } from './ControlPanelHost';
 import '../../styles/profile-page.css';
 import '../../styles/posts-page.css';
 import { useLayoutPageStyles } from '../../components/StandalonePage';
-
-interface FeedAd {
-  id: number;
-  media: string;
-  link: string;
-}
-
-/** "Super Ads" tile injected after every 21st post (user_posts.blade.php). */
-function AdItem({ ad }: { ad: FeedAd }) {
-  const { t: tUi } = useTranslation('ui');
-  const frame: React.CSSProperties = { borderRadius: 26, border: '7px solid lightgray', width: '100%' };
-  return (
-    <div className="work-item">
-      <a href={ad.link} target="_blank" rel="noreferrer">
-        <p className="feed_posts_heading_p" style={{ position: 'relative', width: '70%', margin: 'auto' }}>
-          <span>Super Ads</span>
-        </p>
-        {isVideoFile(ad.media) ? (
-          <div className="video-wrapper" style={{ position: 'relative', width: '100%' }}>
-            <video
-              className="autoplay-video"
-              id={`video-ad-${ad.id}`}
-              style={{ maxWidth: '100%', ...frame }}
-              loop
-              muted
-              playsInline
-            >
-              <source src={assetImage(ad.media)} type={videoMime(ad.media)} />
-            </video>
-            <VolumeButton videoId={`video-ad-${ad.id}`} />
-          </div>
-        ) : (
-          <img src={assetImage(ad.media)} alt={tUi('alt_ad')} className="img-responsive" style={frame} />
-        )}
-      </a>
-    </div>
-  );
-}
 
 /**
  * All-posts page —Â port of user_posts.blade.php (/posts/:usernameUrl).
@@ -81,7 +43,7 @@ export function Posts() {
 
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [posts, setPosts] = useState<ProfilePost[]>([]);
-  const [ads, setAds] = useState<FeedAd[]>([]);
+  const [ads, setAds] = useState<AdCardItem[]>([]);
   const [state, setState] = useState<'loading' | 'ok' | 'notfound'>('loading');
   const [addPostOpen, setAddPostOpen] = useState(false);
   const [controlPanelOpen, setControlPanelOpen] = useState(false);
@@ -95,9 +57,9 @@ export function Posts() {
       fetchProfile(usernameUrl),
       fetchProfilePosts(usernameUrl),
       api
-        .get<{ success: boolean; data: FeedAd[] }>('/ads/random?count=5')
+        .get<{ success: boolean; data: AdCardItem[] }>('/ads/random?count=5')
         .then((r) => r.data.data)
-        .catch(() => [] as FeedAd[]),
+        .catch(() => [] as AdCardItem[]),
     ])
       .then(([p, ps, adList]) => {
         if (cancelled) return;
@@ -261,7 +223,11 @@ export function Posts() {
                 const ad = showAd ? ads[adIndex++] : null;
                 return (
                   <Fragment key={post.id}>
-                    {ad && <AdItem ad={ad} />}
+                    {/* the same tile WORLD draws — it used to be a bare picture here, with
+                        no advertiser named and no call to action (user_posts.blade.php does
+                        the same), so the double tag and the `outside` button had nowhere to
+                        appear on a wall. David asked for both "in WORLD and WALLS". */}
+                    {ad && <AdCard key={ad.id} item={ad} />}
                     <PostItem
                       post={post}
                       locked={!isOwner && !post.visible && !viewerHasAccess}

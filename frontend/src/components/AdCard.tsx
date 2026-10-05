@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { AdLeadForm } from '../pages/ads/AdLeadForm';
+import { HandleMarquee } from './PostHeading';
 import { PremiumFanModal } from './PremiumFanModal';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { SubscribeModal } from '../pages/profile/SubscribeModal';
 import { assetImage, isVideoFile, videoMime } from '../utils/format';
+import { VolumeButton } from './VolumeButton';
 
 /**
  * One Super Ads tile, as it appears on the World feed and the walls.
@@ -50,14 +52,25 @@ export interface AdCardItem {
   /** how big the advertiser asked for the button, and where on the creative */
   buttonSize?: AdButtonSize | null;
   buttonPosition?: AdButtonPosition | null;
+  /** the advertiser's logo and @handle beside "Super Ads" on the wall — their own choice */
+  showAdvertiserTag?: boolean;
+  /** when the ad was bought; the date under the advertiser's name in the reel */
+  createdAt?: string | null;
 }
 
 /** The advertiser picks both of these on the create form. */
 export type AdButtonSize = 'small' | 'medium' | 'large';
-export type AdButtonPosition = 'top' | 'center' | 'bottom';
+/* The first three stand the button ON the creative. `outside` is the odd one: it puts the
+   button under the tile, at the right, where a post carries its rating pill — David asked for
+   it on 4 Oct 2026 ("It goes under the post bottom-right, in the place of Likes"), and the
+   create form locks the size to small when it is chosen. */
+export type AdButtonPosition = 'top' | 'center' | 'bottom' | 'outside';
 
 export const AD_BUTTON_SIZES: AdButtonSize[] = ['small', 'medium', 'large'];
-export const AD_BUTTON_POSITIONS: AdButtonPosition[] = ['top', 'center', 'bottom'];
+export const AD_BUTTON_POSITIONS: AdButtonPosition[] = ['top', 'center', 'bottom', 'outside'];
+
+/** `outside` is drawn small and nothing else; the form greys the size out to say so. */
+export const OUTSIDE_LOCKED_SIZE: AdButtonSize = 'small';
 
 /** The client's six calls to action. */
 export type AdAction = 'more-details' | 'call' | 'send-card' | 'subscribe' | 'follow' | 'whatsapp';
@@ -132,24 +145,113 @@ function safeLink(link: string | undefined): string | null {
  */
 export type AdCardVariant = 'wall' | 'fullscreen';
 
+/**
+ * An ad's video, behaving as a post's does.
+ *
+ * David, 4 Oct 2026: "Videos Ads don't have Video Controls. Just like a Post: Autoplay and
+ * Volume ON/OFF." The post tiles were settled this way already — World.tsx carries the same
+ * note, "two of them stacked on one card is what the client asked to be rid of" — and the ad
+ * tile was simply missed, so it still drew the browser's own bar. That bar also swallowed the
+ * tap meant to open the ad, which is the other half of the same report.
+ *
+ * On a wall nothing here starts the clip: `.autoplay-video` is what the page's own observer
+ * (utils/video.ts) looks for, and it plays whichever visible clip should be playing and mutes
+ * the rest. The reel has no such observer, so there the element starts itself.
+ *
+ * The id carries the variant as well as the ad: `toggleMute` finds its video by id, and the
+ * same ad can be drawn by more than one tile on a page.
+ */
+function AdVideo({
+  media,
+  domId,
+  fullscreen,
+}: {
+  media: string;
+  domId: string;
+  fullscreen: boolean;
+}) {
+  /**
+   * The clip's own shape, read off the file once the browser knows it.
+   *
+   * In the reel a portrait clip is capped by height, so the picture is far narrower than the
+   * column it sits in — 191px inside 296px on a 320px phone. The speaker is positioned
+   * against this wrapper, and a wrapper that kept the column's width left it floating in the
+   * black beside the picture instead of sitting on its corner. `fit-content` does not help:
+   * it sizes from the file's own 720px width, not from the width the height cap leaves.
+   * Giving the wrapper the clip's ratio is what makes the two boxes the same.
+   */
+  const [ratio, setRatio] = useState<number | null>(null);
+
+  return (
+    <div
+      className="video-wrapper"
+      style={
+        fullscreen && ratio
+          ? { position: 'relative', aspectRatio: String(ratio) }
+          : { position: 'relative', width: '100%' }
+      }
+    >
+      <video
+        className="autoplay-video"
+        id={domId}
+        controlsList="nodownload"
+        style={fullscreen && ratio ? { width: '100%', height: '100%' } : { maxWidth: '100%' }}
+        autoPlay={fullscreen}
+        loop
+        muted
+        playsInline
+        onLoadedMetadata={(e) => {
+          const v = e.currentTarget;
+          if (v.videoWidth && v.videoHeight) setRatio(v.videoWidth / v.videoHeight);
+        }}
+      >
+        <source src={assetImage(media)} type={videoMime(media)} />
+      </video>
+      {/* the one control, in place of the native bar — it stops the click reaching the
+          creative's own link, so turning the sound on does not also open the ad */}
+      <VolumeButton videoId={domId} variant="world" />
+    </div>
+  );
+}
+
 export function AdCard({
   item,
   showType = false,
   variant = 'wall',
+  onOpenFullscreen,
 }: {
   item: AdCardItem;
   showType?: boolean;
   variant?: AdCardVariant;
+  /**
+   * What a click on the creative does, where the page can answer it.
+   *
+   * David, 4 Oct 2026: "If they Click in WORLD/WALLS, they open the Ad full screen." Until
+   * now the creative led straight out to the advertiser's own address in a new tab — all 45
+   * live ads carry a link and none promotes a post — so the full-screen ad could only be
+   * reached by scrolling onto it in the reel. The wall passes this and the click opens the
+   * ad instead; the call to action under it is still the way out to the advertiser.
+   *
+   * Left undefined by the Ads Center's preview, which has no reel to open.
+   */
+  onOpenFullscreen?: () => void;
 }) {
   const isFullscreen = variant === 'fullscreen';
   const navigate = useNavigate();
   const { user: authUser } = useAuth();
   const [formOpen, setFormOpen] = useState(false);
-  const { t: tUi } = useTranslation('ui');
+  const { t: tUi, i18n } = useTranslation('ui');
   /* the $10 that stands in front of writing when the advertiser is Busy */
   const [premiumOpen, setPremiumOpen] = useState(false);
   const media = item.media ?? '';
   const handle = item.advertiser?.usernameUrl ?? null;
+  /* the same date the reel prints under a post's author: day, month and year in the
+     reader's own language, with en-GB standing in for English so it reads "4 October 2026"
+     rather than the American "October 4, 2026" (PostFullscreen does the same) */
+  const dateLocale = (i18n.resolvedLanguage ?? 'en') === 'en' ? 'en-GB' : (i18n.resolvedLanguage ?? 'en');
+  const postedOn = item.createdAt
+    ? new Date(item.createdAt).toLocaleDateString(dateLocale, { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
 
   const advertiserPaid = isPaidAdvertiser(item.advertiser);
   const action = resolveAdAction(item.adType, advertiserPaid);
@@ -213,66 +315,13 @@ export function AdCard({
     return true;
   }
 
-  /* A clients-form ad is its own tile: the creative with the advertiser's button under it,
-     walking the viewer through the formulary in place rather than leading anywhere.
-     We now render the tile like any other ad, with the button respecting size/position,
-     and open the form in a modal when clicked. */
-  if (item.adType === 'clients-form' && item.adId) {
-    const label = item.buttonAction || AD_ACTION_LABEL[action];
-
-    return (
-      <>
-        <div className="col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item">
-          <p className="feed_posts_heading_p ad-card-heading" style={{ position: 'relative', fontSize: 14 }}>
-            <span>Super Ads</span>
-            {showType && <TypeTag adType={item.adType} />}
-          </p>
-
-          <div className="ad-media">
-            {isVideoFile(media) ? (
-              <video
-                className="autoplay-video"
-                controlsList="nodownload"
-                style={{ maxWidth: '100%' }}
-                controls
-                loop
-                muted
-                playsInline
-              >
-                <source src={assetImage(media)} type={videoMime(media)} />
-              </video>
-            ) : (
-              <img
-                src={assetImage(media)}
-                alt={tUi('alt_advertisement')}
-                className="img-responsive posttt-img"
-                style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
-              />
-            )}
-
-            <AdCta
-              action={action}
-              label={label}
-              href={null}
-              onClick={() => setFormOpen(true)}
-              size={item.buttonSize ?? 'medium'}
-              position={item.buttonPosition ?? 'bottom'}
-              isForm={true}
-            />
-          </div>
-        </div>
-      {formOpen && (
-        <AdLeadForm
-          adId={item.adId}
-          media={media}
-          link={item.link}
-          onClose={() => setFormOpen(false)}
-        />
-      )}
-      </>
-    );
-  }
-
+  /* A clients-form ad walks the viewer through the advertiser's formulary in place rather
+     than leading anywhere: its button opens the form over the tile. It used to be a tile of
+     its own here — a second copy of the markup below — so every change to the ad tile had to
+     be made twice, and the three David asked for on 4 Oct 2026 (no grey banner in the reel,
+     the bottom bar, the `outside` button) reached only one of them. It is the same tile now;
+     only what the button does, and the creative not being a link, set it apart.
+     See `isLeadForm` below. */
   /* Where the button goes. The ad's own link already carries it for every outward type —
      the Ads Center writes `tel:` for a calls ad and a wa.me address for a WhatsApp one
      (ads.routes buildAd), so there is nothing to assemble here.
@@ -291,7 +340,11 @@ export function AdCard({
   const advertiserBusy =
     item.advertiser?.chatToggle === false && !item.advertiser?.viewerPremium;
 
-  if (action === 'send-card' && advertiserId && handle)
+  /* the advertiser's own formulary, opened over the tile rather than led to */
+  const isLeadForm = item.adType === 'clients-form' && !!item.adId;
+
+  if (isLeadForm) onClick = () => setFormOpen(true);
+  else if (action === 'send-card' && advertiserId && handle)
     onClick = () =>
       advertiserBusy ? setPremiumOpen(true) : navigate(`/user/messages?to=${handle}`);
   else if (action === 'follow' && advertiserId) onClick = () => void follow();
@@ -299,35 +352,100 @@ export function AdCard({
     onClick = () => { if (!isOwnAd) setSubOpen(true); };
   else href = safeLink(item.link);
 
+  /* worked out once: the wall draws this button on the creative and the reel in its bottom
+     bar, and the two must never read differently */
+  const ctaLabel =
+    item.buttonAction ||
+    (done ? (action === 'subscribe' ? 'Subscribed' : 'Following') : AD_ACTION_LABEL[action]);
+
+  /* `outside` is the one position that is not on the creative, so the button cannot live
+     inside .ad-media with the other three — it is rendered after it, under the tile. The
+     reel ignores the choice entirely; there the button is in the bottom bar. */
+  const ctaOutside = !isFullscreen && (item.buttonPosition ?? 'bottom') === 'outside';
+
+  /* The advertiser's own tag beside "Super Ads". Theirs to ask for — off on every ad bought
+     before the box existed — and the reel never carries it: there the handle is already in
+     the bottom bar, which is what David meant by "this don't affect on Full screen viewer". */
+  const doubleTag = !isFullscreen && item.showAdvertiserTag === true && !!handle;
+  const wallCta = (
+    <AdCta
+      action={action}
+      label={ctaLabel}
+      href={href}
+      onClick={onClick}
+      size={ctaOutside ? OUTSIDE_LOCKED_SIZE : item.buttonSize ?? 'medium'}
+      position={item.buttonPosition ?? 'bottom'}
+      isForm={isLeadForm}
+    />
+  );
+
   return (
     <div className={isFullscreen ? 'ad-fullscreen' : 'col-md-4 col-sm-6 col-xs-6 col-xxs-12 work-item'}>
-      <p className="feed_posts_heading_p ad-card-heading" style={{ position: 'relative', fontSize: 14 }}>
-        <span>Super Ads</span>
-        {showType && <TypeTag adType={item.adType} />}
-      </p>
+      {/* The grey bar heads the tile on the wall. In the reel David asked for it to go
+          ("Take out GRAY COLOR Banner — just full screen", 4 Oct 2026): the creative has the
+          screen to itself, and the label moves into the bottom bar beside the advertiser.
+
+          One box, the same box a post's own heading is — not a second one of its own beside
+          it (David, 5 Oct 2026: "single tag box... Super Ads first then username, one box").
+          "Super Ads" leads the run; an advertiser who ticked "Show my logo and username" on
+          the create form has their own handle follow it, in the same scrolling strip a post's
+          tagged handles share. Unticked, and the box reads exactly as it always has. */}
+      {!isFullscreen && (
+        <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ position: 'relative', fontSize: 14 }}>
+          <HandleMarquee
+            leading={<span className="ad-card-super-ads-label">Super Ads</span>}
+            handles={
+              doubleTag
+                ? [{ usernameUrl: handle as string, profilePicture: item.advertiser?.profilePicture ?? null }]
+                : []
+            }
+          />
+          {showType && <TypeTag adType={item.adType} />}
+        </p>
+      )}
 
       <div className="ad-media">
+        {/* a lead-form ad's creative leads nowhere — the button opens the form */}
+        {isLeadForm ? (
+          <div className="ad-media-link">
+            {isVideoFile(media) ? (
+              <AdVideo media={media} domId={`video-ad-form-${item.id}`} fullscreen={isFullscreen} />
+            ) : (
+              <img
+                src={assetImage(media)}
+                alt={tUi('alt_advertisement')}
+                className="img-responsive posttt-img"
+                style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
+              />
+            )}
+          </div>
+        ) : (
         <a
           className="ad-media-link"
-          href={item.postId ? `/user/post_detail/${item.postId}` : safeLink(item.link) ?? '#'}
-          target={item.postId ? undefined : '_blank'}
+          href={
+            onOpenFullscreen
+              ? `/user/post_detail/${item.id}`
+              : item.postId
+                ? `/user/post_detail/${item.postId}`
+                : safeLink(item.link) ?? '#'
+          }
+          target={onOpenFullscreen || item.postId ? undefined : '_blank'}
           rel="noreferrer"
           onClick={(e) => {
+            if (onOpenFullscreen) {
+              e.preventDefault();
+              onOpenFullscreen();
+              return;
+            }
             if (openPost()) e.preventDefault();
           }}
         >
           {isVideoFile(media) ? (
-            <video
-              className="autoplay-video"
-              controlsList="nodownload"
-              style={{ maxWidth: '100%' }}
-              controls
-              loop
-              muted
-              playsInline
-            >
-              <source src={assetImage(media)} type={videoMime(media)} />
-            </video>
+            <AdVideo
+              media={media}
+              domId={`video-ad-${isFullscreen ? 'fs' : 'wall'}-${item.id}`}
+              fullscreen={isFullscreen}
+            />
           ) : (
             <img
               src={assetImage(media)}
@@ -337,23 +455,55 @@ export function AdCard({
             />
           )}
         </a>
+        )}
 
-        <AdCta
-          action={action}
-          label={
-            item.buttonAction ||
-            (done
-              ? action === 'subscribe'
-                ? 'Subscribed'
-                : 'Following'
-              : AD_ACTION_LABEL[action])
-          }
-          href={href}
-          onClick={onClick}
-          size={item.buttonSize ?? 'medium'}
-          position={item.buttonPosition ?? 'bottom'}
-        />
+        {/* on the creative, at the size and place the advertiser chose — the wall only,
+            and not when they asked for the button to stand outside it */}
+        {!isFullscreen && !ctaOutside && wallCta}
       </div>
+
+      {/* under the tile, at the right, where a post carries its rating pill */}
+      {ctaOutside && <div className="ad-cta-outside-row">{wallCta}</div>}
+
+      {/* The reel's bottom bar, built like the one a post carries (PostFullscreen): the
+          advertiser's logo, their name over the ad's date, the "Super Ads" label beside
+          them, and the call to action at the right. */}
+      {isFullscreen && (
+        <div className="ad-fs-bottombar">
+          {handle ? (
+            <a
+              className="ad-fs-authorlink"
+              href={`/${handle}`}
+              onClick={(e) => { e.preventDefault(); navigate(`/${handle}`); }}
+            >
+              <img
+                className="ad-fs-avatar"
+                src={
+                  item.advertiser?.profilePicture
+                    ? assetImage(item.advertiser.profilePicture)
+                    : assetImage('SUPERHEROINA.svg')
+                }
+                alt=""
+              />
+              <span className="ad-fs-author">
+                <span className="ad-fs-name">{item.advertiser?.name || `@${handle}`}</span>
+                {postedOn && <span className="ad-fs-date">{postedOn}</span>}
+              </span>
+            </a>
+          ) : null
+          /* Most migrated ads name no advertiser at all. The bar carried the date on its own
+             for those, which read as a stray number against the black — David asked for the
+             left of the bar to be empty instead (4 Oct 2026), leaving the label and the
+             button at the right. */
+          }
+          {/* the label and the button wrap to the next line together, as one unit, rather
+              than splitting across two lines of their own on a narrow phone */}
+          <span className="ad-fs-tag-actions">
+            <span className="ad-fs-tag">Super Ads</span>
+            <AdCta action={action} label={ctaLabel} href={href} onClick={onClick} inBar />
+          </span>
+        </div>
+      )}
 
       {handle && (
         <SubscribeModal
@@ -362,6 +512,15 @@ export function AdCard({
           busy={subBusy}
           onClose={() => setSubOpen(false)}
           onConfirm={subscribe}
+        />
+      )}
+
+      {formOpen && item.adId && (
+        <AdLeadForm
+          adId={item.adId}
+          media={media}
+          link={item.link}
+          onClose={() => setFormOpen(false)}
         />
       )}
 
@@ -417,6 +576,7 @@ function AdCta({
   size = 'medium',
   position = 'bottom',
   isForm = false,
+  inBar = false,
 }: {
   action: AdAction;
   label: string;
@@ -425,8 +585,16 @@ function AdCta({
   size?: AdButtonSize;
   position?: AdButtonPosition;
   isForm?: boolean;
+  /** standing in the reel's bottom bar rather than on the creative */
+  inBar?: boolean;
 }) {
-  let className = `ad-cta-btn cta-${action} size-${size} pos-${position}`;
+  /* In the bar the advertiser's size and position say nothing: the button is no longer on
+     the creative, so there is nothing to place it against and nothing to scale it by. It is
+     drawn at one size there, like the Follow+ / Subscribe+ button it stands in for, and
+     grows only with its own words (David, 4 Oct 2026). */
+  let className = inBar
+    ? `ad-cta-btn ad-cta-bar cta-${action}`
+    : `ad-cta-btn cta-${action} size-${size} pos-${position}`;
   if (isForm) className += ' form-cta';
 
   /* The mark leads on every one of them. The client's cards put it on the right for four

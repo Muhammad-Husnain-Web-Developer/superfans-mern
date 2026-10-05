@@ -64,31 +64,272 @@
   justify-content: center;
 }
 
-/* "Super Ads" over the creative, in the reel too. On the wall the label is drawn by the page
-   stylesheet the wall itself loads (layout-direct-user.css:235) — the viewer never loads it,
-   so the word arrived black on black. The values are that rule's own, restated. */
-.ad-fullscreen .ad-card-heading {
-  width: fit-content;
-  margin: 0 auto;
+/* ------------------------------------------------- the reel's bottom bar ----
+ * David, 4 Oct 2026: the grey banner over the creative is gone from the reel — the picture
+ * has the screen to itself — and what it said moved down here, beside the advertiser:
+ *
+ *     [logo]  Name           [Super Ads]        [ More details ]
+ *             4 October 2026
+ *
+ * Laid out like the bar a post carries in the same viewer (PostFullscreen's
+ * .post-fs-bottombar), because it is the same bar: an ad and a post stand in one reel and
+ * the reader scrolls from one to the other.
+ */
+.ad-fs-bottombar {
+  /* The post's own bar runs the full width of the screen along the bottom
+     (PostFullscreen .post-fs-bottombar, absolute at inset 0). This one sat inside the 460px
+     column the creative is held to, so on a desktop it came out as a short bar floating in
+     the middle — David asked for it to read like a post's (4 Oct 2026).
+     `fixed`, not `absolute`: the reel's wrapper (.ad-slide-wrap) carries 12px of side padding
+     and 24px at the foot, which an absolutely placed child would be inset by. Fixed measures
+     the viewport, so the bar lands flush where the post's does. */
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  min-height: 72px;
+}
+
+
+.ad-fs-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #555;
+  flex-shrink: 0;
+}
+
+/* flex: 0 1 auto, not flex: 1 — growing would take all the free width and shove the button
+   against the far edge, half a bar away from the name it belongs to. It still shrinks, so a
+   long name ellipsises.
+   `overflow: hidden` is what makes that shrinking real: on a 320px screen the three items
+   want more width than the bar has, and without it the date broke onto three lines and ran
+   under the "Super Ads" tag instead of the column giving way. */
+.ad-fs-authorlink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  flex: 0 1 auto;
+  overflow: hidden;
+}
+
+/* the page's own a:hover underlines every link; the advertiser's name is not one to underline */
+.ad-fs-authorlink:hover,
+.ad-fs-authorlink:focus {
+  text-decoration: none;
+  color: inherit;
+}
+
+.ad-fs-author {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  gap: 2px;
+}
+
+/* most migrated ads name no advertiser, so the bar carries the date alone and still has to
+   push the label and the button to the right */
+.ad-fs-author--bare {
+  flex: 0 1 auto;
+}
+
+.ad-fs-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 17px;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the date is one line like the name above it — "28 August 2026" wrapping to three was what
+   pushed the bar apart on a narrow phone */
+.ad-fs-date {
+  color: #fff;
+  font-size: 12px;
+  line-height: 1.1;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* A phone has about half the bar a desktop does, and the three items do not fit across it:
+   at 320px the name and date were squeezed out of existence, leaving a logo and nothing to
+   read. So the bar is allowed a second line there — the advertiser and the label on the
+   first, the call to action under them at the right — and everything David asked for is on
+   screen rather than one of them silently going missing. */
+/* David, 5 Oct 2026: everything in this bar — avatar, name, "Super Ads" and the button —
+   has to fit on the one line a phone gives it, not spread across two. Each piece is shrunk
+   enough that the four together stop short of 320px, the narrowest phone this app supports;
+   a wider one just leaves more air on the right. */
+@media (max-width: 400px) {
+  .ad-fs-bottombar {
+    flex-wrap: nowrap;
+    gap: 4px;
+    padding: 8px 10px;
+    min-height: 0;
+  }
+
+  /* name and avatar take only the room the clamped name needs, not a fixed 130px — at this
+     width 130px alone would have squeezed the tag and the button off the line */
+  .ad-fs-authorlink {
+    flex: 0 1 auto;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  /* No `margin-left: auto` here either. The desktop bar lost it when David asked for this
+     bar to read like a post's — where FOLLOW+ sits beside the nickname rather than away at
+     the far edge — and the phone kept it by oversight, so the two screens disagreed. The
+     tag and the button sit next to the name on both now (David, 5 Oct 2026). */
+  .ad-fs-bottombar .ad-fs-tag-actions {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  /* back on the bar, under the name (David, 5 Oct 2026) — shrunk to match the name's own
+     12px at this width rather than the base rule's 12px-for-desktop figure, which read big
+     stacked under a name this small */
+  .ad-fs-date {
+    font-size: 9px;
+  }
+
+  /* a smaller circle and a shorter clamp, so the name cannot by itself crowd the tag and
+     the button off the line (David, 5 Oct 2026) */
+  .ad-fs-avatar {
+    width: 26px;
+    height: 26px;
+  }
+
+  .ad-fs-name {
+    max-width: 5ch;
+    font-size: 12px;
+  }
+
+  /* Through `.ad-fs-tag-actions` rather than `.ad-fs-bottombar` directly: the unconditional
+     `.ad-fullscreen .ad-cta-btn.ad-cta-bar` rule below ties this one's specificity exactly
+     (three classes each), and a tie is settled by which rule comes later in the file — which
+     used to be that one, so this never actually took hold on a phone. One more class here
+     breaks the tie outright rather than leaving it to depend on where either rule sits. */
+  .ad-fs-bottombar .ad-fs-tag-actions .ad-cta-btn.ad-cta-bar {
+    gap: 3px;
+    padding: 3px 6px;
+    border-width: 2px;
+    font-size: 9px;
+  }
+
+  /* `.ad-fs-tag-actions .ad-fs-tag`, not just `.ad-fs-tag`: the unconditional rule below is
+     the same single-class selector, and whichever of two ties comes later in the file wins —
+     which was that one. The extra class breaks the tie the way the button's own needed to. */
+  .ad-fs-tag-actions .ad-fs-tag {
+    padding: 3px 5px;
+    border-width: 2px;
+    font-size: 9px;
+  }
+}
+
+/* the banner's own dress, kept — darkgray ground, black Consolas, lightgray edge — now as a
+   tag standing beside the advertiser rather than a bar across the top. Square, at David's
+   request (4 Oct 2026): the rounded corner read as a second button beside the real one.
+   No `margin-left: auto`: a post's own bar (.post-fs-bottombar) never pushes FOLLOW+ to the
+   far edge — the avatar, the name and the button all sit together at the left, and the rest
+   of the bar is simply empty. Pushing this tag and the button out to the right edge was the
+   one place this bar stopped reading as the post's own — David pointed at it directly
+   (4 Oct 2026, "which design did you follow — I said [match] the post's"). */
+/* the tag and the button as one piece — so a narrow bar wraps them to a second line
+   together rather than splitting them onto two lines of their own */
+.ad-fs-tag-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.ad-fs-tag {
   padding: 5px 10px;
   color: black;
   background: darkgray;
-  border: 7px solid lightgray;
-  border-bottom: 3px solid lightgray;
-  border-radius: 5px 5px 0 0;
+  border: 4px solid lightgray;
+  border-radius: 0;
   font-family:
     Consolas, Menlo, Monaco, 'Lucida Console', 'Liberation Mono', 'DejaVu Sans Mono',
     'Bitstream Vera Sans Mono', 'Courier New', monospace, serif;
   font-weight: bold;
+  font-size: 14px;
   line-height: 1.2;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/*
+ * The video and the speaker beside it, in the reel.
+ *
+ * A portrait clip in the reel is capped by its height, so its width is far narrower than the
+ * column it sits in — 191px inside a 296px slot on a 320px phone. The wrapper is what the
+ * speaker is positioned against, so a full-width wrapper left the speaker floating in the
+ * black beside the clip rather than on it. Shrinking the wrapper to the clip puts it back on
+ * the corner of the picture at every size.
+ *
+ * The button's own look is restated here rather than borrowed from world-page.css: that
+ * stylesheet belongs to the wall, and the reel does not load it.
+ */
+.ad-fullscreen .video-wrapper {
+  /* the ratio itself is set inline, from the file (see AdVideo); height is what the reel
+     caps, and the width follows from the two */
+  height: calc(100vh - 140px);
+  width: auto;
+  max-width: 100%;
+  margin-inline: auto;
+}
+.ad-fullscreen .volume-btn {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+.ad-fullscreen .volume-btn i {
+  font-size: 12px;
 }
 
 .ad-fullscreen .ad-media img,
 .ad-fullscreen .ad-media video {
-  /* the top bar and a margin at the foot; a percentage would be ignored here, the height
-     above it being auto */
-  max-height: calc(100vh - 140px);
+  /* The bar is out of the flow now, lying over the foot of the screen, so the creative has
+     to stop short of it on its own. The wrapper centres the picture between its 56px of head
+     room and 24px at the foot; stopping at 100vh - 200px leaves the 72px bar clear with air
+     either side. A percentage would be ignored here, the height above it being auto. */
+  max-height: calc(100vh - 200px);
   object-fit: contain;
+}
+
+/* the bar takes two lines on a narrow phone, so the picture gives up a little more */
+@media (max-width: 400px) {
+  .ad-fullscreen .ad-media img,
+  .ad-fullscreen .ad-media video {
+    max-height: calc(100vh - 250px);
+  }
 }
 
 .work-item .ad-cta-btn,
@@ -203,6 +444,35 @@
 .ad-cta-btn.cta-follow       { width: calc(42.9% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
 .ad-cta-btn.cta-whatsapp     { width: calc(46.7% * var(--cta-scale)); font-size: clamp(7px, calc(7.0cqw * var(--cta-scale)), 36px); }
 
+/* ----------------------------------------- the button in the reel's bottom bar ----
+ * David, 4 Oct 2026: "SIZE BUTTONS SELECTED IN MODAL don't affect on FULL SCREEN... always
+ * same size of buttons (Follow+, Subscribe+)". Out of the creative there is nothing to
+ * place the button against and nothing to scale it by, so everything the three sizes and
+ * four positions set is undone here and the button is drawn once, at the size the viewer's
+ * own Follow+ / Subscribe+ is drawn at. Its colours and its mark are the ad's own.
+ *
+ * The width is the words' — `width: auto` with `nowrap`, so a longer label makes a longer
+ * button rather than a squeezed one, which is what David asked for.
+ */
+.ad-fullscreen .ad-cta-btn.ad-cta-bar,
+.ad-cta-btn.ad-cta-bar {
+  position: static;
+  transform: none;
+  width: auto;
+  aspect-ratio: auto;
+  flex-shrink: 0;
+  /* the Follow+ button's own metrics (PostFullscreen .post-fs-follow-btn) */
+  gap: 6px;
+  padding: 5px 10px;
+  border-width: 5px;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* the mark needs nothing of its own here: it is sized in `em` off the lettering, which the
+   rule above sets to 14px, so it follows the words down from the creative's cqw figures */
+
 /* ------------------------------------------ size, as the advertiser chose ---- */
 /* Medium is the size drawn on the client's cards. Small and large step either side of it
    by a quarter, which is enough to read as a different size without the words having to
@@ -233,6 +503,36 @@
 .ad-cta-btn.pos-bottom {
   top: auto;
   bottom: 5%;
+}
+
+/* --------------------------------------------------- outside the creative ----
+ * David, 4 Oct 2026: "Outside — it goes under the post bottom-right, in the place of Likes."
+ * The other three hang off `.ad-media`; this one stands in a row of its own under the tile,
+ * so everything the absolute placement sets has to be undone. The row is where a post draws
+ * its 👁 count and rating pill, which is the line David pointed at, and it makes the tile a
+ * little taller than its neighbours — he asked for that and knows.
+ *
+ * The container query that sizes the button measures `.ad-media`; out here there is no such
+ * yardstick, so the size is given in px. `small` is the only size this position takes.
+ */
+.ad-cta-outside-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 0 0;
+}
+
+.work-item .ad-cta-btn.pos-outside,
+.ad-cta-btn.pos-outside {
+  position: static;
+  transform: none;
+  width: auto;
+  aspect-ratio: auto;
+  gap: 6px;
+  padding: 4px 9px;
+  border-width: 4px;
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .work-item .ad-cta-btn:hover,
@@ -360,6 +660,27 @@
   color: #fff;
 }
 
+/* the note under the greyed-out Size control when the position is `outside` */
+/* the double-tag opt-in, under the size/position row */
+.ads-advertiser-tag-check {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.ads-advertiser-tag-check small {
+  opacity: 0.7;
+}
+
+.ads-cta-locked-note {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
 .ads-cta-preview {
   width: 260px;
   max-width: 100%;
@@ -422,4 +743,20 @@
 /* Reduce gap between heading and media on ad tiles only */
 .ad-card-heading {
   margin-bottom: 0px !important;
+}
+
+/* ------------------------------------------------------- the double tag ----
+ * David, 5 Oct 2026: one box, not two — the same box a post's own heading is. "Super Ads"
+ * leads the scrolling run (HandleMarquee's `leading`), and an advertiser who ticked "Show my
+ * logo and username" has their own handle follow it in that same run, travelling with it
+ * when the two together are too wide for the box — one marquee, the label included, exactly
+ * as a post's own handles travel together.
+ */
+.ad-card-super-ads-label {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 10px;
+  color: black;
+  white-space: nowrap;
+  flex-shrink: 0;
 }

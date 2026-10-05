@@ -22,28 +22,28 @@ export interface HeadingHandle {
 /** how fast the handle strip scrolls. The old fixed 10s covered 300px, which is this. */
 const MARQUEE_PX_PER_SEC = 30;
 
-export function PostHeading({
-  author,
-  tagged = [],
-  right,
+/**
+ * The scrolling run of handles itself, without the grey box around it.
+ *
+ * A post's heading is this box; an ad's tag is the same box, with "Super Ads" leading the
+ * run — one label, then the advertiser's own handle when they have asked for it — rather
+ * than a second box of its own beside it. Both carry the same run: measured travel, one
+ * pace, one animation. Keeping it in one component is what stops the two drifting apart.
+ */
+export function HandleMarquee({
+  handles,
+  leading,
 }: {
-  author?: HeadingHandle | null;
-  tagged?: HeadingHandle[];
-  /** the report control, on the grids that carry one */
-  right?: ReactNode;
+  handles: HeadingHandle[];
+  /** content that leads the scrolling run, ahead of the handles — "Super Ads", on an ad's
+      tag. Travels with the handles when the run is too long for the box; static text, not
+      a link, so it carries none of a handle's own styling or click handling. */
+  leading?: ReactNode;
 }) {
   const runRef = useRef<HTMLSpanElement | null>(null);
   /* null while the handles fit the slot; otherwise the travel this particular run needs */
   const [marquee, setMarquee] = useState<{ from: number; to: number; seconds: number } | null>(null);
   const { t: tUi } = useTranslation('ui');
-
-  /* One entry per account. A post may tag its own author — 12 of them in the migrated data
-     do, @superzubair's among them — and that put the same handle in this strip twice, which
-     React then reported as two children sharing a key. The author is listed first, so keeping
-     the first of each also keeps them at the front where they belong. */
-  const handles = [...(author ? [author] : []), ...tagged]
-    .filter((h) => h.usernameUrl)
-    .filter((h, i, all) => all.findIndex((other) => other.usernameUrl === h.usernameUrl) === i);
 
   useEffect(() => {
     const run = runRef.current;
@@ -79,6 +79,80 @@ export function PostHeading({
     };
   }, [handles.map((h) => h.usernameUrl).join('|')]);
 
+  return (
+    <span className={`feed_posts_heading_left${marquee ? ' is-overflowing' : ''}`}>
+      <span
+        className="feed_posts_heading_marquee"
+        ref={runRef}
+        style={
+          marquee
+            ? ({
+                '--marquee-from': `${marquee.from}px`,
+                '--marquee-to': `${marquee.to}px`,
+                '--marquee-duration': `${marquee.seconds}s`,
+              } as CSSProperties)
+            : undefined
+        }
+      >
+        {leading}
+        {handles.map((h) => (
+          <Link
+            key={h.usernameUrl}
+            to={`/${h.usernameUrl}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              /* the client asks for the world feed to be waiting unchanged if
+                 the reader opens a creator from it and comes back. Marks the
+                 listing being left, whichever one it is; only that listing
+                 ever reads its own mark. */
+              rememberScroll();
+              markFeedReturn();
+            }}
+            style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
+          >
+            {h.profilePicture && (
+              <img
+                className="feed_posts_heading_img"
+                src={assetImage(h.profilePicture)}
+                alt=""
+                style={{ marginRight: 10, marginBottom: 0 }}
+              />
+            )}
+            <span>@{h.usernameUrl}</span>
+            {h.verified && (
+              <img
+                src={assetImage('verified.png')}
+                alt={tUi('alt_verified')}
+                width={18}
+                height={18}
+                style={{ marginLeft: 5, verticalAlign: 'middle', display: 'inline-block' }}
+              />
+            )}
+          </Link>
+        ))}
+      </span>
+    </span>
+  );
+}
+
+export function PostHeading({
+  author,
+  tagged = [],
+  right,
+}: {
+  author?: HeadingHandle | null;
+  tagged?: HeadingHandle[];
+  /** the report control, on the grids that carry one */
+  right?: ReactNode;
+}) {
+  /* One entry per account. A post may tag its own author — 12 of them in the migrated data
+     do, @superzubair's among them — and that put the same handle in this strip twice, which
+     React then reported as two children sharing a key. The author is listed first, so keeping
+     the first of each also keeps them at the front where they belong. */
+  const handles = [...(author ? [author] : []), ...tagged]
+    .filter((h) => h.usernameUrl)
+    .filter((h, i, all) => all.findIndex((other) => other.usernameUrl === h.usernameUrl) === i);
+
   if (handles.length === 0) return null;
 
   return (
@@ -86,57 +160,7 @@ export function PostHeading({
       className="feed_posts_heading_p feed-heading-flex"
       style={{ position: 'relative', top: 20, fontSize: 14, marginBottom: 12 }}
     >
-      <span className={`feed_posts_heading_left${marquee ? ' is-overflowing' : ''}`}>
-        <span
-          className="feed_posts_heading_marquee"
-          ref={runRef}
-          style={
-            marquee
-              ? ({
-                  '--marquee-from': `${marquee.from}px`,
-                  '--marquee-to': `${marquee.to}px`,
-                  '--marquee-duration': `${marquee.seconds}s`,
-                } as CSSProperties)
-              : undefined
-          }
-        >
-          {handles.map((h) => (
-            <Link
-              key={h.usernameUrl}
-              to={`/${h.usernameUrl}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                /* the client asks for the world feed to be waiting unchanged if
-                   the reader opens a creator from it and comes back. Marks the
-                   listing being left, whichever one it is; only that listing
-                   ever reads its own mark. */
-                rememberScroll();
-                markFeedReturn();
-              }}
-              style={{ color: 'black', display: 'inline-flex', alignItems: 'center', marginRight: 10 }}
-            >
-              {h.profilePicture && (
-                <img
-                  className="feed_posts_heading_img"
-                  src={assetImage(h.profilePicture)}
-                  alt=""
-                  style={{ marginRight: 10, marginBottom: 0 }}
-                />
-              )}
-              <span>@{h.usernameUrl}</span>
-              {h.verified && (
-                <img
-                  src={assetImage('verified.png')}
-                  alt={tUi('alt_verified')}
-                  width={18}
-                  height={18}
-                  style={{ marginLeft: 5, verticalAlign: 'middle', display: 'inline-block' }}
-                />
-              )}
-            </Link>
-          ))}
-        </span>
-      </span>
+      <HandleMarquee handles={handles} />
       {right && <span className="feed_posts_heading_right">{right}</span>}
     </p>
   );

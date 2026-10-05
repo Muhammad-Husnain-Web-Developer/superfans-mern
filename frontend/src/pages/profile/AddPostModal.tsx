@@ -48,10 +48,25 @@ function PostTile({
           client's drawing has them even. `cover` fills the box without squashing anything. */}
       <div className="add-post-thumb">
         {post.imageVideo && isVideoFile(post.imageVideo) ? (
+          /* David, 4 Oct 2026: "Videos Thumbnails: Please NO VIDEO-CONTROLS, just video
+             autoplay with no volume." It is the same rule he gave on 30 Sep for the modal
+             on the profile (see Profile.tsx) — this strip was simply missed, and in a 70px
+             box the browser's own bar covered most of the picture it was meant to show.
+             `muted` is both halves of the ask: it is the no-volume, and it is what makes a
+             clip allowed to start at all, since this modal opens on its own rather than off
+             a tap. `loop` because a short clip that stops on its last frame reads as broken
+             and there are no controls left to restart it. */
           <video
-            controls
+            autoPlay
+            muted
             loop
+            playsInline
             controlsList="nodownload"
+            /* React sets muted as a property and does not always emit the attribute;
+               setting it on the node too means autoplay is never refused over that. */
+            ref={(el) => {
+              if (el) el.muted = true;
+            }}
             poster={post.thumbnail ? assetImage(`thumbnails/${post.thumbnail}`) : undefined}
           >
             <source src={assetImage(post.imageVideo)} type={videoMime(post.imageVideo)} />

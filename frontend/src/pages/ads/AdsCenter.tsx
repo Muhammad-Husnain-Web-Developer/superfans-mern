@@ -13,6 +13,7 @@ import {
   AD_ACTION_LABEL,
   AD_BUTTON_POSITIONS,
   AD_BUTTON_SIZES,
+  OUTSIDE_LOCKED_SIZE,
   CtaMark,
   resolveAdAction,
   isPaidAdvertiser,
@@ -83,11 +84,23 @@ function AdButtonPreview({
         )}
         {/* the real mark, not a stand-in: the point of the preview is to show the button
             the advertiser will actually get, and the mark is half of what it looks like */}
-        <span className={`ad-cta-btn cta-${action} size-${size} pos-${position}`}>
-          <CtaMark action={action} />
-          <span>{label}</span>
-        </span>
+        {position !== 'outside' && (
+          <span className={`ad-cta-btn cta-${action} size-${size} pos-${position}`}>
+            <CtaMark action={action} />
+            <span>{label}</span>
+          </span>
+        )}
       </div>
+      {/* `outside` stands under the creative, so the preview has to show it there too —
+          drawn inside the picture it would have said the opposite of what it does */}
+      {position === 'outside' && (
+        <div className="ad-cta-outside-row">
+          <span className={`ad-cta-btn cta-${action} pos-outside`}>
+            <CtaMark action={action} />
+            <span>{label}</span>
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -559,6 +572,9 @@ function CreateAdModal({
   /* how the call to action is drawn on the creative — the advertiser's own choice */
   const [buttonSize, setButtonSize] = useState<AdButtonSize>('medium');
   const [buttonPosition, setButtonPosition] = useState<AdButtonPosition>('bottom');
+  /* the advertiser's logo and handle beside "Super Ads" on WORLD and the walls — off by
+     default, so an advertiser has to ask for their name on the tile rather than find it there */
+  const [showAdvertiserTag, setShowAdvertiserTag] = useState(false);
   const [busy, setBusy] = useState(false);
   /* what went wrong, in the modal. Without this the submit failed in silence: the button
      stopped spinning and nothing else happened, so a rejected video looked like a dead form. */
@@ -637,8 +653,11 @@ function CreateAdModal({
 
       if (media) body.media = media;
       if (postId) body.post_id = postId;
-      body.button_size = buttonSize;
+      /* `outside` is drawn small whatever the select last held, so the locked value is what
+         is sent rather than whatever the advertiser had picked before switching */
+      body.button_size = buttonPosition === 'outside' ? OUTSIDE_LOCKED_SIZE : buttonSize;
       body.button_position = buttonPosition;
+      body.show_advertiser_tag = showAdvertiserTag;
 
       if (card.type === 'clients-form') {
         body.question1 = questions[0] ?? '';
@@ -781,11 +800,16 @@ function CreateAdModal({
             <div className="ads-cta-choice">
               <h5 className="mb-2">Button on your ad</h5>
               <div className="ads-cta-row">
+                {/* David, 4 Oct 2026: "If we select outside, size gets blocked: small."
+                    Out from under the creative there is no card to measure the button
+                    against, so the three sizes have nothing to mean — the choice is made
+                    for the advertiser and the control says so rather than going quiet. */}
                 <label>
                   Size
                   <select
                     className="ads-input"
-                    value={buttonSize}
+                    value={buttonPosition === 'outside' ? OUTSIDE_LOCKED_SIZE : buttonSize}
+                    disabled={buttonPosition === 'outside'}
                     onChange={(e) => setButtonSize(e.target.value as AdButtonSize)}
                   >
                     {AD_BUTTON_SIZES.map((s2) => (
@@ -794,13 +818,21 @@ function CreateAdModal({
                       </option>
                     ))}
                   </select>
+                  {buttonPosition === 'outside' && (
+                    <small className="ads-cta-locked-note">Outside is always small</small>
+                  )}
                 </label>
                 <label>
                   Position
                   <select
                     className="ads-input"
                     value={buttonPosition}
-                    onChange={(e) => setButtonPosition(e.target.value as AdButtonPosition)}
+                    onChange={(e) => {
+                      const next = e.target.value as AdButtonPosition;
+                      setButtonPosition(next);
+                      /* the locked value is what gets submitted, not just what is shown */
+                      if (next === 'outside') setButtonSize(OUTSIDE_LOCKED_SIZE);
+                    }}
                   >
                     {AD_BUTTON_POSITIONS.map((p2) => (
                       <option key={p2} value={p2}>
@@ -811,12 +843,28 @@ function CreateAdModal({
                 </label>
               </div>
 
+              {/* David, 4 Oct 2026: the advertiser decides whether their own logo and handle
+                  stand beside "Super Ads". It changes the tile on WORLD and the walls only —
+                  the full-screen viewer names them in its bottom bar either way, which is
+                  what the second half of the label says. */}
+              <label className="ads-advertiser-tag-check">
+                <input
+                  type="checkbox"
+                  checked={showAdvertiserTag}
+                  onChange={(e) => setShowAdvertiserTag(e.target.checked)}
+                />{' '}
+                {/* plain English, like every other label on this form — the Ads Center has
+                    no i18n namespace of its own and is written in English throughout */}
+                Show my logo and username on tag post in WORLD and WALLS
+                <small> (this doesn&apos;t affect the full screen viewer)</small>
+              </label>
+
               {/* the choice, shown on the advertiser's own artwork where there is any */}
               <AdButtonPreview
                 src={previewSrc}
                 isVideo={previewIsVideo}
                 adType={card.type}
-                size={buttonSize}
+                size={buttonPosition === 'outside' ? OUTSIDE_LOCKED_SIZE : buttonSize}
                 position={buttonPosition}
                 buttonAction={card.type === 'clients-form' ? buttonAction : null}
                 advertiserPaid={advertiserPaid}
