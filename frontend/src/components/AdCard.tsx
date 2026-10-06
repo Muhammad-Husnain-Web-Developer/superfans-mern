@@ -134,7 +134,10 @@ export const AD_ACTION_LABEL: Record<AdAction, string> = {
     with no choice on record draws the type's own button (Spotify), else the first. */
 export const AD_BUTTON_VARIANTS: Partial<Record<string, AdAction[]>> = {
   spotify: ['itunes', 'spotify'],
-  amazon: ['amazon-yellow', 'amazon-white', 'amazon-mono'],
+  /* 'amazon-mono' (the yellow one in grey Consolas) is held back for now — David, 6 Oct 2026:
+     "Hide this button, for moment we only have 2 buttons in Amazon". Its label, mark and
+     styles stay, so putting it back is adding it to this list again (and to ads.routes). */
+  amazon: ['amazon-yellow', 'amazon-white'],
   /* David, 6 Oct 2026: "Temu we have missing personalized Buttons — do the same as
      Spotify & iTunes" — one button for each store, the advertiser ticks which */
   'aliexpress-temu': ['aliexpress', 'temu'],

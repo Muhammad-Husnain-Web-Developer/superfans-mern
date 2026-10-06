@@ -68,7 +68,8 @@ const AUDIENCE_MAP: Record<string, number> = {
 /** The types whose create form offers a choice of button design; the first is the default. */
 const BUTTON_VARIANTS: Partial<Record<string, string[]>> = {
   spotify: ['spotify', 'itunes'],
-  amazon: ['amazon-yellow', 'amazon-white', 'amazon-mono'],
+  /* amazon-mono held back for now (David, 6 Oct 2026) — see AD_BUTTON_VARIANTS in AdCard.tsx */
+  amazon: ['amazon-yellow', 'amazon-white'],
   'aliexpress-temu': ['aliexpress', 'temu'],
 };
 
