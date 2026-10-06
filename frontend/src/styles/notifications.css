@@ -92,12 +92,28 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  /* centred like the Add post / Cards / Control Panel entries beside it, which are plain
+     blocks taking the column's own text-align. This one is a flex row (the count has to
+     sit on the end of the line), so it needs saying outright (David, 6 Oct 2026). */
+  justify-content: center;
   gap: 6px;
+  transition: 0.3s;
 }
 
+/* the yellow the client uses for a hover throughout (.btnswa-hover, the premium dialog) */
+.notif-sidebar-item:hover {
+  background: #fdd835;
+  border-color: #fdd835;
+}
+
+/* `position: absolute`, not `margin-left: auto`: an auto margin would eat the free space on
+   the left of the row and push the words off centre, which is what the rule above is for. */
 .notif-sidebar-item .notif-badge {
-  position: static;
-  margin-left: auto;
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  margin-left: 0;
 }
 
 /* the phone has the bell on its bar already — one is enough */
@@ -120,11 +136,19 @@
 .notif-close {
   border: 0;
   background: none;
-  font-size: 30px;
   line-height: 1;
   color: #333;
   cursor: pointer;
   padding: 0 6px;
+  display: flex;
+  align-items: center;
+}
+
+/* the same 12px the heading's own caret is drawn at (PostReportButton) */
+.notif-close img {
+  width: 12px;
+  height: 12px;
+  display: block;
 }
 
 .notif-body {

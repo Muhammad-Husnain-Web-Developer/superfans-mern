@@ -446,10 +446,14 @@ export function AdCard({
      SUPER ADS Tag and the @nickname tag". Bought "As a normal Post" it carries only the
      @nickname, like any post: WORLD draws those as ordinary posts, and the preview page,
      which draws every ad as a tile, should still show it the way it will be seen. */
+  /* Every promote-post ad loses its button and carries the two tags — including one whose
+     post is not on record (a live one links to /world instead of a post). Only the 👁️/❤️💩
+     row, and opening the post itself, need the post: that is `promoted`. */
+  const promoteAd = item.adType === 'promote-post';
   const promoted = isPromotedPost(item);
-  const asNormalPost = promoted && item.promoteAs === 'post';
+  const asNormalPost = promoteAd && item.promoteAs === 'post';
   const doubleTag =
-    !isFullscreen && !!handle && (item.showAdvertiserTag === true || promoted);
+    !isFullscreen && !!handle && (item.showAdvertiserTag === true || promoteAd);
   const wallCta = (
     <AdCta
       action={action}
@@ -468,33 +472,31 @@ export function AdCard({
           ("Take out GRAY COLOR Banner — just full screen", 4 Oct 2026): the creative has the
           screen to itself, and the label moves into the bottom bar beside the advertiser.
 
-          One box, the same box a post's own heading is — not a second one of its own beside
-          it (David, 5 Oct 2026: "single tag box... Super Ads first then username, one box").
-          "Super Ads" leads the run; an advertiser who ticked "Show my logo and username" on
-          the create form has their own handle follow it, in the same scrolling strip a post's
-          tagged handles share. Unticked, and the box reads exactly as it always has. */}
-      {/* A promoted post shown as an ad carries its two tags in two boxes, side by side
-          (David's mockup, 6 Oct 2026): "Super Ads" standing still, and the @nickname in a
-          box of its own that scrolls only when the name is too long for it. Every other ad
-          keeps the one box below. */}
-      {!isFullscreen && promoted && !asNormalPost && handle && (
+          The double tag is two boxes, side by side (David, 6 Oct 2026 — every ad, not only a
+          promoted post): "Super Ads" standing still in one, and in the other the advertiser's
+          own tag exactly as it was — their picture and @nickname, scrolling only when the
+          name is too long for the box. It shows where the advertiser ticked "Show my logo and
+          username", and always on a promoted post. Without it the tile keeps the one
+          "Super Ads" box; a post bought "As a normal Post" keeps only the @nickname box. */}
+      {!isFullscreen && doubleTag && !asNormalPost && (
         <div className="ad-card-heading-pair">
           <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ fontSize: 14 }}>
             <span className="ad-card-super-ads-label">Super Ads</span>
           </p>
           <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ position: 'relative', fontSize: 14 }}>
-            {/* the name alone, as the mockup draws it — no avatar in this box */}
-            <HandleMarquee handles={[{ usernameUrl: handle }]} />
+            <HandleMarquee
+              handles={[{ usernameUrl: handle as string, profilePicture: item.advertiser?.profilePicture ?? null }]}
+            />
           </p>
         </div>
       )}
-      {!isFullscreen && !(promoted && !asNormalPost && handle) && (
+      {!isFullscreen && !(doubleTag && !asNormalPost) && (
         <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ position: 'relative', fontSize: 14 }}>
           <HandleMarquee
             leading={asNormalPost ? undefined : <span className="ad-card-super-ads-label">Super Ads</span>}
             handles={
-              doubleTag
-                ? [{ usernameUrl: handle as string, profilePicture: item.advertiser?.profilePicture ?? null }]
+              asNormalPost && handle
+                ? [{ usernameUrl: handle, profilePicture: item.advertiser?.profilePicture ?? null }]
                 : []
             }
           />
@@ -556,11 +558,11 @@ export function AdCard({
 
         {/* on the creative, at the size and place the advertiser chose — the wall only,
             and not when they asked for the button to stand outside it */}
-        {!isFullscreen && !ctaOutside && !promoted && wallCta}
+        {!isFullscreen && !ctaOutside && !promoteAd && wallCta}
       </div>
 
       {/* under the tile, at the right, where a post carries its rating pill */}
-      {ctaOutside && !promoted && <div className="ad-cta-outside-row">{wallCta}</div>}
+      {ctaOutside && !promoteAd && <div className="ad-cta-outside-row">{wallCta}</div>}
 
       {/* a promoted post's own 👁️ and ❤️💩, where a WORLD post carries them */}
       {promoted && !isFullscreen && item.post && item.postId && (
@@ -611,7 +613,7 @@ export function AdCard({
               than splitting across two lines of their own on a narrow phone */}
           <span className="ad-fs-tag-actions">
             {!asNormalPost && <span className="ad-fs-tag">Super Ads</span>}
-            {!promoted && <AdCta action={action} label={ctaLabel} href={href} onClick={onClick} inBar />}
+            {!promoteAd && <AdCta action={action} label={ctaLabel} href={href} onClick={onClick} inBar />}
           </span>
         </div>
       )}

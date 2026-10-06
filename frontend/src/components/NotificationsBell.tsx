@@ -292,7 +292,12 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
             <div className="notif-head">
               <span>{t('notif_title')}</span>
               <button className="notif-close" onClick={() => setOpen(false)} aria-label={t('close')}>
-                ▾
+                {/* The very file the caret on a post's heading tag is drawn from, at the size
+                    it is drawn there (PostReportButton, 12px) — not the ▾ character this used
+                    to be, whose shape came from whichever font the device happened to have
+                    (David, 6 Oct 2026). Drawing a new triangle to match was close but not the
+                    same arrow; this is the same arrow. */}
+                <img src={assetImage('arrowDown_.png')} alt="" />
               </button>
             </div>
 

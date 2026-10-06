@@ -17,16 +17,23 @@ h2#pageTitle { font-weight: 700; font-size: 1.8rem; margin-bottom: 20px; }
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
   margin-top: 20px;
+  /* every row as tall as the tallest card in the grid, so a card that grows keeps the grid even */
+  grid-auto-rows: 1fr;
 }
+/* David, 6 Oct 2026: "Space padding top in cards — make more squares (just bit more height)".
+   The card was a fixed 180px with its content centred; on a wide screen the grid fits more
+   cards per row, each narrower, the text wraps to more lines and the content outgrew 180px —
+   centred, it spilled out past the top edge (WhatsApp's by 4px). A minimum instead of a fixed
+   height lets a card grow rather than overflow, and 215px squares them up. */
 .ad-card {
   border: 6px solid #c3c3c3;
   border-radius: 20px;
   background: #fff;
-  padding: 20px;
+  padding: 22px 20px;
   color: #111;
   cursor: pointer;
   transition: all 0.1s ease-in-out;
-  height: 180px;
+  min-height: 215px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -42,7 +49,9 @@ h2#pageTitle { font-weight: 700; font-size: 1.8rem; margin-bottom: 20px; }
 .ad-card:hover .ad-card-icons .icon-hover,
 .ad-card:focus-visible .ad-card-icons .icon-hover { display: inline-block; }
 .ad-card h4 { font-weight: bold; font-size: 1.1rem; }
-.ad-card p { margin-top: 8px; font-size: 0.9rem; color: #555; font-weight: 550; font-family: Helvetica, Arial, sans-serif !important; }
+/* no bottom margin: Bootstrap's 1rem under the last line sat inside the card and pushed the
+   centred content 16px high, which is why the top looked cramped */
+.ad-card p { margin-top: 8px; margin-bottom: 0; font-size: 0.9rem; color: #555; font-weight: 550; font-family: Helvetica, Arial, sans-serif !important; }
 .ad-card:hover { background: #000; color: #fff; text-decoration: none; border: 6px solid #000; }
 .ad-card:hover p { color: #fff; }
 a { text-decoration: none !important; }

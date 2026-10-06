@@ -385,7 +385,6 @@ export function LoggedInNav({
   if (!authUser) return null;
 
   const base = authUser.role === 'influencer' ? '/influencer' : '/user';
-  const addPostFirst = authUser.role === 'influencer';
   /**
    * David, 1 Oct 2026: "Now they can Visit a user or navigate only for WORLD."
    *
@@ -510,43 +509,25 @@ export function LoggedInNav({
               border: 0,
             }}
           >
-            {/* David, 30 Sep 2026: "notification ka button iski dropdown main ana chahiye
+{/* David, 30 Sep 2026: "notification ka button iski dropdown main ana chahiye
                 add post, control panel aur card ke sath" — so the bell sits in here with
                 the other three rather than above the handle. Its own count is on the
-                profile mark above, which is what keeps it findable while this is shut. */}
+                profile mark above, which is what keeps it findable while this is shut.
+
+                One order for everyone, on every page: Add post, Notifications, Cards,
+                Control Panel (David, 6 Oct 2026). It used to depend on the role — an
+                influencer had Add post above the panel and a reader below it — so the same
+                four entries read differently depending on who was looking at them. */}
+            {showAddPost && (
+              <p
+                className="dropdown-item add_post_item"
+                style={COLLAPSE_ITEM}
+                onClick={() => openSidebarModal(onAddPost)}
+              >
+                <i className="fa fa-plus"></i> {t('add_post', { defaultValue: 'Add post' })}
+              </p>
+            )}
             <NotificationsBell variant="sidebar" />
-            {addPostFirst && showAddPost && (
-              <p
-                className="dropdown-item add_post_item"
-                style={COLLAPSE_ITEM}
-                onClick={() => openSidebarModal(onAddPost)}
-              >
-                <i className="fa fa-plus"></i> {t('add_post', { defaultValue: 'Add post' })}
-              </p>
-            )}
-            {/* the blade leaves this one without a margin-top of its own; the
-                layout's `.control_panel_item { margin-top: 10px !important }`
-                supplies it either way, so the spacing holds in both orders */}
-            {/* the blade leaves this one without a margin-top of its own; the
-                layout's `.control_panel_item { margin-top: 10px !important }`
-                supplies it either way, so the spacing holds in both orders */}
-            <p
-              className="dropdown-item control_panel_item"
-              style={COLLAPSE_ITEM}
-              onClick={() => openSidebarModal(onControlPanel)}
-            >
-              <i className="far fa-user-circle"></i>{' '}
-              {t('control_panel', { defaultValue: 'Control Panel' })}
-            </p>
-            {!addPostFirst && showAddPost && (
-              <p
-                className="dropdown-item add_post_item"
-                style={COLLAPSE_ITEM}
-                onClick={() => openSidebarModal(onAddPost)}
-              >
-                <i className="fa fa-plus"></i> {t('add_post', { defaultValue: 'Add post' })}
-              </p>
-            )}
             {showMessages && (
               <p
                 className="dropdown-item add_post_item message-tag"
@@ -558,6 +539,17 @@ export function LoggedInNav({
                 <i className="fa fa-envelope"></i> {t('messages', { defaultValue: 'Messages' })}
               </p>
             )}
+            {/* the blade leaves this one without a margin-top of its own; the
+                layout's `.control_panel_item { margin-top: 10px !important }`
+                supplies it either way */}
+            <p
+              className="dropdown-item control_panel_item"
+              style={COLLAPSE_ITEM}
+              onClick={() => openSidebarModal(onControlPanel)}
+            >
+              <i className="far fa-user-circle"></i>{' '}
+              {t('control_panel', { defaultValue: 'Control Panel' })}
+            </p>
           </div>
         </div>
       </li>

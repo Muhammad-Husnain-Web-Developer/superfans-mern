@@ -982,6 +982,21 @@
   margin-right: 0 !important;
   pointer-events: none;
 }
+/* the picture and the name on one line, the picture at the wall's 20px */
+.ads-promote-tag-handle .feed_posts_heading_left {
+  display: flex;
+  align-items: center;
+}
+.ads-promote-tag-handle .feed_posts_heading_img {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 6px !important;
+}
+.ads-cta-preview .ads-promote-tag {
+  margin-bottom: 0;
+}
 /* 👁️ at the left, ❤️💩 at the right, under the picture — as the mockup has them */
 .ads-promote-stats {
   display: flex;
@@ -1042,25 +1057,42 @@
 }
 
 /* ------------------------------------------------------- the double tag ----
- * David, 5 Oct 2026: one box, not two — the same box a post's own heading is. "Super Ads"
- * leads the scrolling run (HandleMarquee's `leading`), and an advertiser who ticked "Show my
- * logo and username" has their own handle follow it in that same run, travelling with it
- * when the two together are too wide for the box — one marquee, the label included, exactly
- * as a post's own handles travel together.
+ * David, 6 Oct 2026, on every ad (it was one shared scrolling box before): two boxes side by
+ * side, centred together the way the one box is centred on its own. "Super Ads" stands still
+ * in the first; the second is the advertiser's own tag as it was, picture and @nickname,
+ * scrolling only when the name does not fit. Each keeps the heading's own grey dress.
  */
-/* a promoted post's two tags, two boxes side by side and centred together the way the one
-   box is centred on its own; each keeps the heading's own grey dress */
+/* Kept 16px in from each side of the tile (David, 6 Oct 2026: the corners went out). The
+   picture below rounds its top corners at 26px, and the pair ran edge to edge, so its two
+   outer corners hung out past the curve. 16px in, the curve has dropped only ~2px under the
+   box's 7px edge. The gap between the boxes and their side padding are tightened to give
+   the name back some of that room; a name still too long scrolls in its own box. */
 .ad-card-heading-pair {
   display: flex;
   justify-content: center;
   align-items: stretch;
-  gap: 8px;
+  gap: 3px;
   min-width: 0;
+  padding: 0 16px;
 }
 .ad-card-heading-pair > .feed_posts_heading_p {
   margin-left: 0;
   margin-right: 0;
   min-width: 0;
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.ad-card-heading-pair .feed_posts_heading_img {
+  margin-right: 6px !important;
+}
+/* David, 6 Oct 2026: "less width in nickname in case of Ads … with the LED cartel animation
+   is good". The name's slot is held to 90px (about 11 characters) instead of a post
+   heading's 150px, so the pair stays compact over the tile; a longer name scrolls through
+   it, the same marquee a post heading uses. The modal's preview is held the same. */
+.ad-card-heading-pair .feed_posts_heading_left,
+.ads-promote-tag-handle .feed_posts_heading_left {
+  flex: 0 1 90px;
+  max-width: 90px;
 }
 .ad-card-heading-pair > .feed_posts_heading_p:first-child {
   flex-shrink: 0;

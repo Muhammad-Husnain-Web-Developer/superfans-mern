@@ -45,6 +45,7 @@ function AdButtonPreview({
   buttonAction,
   advertiserPaid = false,
   buttonVariant = null,
+  tag = null,
 }: {
   /** the uploaded file as a data URL, or the picked post's own media URL */
   src: string;
@@ -57,6 +58,8 @@ function AdButtonPreview({
   advertiserPaid?: boolean;
   /** the button design ticked, on a type that offers several */
   buttonVariant?: string | null;
+  /** the advertiser's tag, when "Show my logo and username" is ticked — null shows "Super Ads" alone */
+  tag?: { handle: string | null; picture: string | null } | null;
 }) {
   const action = resolveAdAction(adType, advertiserPaid, buttonVariant);
   const label = buttonAction || AD_ACTION_LABEL[action];
@@ -79,6 +82,7 @@ function AdButtonPreview({
   );
   return (
     <div className="ads-cta-preview work-item">
+      <PreviewTags superAds handle={tag?.handle ?? null} picture={tag?.picture ?? null} />
       <div className="ad-media">
         {src ? (
           isVideo ? (
@@ -131,6 +135,33 @@ function AdButtonPreview({
 }
 
 /**
+ * The tag row over a preview, as WORLD and the walls draw it (David, 6 Oct 2026): "Super Ads"
+ * in one box and, when the advertiser's tag is on, their picture and @nickname in a second
+ * box beside it — scrolling there if the name is too long. A normal post shows only the
+ * @nickname box; an ad without the tag only "Super Ads".
+ */
+function PreviewTags({
+  superAds,
+  handle,
+  picture = null,
+}: {
+  superAds: boolean;
+  handle: string | null;
+  picture?: string | null;
+}) {
+  return (
+    <div className="ads-promote-tag">
+      {superAds && <span className="ads-promote-tag-box">Super Ads</span>}
+      {handle && (
+        <span className="ads-promote-tag-box ads-promote-tag-handle">
+          <HandleMarquee handles={[{ usernameUrl: handle, profilePicture: picture }]} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+/**
  * The promote-post preview: the picked post as it will stand, with the 👁️ and ❤️💩 a post
  * carries under it rather than a button (David's mockup, 5 Oct 2026). The tag above it says
  * which of the two "Post as" choices is ticked — both tags as an ad, only the @nickname as a
@@ -141,25 +172,19 @@ function PromotePostPreview({
   isVideo,
   promoteAs,
   handle,
+  picture,
 }: {
   src: string;
   isVideo: boolean;
   promoteAs: 'ad' | 'post' | null;
   handle: string | null;
+  picture: string | null;
 }) {
   return (
     <div className="ads-cta-preview work-item">
-      {/* the tags as WORLD will draw them: "Super Ads" and the @nickname in two boxes, the
-          second scrolling if the name is too long for it; the @nickname alone as a post */}
+      {/* the tags as WORLD will draw them; the @nickname alone as a normal post */}
       {promoteAs && (
-        <div className="ads-promote-tag">
-          {promoteAs === 'ad' && <span className="ads-promote-tag-box">Super Ads</span>}
-          {handle && (
-            <span className="ads-promote-tag-box ads-promote-tag-handle">
-              <HandleMarquee handles={[{ usernameUrl: handle }]} />
-            </span>
-          )}
-        </div>
+        <PreviewTags superAds={promoteAs === 'ad'} handle={handle} picture={picture} />
       )}
       <div className="ad-media">
         {src ? (
@@ -705,6 +730,8 @@ function CreateAdModal({
   /* the @nickname the promoted post will carry — the linked account's, when working in one */
   const { user: authUser } = useAuth();
   const advertiserHandle = actingForHandle ?? authUser?.usernameUrl ?? null;
+  /* the picture in the tag — the linked account's is not on hand here, so none then */
+  const advertiserPicture = actingForHandle ? null : authUser?.profilePicture ?? null;
   const [busy, setBusy] = useState(false);
   /* what went wrong, in the modal. Without this the submit failed in silence: the button
      stopped spinning and nothing else happened, so a rejected video looked like a dead form. */
@@ -1058,6 +1085,7 @@ function CreateAdModal({
                   isVideo={previewIsVideo}
                   promoteAs={promoteAs}
                   handle={advertiserHandle}
+                  picture={advertiserPicture}
                 />
               ) : (
                 <AdButtonPreview
@@ -1069,6 +1097,7 @@ function CreateAdModal({
                   buttonAction={card.type === 'clients-form' ? buttonAction : null}
                   advertiserPaid={advertiserPaid}
                   buttonVariant={buttonVariant}
+                  tag={showAdvertiserTag ? { handle: advertiserHandle, picture: advertiserPicture } : null}
                 />
               )}
 
