@@ -72,6 +72,20 @@ export { SwalResult };
 
 const REPORT_REASONS = ['sensuality', 'impersonation', 'violence', 'racism', 'other'] as const;
 
+/* How long the Boost Your Post modal stays away once it has been shown. */
+const BOOST_QUIET_SECONDS = 11 * 60;
+const boostCookie = (usernameUrl: string) => `sf_boost_seen_${encodeURIComponent(usernameUrl)}`;
+
+function boostRecentlyShown(usernameUrl: string): boolean {
+  const name = boostCookie(usernameUrl);
+  return document.cookie.split('; ').some((c) => c.startsWith(`${name}=`));
+}
+
+/* The cookie expires on its own after 11 minutes; nothing has to clear it. */
+function markBoostShown(usernameUrl: string): void {
+  document.cookie = `${boostCookie(usernameUrl)}=1; max-age=${BOOST_QUIET_SECONDS}; path=/; SameSite=Lax`;
+}
+
 export function PostItem({
   post,
   locked,
@@ -383,12 +397,19 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
        influencer wall blade has no copy — so the `role === 'user'` test was a faithful port,
        and widening it here is his change, not a fix. A creator has more reason to boost a
        post than a fan does. */
+    /* David, 6 Oct 2026: "Set cookies for don't show this Modal more than 11 minutes if we
+       refresh". Once shown, a cookie holds it back for 11 minutes, refreshes included. Keyed
+       to the account, so a second account on the same browser still gets its own. */
     const hasBoost =
-      (profile.role === 'user' || profile.role === 'influencer') && posts.length > 0;
+      (profile.role === 'user' || profile.role === 'influencer') &&
+      posts.length > 0 &&
+      !boostRecentlyShown(profile.usernameUrl);
     boostShownRef.current = true;
     const timer = setTimeout(() => {
-      if (hasBoost) setBoostOpen(true);
-      else if (referralPendingRef.current) {
+      if (hasBoost) {
+        setBoostOpen(true);
+        markBoostShown(profile.usernameUrl);
+      } else if (referralPendingRef.current) {
         referralPendingRef.current = false;
         setReferralOpen(true);
       }
