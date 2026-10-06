@@ -69,6 +69,7 @@ const AUDIENCE_MAP: Record<string, number> = {
 const BUTTON_VARIANTS: Partial<Record<string, string[]>> = {
   spotify: ['spotify', 'itunes'],
   amazon: ['amazon-yellow', 'amazon-white', 'amazon-mono'],
+  'aliexpress-temu': ['aliexpress', 'temu'],
 };
 
 /** How a promote-post ad is shown — "Post as:" on the form. Anything but `post` is `ad`. */

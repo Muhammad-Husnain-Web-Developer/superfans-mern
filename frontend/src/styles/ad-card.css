@@ -465,7 +465,9 @@
 .ad-cta-btn.cta-website,
 .ad-cta-btn.cta-ecommerce,
 .ad-cta-btn.cta-amazon-yellow,
-.ad-cta-btn.cta-amazon-white {
+.ad-cta-btn.cta-amazon-white,
+.ad-cta-btn.cta-aliexpress,
+.ad-cta-btn.cta-temu {
   font-family: 'Segoe UI', Roboto, Arial, Helvetica, sans-serif;
   font-weight: 600;
 }
@@ -483,6 +485,11 @@
 .ad-cta-btn.cta-amazon-yellow { width: calc(60.2% * var(--cta-scale)); aspect-ratio: 1 / 0.237; font-size: clamp(7px, calc(4.25cqw * var(--cta-scale)), 34px); --mark: 1.76em; gap: 0.98em; }
 .ad-cta-btn.cta-amazon-white  { width: calc(76.7% * var(--cta-scale)); aspect-ratio: 1 / 0.202; font-size: clamp(7px, calc(4.25cqw * var(--cta-scale)), 34px); --mark: 2.28em; gap: 0.96em; }
 .ad-cta-btn.cta-amazon-mono   { width: calc(60.4% * var(--cta-scale)); aspect-ratio: 1 / 0.237; font-size: clamp(7px, calc(4.76cqw * var(--cta-scale)), 36px); --mark: 1.57em; gap: 0.2em; }
+
+/* AliExpress and Temu — no mockup of their own, so drawn on the Amazon button's measure
+   (same height, lettering and spacing), widened to each store's own words */
+.ad-cta-btn.cta-aliexpress    { width: calc(67% * var(--cta-scale)); aspect-ratio: 1 / 0.213; font-size: clamp(7px, calc(4.25cqw * var(--cta-scale)), 34px); --mark: 1.3em; gap: 0.6em; }
+.ad-cta-btn.cta-temu          { width: calc(57% * var(--cta-scale)); aspect-ratio: 1 / 0.25; font-size: clamp(7px, calc(4.25cqw * var(--cta-scale)), 34px); --mark: 1.3em; gap: 0.6em; }
 
 /* the two emoji marks, at the size they stand beside the lettering on the cards */
 .ad-cta-btn.cta-website .cta-mark { font-size: 0.85em; }
@@ -633,6 +640,15 @@
 .ad-cta-btn.cta-amazon-white { background: #fff; border-color: #575757; color: #575757; }
 .ad-cta-btn.cta-amazon-yellow { background: #ffca18; border-color: #fe7f26; color: #000; }
 .ad-cta-btn.cta-amazon-mono { background: #ffca18; border-color: #fe7f26; color: #625632; }
+/* each store's own colours: AliExpress red edged in its orange, Temu orange edged darker */
+.ad-cta-btn.cta-aliexpress { background: #e43225; border-color: #f7971d; color: #fff; }
+.ad-cta-btn.cta-temu { background: #fb7701; border-color: #c25a00; color: #fff; }
+/* both logos are the colour of their own button, so a thin white edge keeps them apart */
+.ad-cta-btn.cta-aliexpress .cta-mark img,
+.ad-cta-btn.cta-temu .cta-mark img {
+  border-radius: 18%;
+  box-shadow: 0 0 0 0.1em #fff;
+}
 
 /* `.ad-media` / `.ads-cta-preview` too: the tile's and the preview's own `.ad-media img`
    rules stretch every picture to the card's width, and the logo would go with them */
@@ -904,14 +920,28 @@
   color: #fff;
   margin-bottom: 8px;
 }
+/* David, 6 Oct 2026: "Smaller text, if it's possible in 1 line" — the two choices side by
+   side, at a size that fits the form's column; a phone still wraps them rather than clipping */
+.ads-post-as .ads-variant-row {
+  gap: 10px 22px;
+}
+.ads-post-as .ads-variant-check {
+  gap: 8px;
+}
+.ads-post-as .ads-variant-check input {
+  width: 26px;
+  height: 26px;
+  background-size: 18px;
+}
 .ads-post-as-name {
   font-family: 'Montserrat', 'Segoe UI', Roboto, Arial, sans-serif;
-  font-size: 20px;
+  font-size: 15px;
   color: #fff;
   line-height: 1.2;
+  white-space: nowrap;
 }
 .ads-post-as-name small {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.85;
 }
 .ads-surcharge {
@@ -919,22 +949,38 @@
   font-size: 12px;
   opacity: 0.85;
 }
-/* the preview's tag line — both tags as an ad, the @nickname alone as a normal post */
+/* the preview's tags — two boxes as an ad, the @nickname box alone as a normal post. Measured
+   off David's mockup: grey boxes with a light 4px edge, 8px apart, centred over the post */
 .ads-promote-tag {
   display: flex;
   justify-content: center;
   gap: 8px;
-  margin-bottom: 6px;
-  padding: 4px 8px;
+  margin-bottom: 0;
+  min-width: 0;
+}
+.ads-promote-tag-box {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  padding: 5px 12px;
   background: darkgray;
-  border: 3px solid lightgray;
+  border: 4px solid lightgray;
+  border-bottom-width: 2px;
   color: #000;
   font-family: Consolas, Menlo, Monaco, 'Courier New', monospace;
   font-weight: 700;
   font-size: 13px;
+  line-height: 1.4;
+  white-space: nowrap;
 }
-.ads-promote-tag-label {
-  color: #000;
+.ads-promote-tag-box:first-child {
+  flex-shrink: 0;
+}
+/* the handle's own link reads black, and keeps none of the trailing gap it has on a wall */
+.ads-promote-tag-handle a {
+  color: #000 !important;
+  margin-right: 0 !important;
+  pointer-events: none;
 }
 /* 👁️ at the left, ❤️💩 at the right, under the picture — as the mockup has them */
 .ads-promote-stats {
@@ -951,20 +997,29 @@
   vertical-align: middle;
 }
 
+/* every create modal's title: the card's own marks, then its words, and a line's space
+   under it before the first field */
 .ads-modal-brand-title {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
   font-weight: 800;
   font-size: 28px;
+  line-height: 1.2;
 }
-.ads-modal-brand-title img {
-  width: 46px;
-  height: 46px;
+.ads-modal-title-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
-.ads-modal-brand-title img:last-of-type {
-  margin-right: 8px;
+.ads-modal-title-icons img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
 }
 
 /* the create form's own error line, above the Empezar campaña button */
@@ -993,6 +1048,36 @@
  * when the two together are too wide for the box — one marquee, the label included, exactly
  * as a post's own handles travel together.
  */
+/* a promoted post's two tags, two boxes side by side and centred together the way the one
+   box is centred on its own; each keeps the heading's own grey dress */
+.ad-card-heading-pair {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 8px;
+  min-width: 0;
+}
+.ad-card-heading-pair > .feed_posts_heading_p {
+  margin-left: 0;
+  margin-right: 0;
+  min-width: 0;
+}
+.ad-card-heading-pair > .feed_posts_heading_p:first-child {
+  flex-shrink: 0;
+}
+.ad-card-heading-pair .ad-card-super-ads-label {
+  margin-right: 0;
+}
+/* the name's slot centred on its line rather than sat on a text baseline, which left the
+   name box a few px taller than the "Super Ads" one; and no trailing gap after the name */
+.ad-card-heading-pair .feed_posts_heading_left {
+  display: flex;
+  align-items: center;
+}
+.ad-card-heading-pair .feed_posts_heading_marquee a {
+  margin-right: 0 !important;
+}
+
 .ad-card-super-ads-label {
   display: inline-flex;
   align-items: center;

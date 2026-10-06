@@ -24,6 +24,7 @@ import {
 import '../../styles/ad-card.css';
 import { PhoneField } from '../../components/PhoneField';
 import { useAuth } from '../../context/AuthContext';
+import { HandleMarquee } from '../../components/PostHeading';
 
 /** The three cards that promote an existing post rather than an upload (Ads Center 1-3). */
 function usesPostPickerType(adType: string): boolean {
@@ -148,10 +149,16 @@ function PromotePostPreview({
 }) {
   return (
     <div className="ads-cta-preview work-item">
+      {/* the tags as WORLD will draw them: "Super Ads" and the @nickname in two boxes, the
+          second scrolling if the name is too long for it; the @nickname alone as a post */}
       {promoteAs && (
         <div className="ads-promote-tag">
-          {promoteAs === 'ad' && <span className="ads-promote-tag-label">Super Ads</span>}
-          {handle && <span>@{handle}</span>}
+          {promoteAs === 'ad' && <span className="ads-promote-tag-box">Super Ads</span>}
+          {handle && (
+            <span className="ads-promote-tag-box ads-promote-tag-handle">
+              <HandleMarquee handles={[{ usernameUrl: handle }]} />
+            </span>
+          )}
         </div>
       )}
       <div className="ad-media">
@@ -213,6 +220,23 @@ const CARDS: AdCard[] = [
   { id: 13, type: 'clients-form', min: 75, max: 25000, audience: 300000, icons: ['📝'], title: 'Get More Potential Clients', desc: 'Create a Formulary that collects contact details from potential clients.' },
   { id: 14, type: 'website-visits', min: 500, max: 40000, audience: 1380000, icons: ['🪄', '🎬'], title: 'Super Video', desc: 'Reproduce a full screen video. Only for big companies.' },
 ];
+
+/* Where a create modal's title differs from its card: Spotify's own mockup leads with the
+   two logos and drops "o iTunes" from the words. */
+const MODAL_ICONS: Partial<Record<string, string[]>> = {
+  spotify: ['/brand/ads/spotify.svg', `${LOGO}/itunes.svg`],
+};
+/* Button designs ticked by name (Spotify & iTunes, AliExpress & Temu); any design not named
+   here — Amazon's three — is shown as the button itself beside its box. */
+const VARIANT_NAME: Partial<Record<string, string>> = {
+  itunes: 'iTunes',
+  spotify: 'Spotify',
+  aliexpress: 'AliExpress',
+  temu: 'Temu',
+};
+const MODAL_TITLE: Partial<Record<string, string>> = {
+  spotify: 'Get More Spotify Reproductions',
+};
 
 /* the country and city lists come from /api/geo, via data/geo */
 const BUTTON_ACTIONS = ['More Info', 'Ask Offer', 'Fill Out Survey', 'Check Website'];
@@ -829,17 +853,20 @@ function CreateAdModal({
           <button className="close-modal-btn" onClick={onClose}>✖</button>
           {/* the Spotify & iTunes modal carries both logos in place of the megaphone, and
               keeps the shorter title David wrote on it */}
-          {!isFormulary && card.type === 'spotify' && (
+          {/* David, 6 Oct 2026: each modal leads with its own card's marks, not the 📢 they
+              all shared. The modal is black, so a logo with a light version (the card's
+              hover one) takes that. Spotify keeps the logos and shorter title of his own
+              mockup. The space under the title is the <br> he asked for after it. */}
+          {!isFormulary && (
             <h2 className="ads-modal-brand-title">
-              <img src="/brand/ads/spotify.svg" alt="" />
-              <img src="/brand/networks/scroll/itunes.svg" alt="" />
-              Get More Spotify Reproductions
-            </h2>
-          )}
-          {/* the promote-post modal leads with its own card's marks, as David drew it */}
-          {!isFormulary && card.type !== 'spotify' && (
-            <h2 style={{ fontWeight: 800, fontSize: 28 }}>
-              {isPromotePost ? card.icons.join('') : '📢'} {card.title}
+              <span className="ads-modal-title-icons">
+                {(MODAL_ICONS[card.type] ?? card.icons).map((icon) => {
+                  if (!icon.startsWith('/')) return <span key={icon}>{icon}</span>;
+                  const [normal, light] = icon.split('|');
+                  return <img key={icon} src={light ?? normal} alt="" />;
+                })}
+              </span>
+              {MODAL_TITLE[card.type] ?? card.title}
             </h2>
           )}
 
@@ -884,8 +911,8 @@ function CreateAdModal({
                         setError(null);
                       }}
                     />
-                    {card.type === 'spotify' ? (
-                      <span className="ads-variant-name">{v === 'itunes' ? 'iTunes' : 'Spotify'}</span>
+                    {VARIANT_NAME[v] ? (
+                      <span className="ads-variant-name">{VARIANT_NAME[v]}</span>
                     ) : (
                       <span className={`ad-cta-btn cta-${v} pos-outside`}>
                         <CtaMark action={v} />

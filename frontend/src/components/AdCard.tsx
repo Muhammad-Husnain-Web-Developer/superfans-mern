@@ -103,7 +103,7 @@ export const OUTSIDE_LOCKED_SIZE: AdButtonSize = 'small';
 export type AdAction =
   | 'more-details' | 'call' | 'send-card' | 'subscribe' | 'follow' | 'whatsapp'
   | 'instagram' | 'website' | 'tiktok' | 'twitch' | 'youtube' | 'itunes' | 'spotify'
-  | 'ecommerce' | 'amazon-yellow' | 'amazon-white' | 'amazon-mono';
+  | 'ecommerce' | 'amazon-yellow' | 'amazon-white' | 'amazon-mono' | 'aliexpress' | 'temu';
 
 /* His wording, in his languages — "Visitar Twitch" and "Ver Youtube" are Spanish on his
    own buttons, the rest English, and the Amazon/E-commerce ones read Comprar. */
@@ -125,6 +125,8 @@ export const AD_ACTION_LABEL: Record<AdAction, string> = {
   'amazon-yellow': 'Comprar en Amazon',
   'amazon-white': 'Comprar en Amazon',
   'amazon-mono': 'Comprar en Amazon',
+  aliexpress: 'Comprar en AliExpress',
+  temu: 'Comprar en Temu',
 };
 
 /** The types whose create form lets the advertiser tick one of several button designs —
@@ -133,6 +135,9 @@ export const AD_ACTION_LABEL: Record<AdAction, string> = {
 export const AD_BUTTON_VARIANTS: Partial<Record<string, AdAction[]>> = {
   spotify: ['itunes', 'spotify'],
   amazon: ['amazon-yellow', 'amazon-white', 'amazon-mono'],
+  /* David, 6 Oct 2026: "Temu we have missing personalized Buttons — do the same as
+     Spotify & iTunes" — one button for each store, the advertiser ticks which */
+  'aliexpress-temu': ['aliexpress', 'temu'],
 };
 
 /**
@@ -173,8 +178,8 @@ export function adAction(adType: string | null | undefined, buttonVariant?: stri
          which, since it depends on the advertiser and not on the type. */
       return 'follow';
     default:
-      /* aliexpress-temu, promote-post and anything migrated without a type lead outward
-         under the plain button */
+      /* promote-post with no post on record, and anything migrated without a type, lead
+         outward under the plain button */
       return 'more-details';
   }
 }
@@ -468,7 +473,22 @@ export function AdCard({
           "Super Ads" leads the run; an advertiser who ticked "Show my logo and username" on
           the create form has their own handle follow it, in the same scrolling strip a post's
           tagged handles share. Unticked, and the box reads exactly as it always has. */}
-      {!isFullscreen && (
+      {/* A promoted post shown as an ad carries its two tags in two boxes, side by side
+          (David's mockup, 6 Oct 2026): "Super Ads" standing still, and the @nickname in a
+          box of its own that scrolls only when the name is too long for it. Every other ad
+          keeps the one box below. */}
+      {!isFullscreen && promoted && !asNormalPost && handle && (
+        <div className="ad-card-heading-pair">
+          <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ fontSize: 14 }}>
+            <span className="ad-card-super-ads-label">Super Ads</span>
+          </p>
+          <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ position: 'relative', fontSize: 14 }}>
+            {/* the name alone, as the mockup draws it — no avatar in this box */}
+            <HandleMarquee handles={[{ usernameUrl: handle }]} />
+          </p>
+        </div>
+      )}
+      {!isFullscreen && !(promoted && !asNormalPost && handle) && (
         <p className="feed_posts_heading_p ad-card-heading feed-heading-flex" style={{ position: 'relative', fontSize: 14 }}>
           <HandleMarquee
             leading={asNormalPost ? undefined : <span className="ad-card-super-ads-label">Super Ads</span>}
@@ -642,6 +662,8 @@ const BRAND_MARK: Partial<Record<AdAction, string>> = {
   'amazon-yellow': '/brand/networks/scroll/amazon.svg',
   'amazon-white': '/brand/networks/scroll/amazon.svg',
   'amazon-mono': '/brand/networks/scroll/amazon.svg',
+  aliexpress: '/brand/ads/aliexpress.svg',
+  temu: '/brand/ads/temu.svg',
   website: '\u{1F310}',
   ecommerce: '\u{1F6D2}',
 };
