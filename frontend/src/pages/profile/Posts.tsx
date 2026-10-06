@@ -4,7 +4,7 @@ import { useScrollMemory } from '../../utils/useScrollMemory';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, fetchProfilePosts, type ProfileData, type ProfilePost } from '../../api/profiles';
-import { assetImage } from '../../utils/format';
+import { assetImage, formatPrice } from '../../utils/format';
 import { observeNewVideos } from '../../utils/video';
 import { useAuth } from '../../context/AuthContext';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
@@ -177,19 +177,29 @@ export function Posts() {
             {/* guest follow button (no green mail button on this page) */}
             {!authUser && (
               <>
-                {profile.role === 'influencer' ? (
-                  <span
-                    className="btn btn-primary btn-outline"
-                    onClick={() => registerModal.open()}
-                    style={{ width: 226 }}
-                  >
-                    <img
-                      src="/assets/images/SUPERHEROINA.svg"
-                      style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
-                      alt=""
-                    />
-                    {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> | <b>${profile.priceOfSubscription ?? ''}</b>
-                  </span>
+                {/* a creator who charges: the free Follow and the blue Subs, as on the
+                    profile — both lead to registering first */}
+                {profile.role === 'influencer' && (profile.priceOfSubscription ?? 0) > 0 ? (
+                  <div className="profile-cta-row">
+                    <span
+                      className="btn btn-primary btn-outline profile-follow-btn"
+                      onClick={() => registerModal.open()}
+                    >
+                      <img
+                        src="/assets/images/SUPERHEROINA.svg"
+                        style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
+                        alt=""
+                      />
+                      {t('follow', { defaultValue: 'Follow' })} <b>+</b>
+                    </span>
+                    <button
+                      type="button"
+                      className="btn btn-outline profile-subs-btn"
+                      onClick={() => registerModal.open()}
+                    >
+                      🔒 {t('subs_btn', { defaultValue: 'Subs' })} + | {formatPrice(profile.priceOfSubscription)}
+                    </button>
+                  </div>
                 ) : (
                   <>
                     <span

@@ -1,7 +1,7 @@
 import { createElement, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
-import { assetImage } from '../../utils/format';
+import { assetImage, formatPrice } from '../../utils/format';
 import { localeLogo } from '../auth/AuthShell';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 
@@ -169,9 +169,7 @@ export function Merchandising() {
                     </span>
                     <span style={{ display: 'inline-block', fontSize: 15, width: '78%', position: 'relative', left: 4 }}>
                       <marquee behavior="scroll" direction="left" scrollAmount={5}>
-                        OFFER: {t('price')}
-                        {product.price}.00
-                        {t('pricee')}
+                        OFFER: {formatPrice(product.price, 2)}
                       </marquee>
                     </span>
                   </p>

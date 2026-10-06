@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
-import { assetImage } from '../../utils/format';
+import { assetImage, formatPrice } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
 import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { localeLogo } from '../auth/AuthShell';
@@ -30,7 +30,7 @@ interface InfluencerOption {
 export function MerchandisingShow() {
   useStandalonePageStyles([BOOTSTRAP4_CDN, '/page-css/merchandising-show.css']);
   const { slug = '' } = useParams();
-  const { t, i18n } = useTranslation('content');
+  const { i18n } = useTranslation('content');
   const { t: tAuth } = useTranslation('auth');
   const { user: authUser } = useAuth();
   const { t: tUi } = useTranslation('ui');
@@ -182,9 +182,7 @@ export function MerchandisingShow() {
         </span>
         <span style={{ display: 'inline-block', fontSize: 15, width: '78%', position: 'relative', left: 4 }}>
           <marquee id="price-display" behavior="scroll" direction="left" scrollAmount={5}>
-            OFFER: {t('price')}
-            {product.price}.00
-            {t('pricee')}
+            OFFER: {formatPrice(product.price, 2)}
           </marquee>
         </span>
       </p>
@@ -349,9 +347,7 @@ export function MerchandisingShow() {
             >
               <span id="pay-text">
                 <b>
-                  Pay {t('price')}
-                  {product.price}.00
-                  {t('pricee')}{' '}
+                  Pay {formatPrice(product.price, 2)}{' '}
                 </b>
               </span>
             </button>

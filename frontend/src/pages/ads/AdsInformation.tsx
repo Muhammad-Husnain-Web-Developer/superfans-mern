@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
-import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage, formatPrice, isVideoFile, videoMime } from '../../utils/format';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
 import { DataTableShell } from './DataTableShell';
@@ -17,8 +17,8 @@ interface InfoAd {
   remaining: number;
 }
 
-/** $X,XXX.XX — the number_format($n, 2) with a $ prefix used across information.blade. */
-const usd = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+/** two decimals, as information.blade's number_format($n, 2) — the sign by the reader's language */
+const usd = (n: number) => formatPrice(n, 2);
 
 /** Inform Ads — port of ads/information.blade.php: per-ad budget/impressions/clicks/spent/remaining. */
 export function AdsInformation() {

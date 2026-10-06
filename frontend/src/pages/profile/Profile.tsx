@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, fetchProfilePosts, type ProfileData, type ProfilePost } from '../../api/profiles';
-import { assetImage, formatNumber, formatNumberRounded, isVideoFile, likePercent, videoMime } from '../../utils/format';
+import { assetImage, formatNumber, formatNumberRounded, formatPrice, isVideoFile, likePercent, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE, networkLogo } from '../../utils/networkLogo';
 import { observeNewVideos } from '../../utils/video';
 import { useAuth } from '../../context/AuthContext';
@@ -1024,20 +1024,28 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
             {/* guest follow / subscribe buttons (register modal flow → /register) */}
             {!authUser && (
               <div className="col-12 d-flex justify-content-center align-items-center">
-                {profile.role === 'influencer' ? (
-                  <>
+                {/* a creator who charges: the free Follow and the blue Subs, as a signed-in
+                    visitor sees them (FollowButtons) — both lead to registering first */}
+                {profile.role === 'influencer' && (profile.priceOfSubscription ?? 0) > 0 ? (
+                  <div className="profile-cta-row">
                     <span
-                      className="btn btn-primary btn-outline play-sound1"
+                      className="btn btn-primary btn-outline profile-follow-btn play-sound1"
                       onClick={() => registerModal.open()}
-                      style={{ width: 226, display: 'inline-block' }}
                     >
                       <img
                         src="/assets/images/SUPERHEROINA.svg"
                         style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
                         alt=""
                       />
-                      {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> | <b>${profile.priceOfSubscription ?? ''}</b>
+                      {t('follow', { defaultValue: 'Follow' })} <b>+</b>
                     </span>
+                    <button
+                      type="button"
+                      className="btn btn-outline profile-subs-btn play-sound1"
+                      onClick={() => registerModal.open()}
+                    >
+                      🔒 {t('subs_btn', { defaultValue: 'Subs' })} + | {formatPrice(profile.priceOfSubscription)}
+                    </button>
                     <button
                       className="btn btn-success play-sound1"
                       onClick={() => registerModal.open()}
@@ -1051,7 +1059,7 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                     >
                       ✉️
                     </button>
-                  </>
+                  </div>
                 ) : (
                   <>
                     <span
@@ -1400,79 +1408,78 @@ export function FollowButtons({
     </button>
   );
 
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', gap: 1 }}>
-      {isOwner ? (
-        /* A creator with a price reads their own button the way their fans read it —
-           "Subscribe + | $0.99" rather than "Follow +". David asked for this (3 Oct 2026):
-           the price belongs on the button, where everyone else sees it, not only in the
-           stats line. The blade renders "Follow +" here, so this is a deliberate departure.
-           What the button DOES is unchanged: on your own profile it opens the control
-           panel, which is where the price is set — so the figure and the place to change
-           it are now the same control. A creator with no price, and every normal user,
-           keeps "Follow +": there is no figure to show. */
-        <button
-          type="button"
-          className="btn btn-primary btn-outline"
-          onClick={onControlPanel}
-          style={{ width: 226 }}
-        >
-          {superheroina}
-          {isPaidCreator ? (
-            <>
-              {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> |{' '}
-              <b>${profile.priceOfSubscription}</b>
-            </>
-          ) : (
-            <>
-              {t('follow', { defaultValue: 'Follow' })} <b>+</b>
-            </>
-          )}
-        </button>
-      ) : isPaidCreator ? (
-        subscribed ? (
-          <span
-            className="btn btn-primary btn-outline"
-            onClick={unsubscribe}
-            style={{ width: 226, cursor: 'pointer' }}
-          >
-            {superheroina}
-            {tUi('subscribed')}{' '}
-            | <b><i className="fa fa-check" style={{ fontSize: 17 }} aria-hidden="true"></i></b>
-          </span>
-        ) : (
-          /* This one charges — it opens the subscribe modal. The blade labels it
-             `content.follow` ("Seguir"), so it read as a free follow with a price stuck on
-             the end; David asked for the word to say what the button does (1 Oct 2026).
-             `subscribe_btn`, not `subscribe`: the latter is the longer "Suscribirse" of the
-             locked-post line, which at a two-digit price runs past the 226px button. The
-             free-follow buttons below keep `follow`, so the two cannot drift together. */
-          <button type="button" className="btn btn-primary btn-outline" onClick={() => setSubModalOpen(true)} style={{ width: 226 }}>
-            {superheroina}
-            {t('subscribe_btn', { defaultValue: 'Subscribe' })} <b>+</b> | <b>${profile.priceOfSubscription}</b>
-          </button>
-        )
-      ) : following ? (
-        <span
-          className="btn btn-primary btn-outline"
-          onClick={toggleFollow}
-          style={{ width: 226, cursor: 'pointer' }}
-        >
-          {superheroina}
-          {t('followed', { defaultValue: 'Followed' })}{' '}
-          | <b><i className="fa fa-check" style={{ fontSize: 17 }} aria-hidden="true"></i></b>
-        </span>
+  /* David, 6 Oct 2026: "Now INFLUENCERS CREATORS can be followed for free (but when they are
+     followed, the Hidden Posts still blocked) — the posts only are visible if they pay
+     Subscription. So: New Blue Button for subscription." A creator who charges therefore
+     carries two buttons where they had one: the free "Follow +" every account has, and the
+     blue "🔒 Subs + | $price" beside it. Following gives the feed and the profile, never the
+     hidden posts — the server opens those to subscribers only (posts.routes.ts), which is
+     unchanged. A creator with no price, and every normal user, keep the one Follow button.
+     The pair is laid out by .profile-cta-row (profile-page.css): centred labels, sizes off
+     his mockup on a desktop, and lettering that steps down on a narrow phone so the three
+     buttons keep to one line. The single Follow button keeps its 226px. */
+  const followClass = `btn btn-primary btn-outline${isPaidCreator ? ' profile-follow-btn' : ''}`;
+  const followStyle = isPaidCreator ? undefined : { width: 226 };
+  const followBtn = isOwner ? (
+    /* on your own profile both buttons open the control panel, where the price is set — the
+       creator sees the row the way their fans see it */
+    <button
+      type="button"
+      className={followClass}
+      onClick={onControlPanel}
+      style={followStyle}
+    >
+      {superheroina}
+      {t('follow', { defaultValue: 'Follow' })} <b>+</b>
+    </button>
+  ) : following ? (
+    <span
+      className={followClass}
+      onClick={toggleFollow}
+      style={{ ...followStyle, cursor: 'pointer' }}
+    >
+      {superheroina}
+      {t('followed', { defaultValue: 'Followed' })}{' '}
+      | <b><i className="fa fa-check" style={{ fontSize: 17 }} aria-hidden="true"></i></b>
+    </span>
+  ) : (
+    <button
+      type="button"
+      className={followClass}
+      onClick={toggleFollow}
+      style={followStyle}
+    >
+      {superheroina}
+      {t('follow', { defaultValue: 'Follow' })} <b>+</b>
+    </button>
+  );
+
+  /* the blue subscription button — the only way to the hidden posts */
+  const subsBtn = !isPaidCreator ? null : (
+    <button
+      type="button"
+      className="btn btn-outline profile-subs-btn"
+      onClick={isOwner ? onControlPanel : subscribed ? unsubscribe : () => setSubModalOpen(true)}
+    >
+      {subscribed && !isOwner ? (
+        <>
+          {tUi('subscribed')} | <i className="fa fa-check" aria-hidden="true"></i>
+        </>
       ) : (
-        <button
-          type="button"
-          className="btn btn-primary btn-outline"
-          onClick={toggleFollow}
-          style={{ width: 226 }}
-        >
-          {superheroina}
-          {t('follow', { defaultValue: 'Follow' })} <b>+</b>
-        </button>
+        <>
+          🔒 {t('subs_btn', { defaultValue: 'Subs' })} + | {formatPrice(profile.priceOfSubscription)}
+        </>
       )}
+    </button>
+  );
+
+  return (
+    <div
+      className={isPaidCreator ? 'profile-cta-row' : undefined}
+      style={isPaidCreator ? undefined : { display: 'flex', justifyContent: 'center', gap: 1 }}
+    >
+      {followBtn}
+      {subsBtn}
       {chatBtn}
 
       <SubscribeModal

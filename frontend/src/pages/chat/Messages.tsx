@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatPrice } from '../../utils/format';
 import { io, type Socket } from 'socket.io-client';
 import { api } from '../../api/client';
 import { fetchProfile } from '../../api/profiles';
@@ -221,7 +222,7 @@ export function Messages() {
                 <span className="tooltip-container" style={{ fontSize: 18, position: 'relative', bottom: 2.5 }}>
                   ⓘ
                   <span className="tooltip-text">
-                    Putting the status in Busy will activate <br /> a premium account at $10.
+                    Putting the status in Busy will activate <br /> a premium account at {formatPrice(10)}.
                   </span>
                 </span>
                 <span style={{ position: 'relative', bottom: 3 }}>{tUi('chat_busy_on')}</span>

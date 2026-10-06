@@ -1,3 +1,29 @@
+import i18n from '../i18n';
+
+/**
+ * A price, written the way the reader's language writes it (David, 6 Oct 2026: "$ dollar sign
+ * (left) only in ENGLISH and CHINA — € euro sign (right) in other languages"):
+ *   en / cn → $1,234.50  ·  every other language → 1.234,50€
+ * The translation files follow the same rule for the amounts written into their own text.
+ * Whole amounts print without decimals unless `decimals` asks for them ($10, 10€, $0.00).
+ */
+export function formatPrice(amount: number | string | null | undefined, decimals?: number): string {
+  const n = Number(amount);
+  if (amount === null || amount === undefined || amount === '' || !Number.isFinite(n)) return '';
+  const dollar = currencySign() === '$';
+  const digits = decimals ?? (Number.isInteger(n) ? 0 : 2);
+  const [int, dec] = n.toFixed(digits).split('.');
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, dollar ? ',' : '.');
+  return dollar
+    ? `$${grouped}${dec ? `.${dec}` : ''}`
+    : `${grouped}${dec ? `,${dec}` : ''}€`;
+}
+
+/** The sign alone, for a label that names the currency without an amount. */
+export function currencySign(): '$' | '€' {
+  return ['en', 'cn'].includes(i18n.resolvedLanguage ?? 'en') ? '$' : '€';
+}
+
 /**
  * Exact port of the blade helper `thousandsCurrencyFormat($num)`
  * (user_profile.blade.php ~3693) used for the profile stats:

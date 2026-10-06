@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
-import { assetImage, isVideoFile, likePercent, videoMime } from '../../utils/format';
+import { assetImage, formatPrice, isVideoFile, likePercent, videoMime } from '../../utils/format';
 import { playHateSound, playLikeSound } from '../../utils/postSounds';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
@@ -955,7 +955,7 @@ export function PostFullscreen() {
                 {author?.role === 'influencer' ? (
                   <>
                     {tContent('subscribe', { defaultValue: 'Subscribe' })}<b style={{ marginLeft: '-5px', fontWeight: 900 }}>+</b>{' '}
-                    {tContent('to_see_post', { defaultValue: 'to see the post' })} | ${author?.priceOfSubscription ?? ''}
+                    {tContent('to_see_post', { defaultValue: 'to see the post' })} | {formatPrice(author?.priceOfSubscription)}
                   </>
                 ) : (
                   <>

@@ -152,3 +152,98 @@
    the plain native bar styled by .js-fullheight::-webkit-scrollbar (11px, #777
    thumb, blueviolet right edge). Those rules are carried in
    public/page-css/layout-direct-user.css and need the bar to exist. */
+
+/* ===== Subscription button (blue) =====
+   David, 6 Oct 2026: a creator who charges can now be followed for free, and the hidden
+   posts open only through a paid subscription — "New Blue Button for subscription". It
+   stands beside the red Follow button and is dressed as its twin: the same 2px outline,
+   square corners, transparent ground and 59px height, filling with its colour on hover.
+   The blue (#0d63e8) and the 129px / 136px widths are measured off his mockup.
+
+   The row the pair stands in. Each button is as wide as its own words, never less than the
+   mockup's width on a desktop, and every label sits on the middle line (the red one used to
+   ride 11px from the top and 29px from the bottom). On a narrow phone the lettering steps down
+   with the screen and the ✉️ narrows, so the three stay on one line however long the
+   language's words are — at 375px the old fixed widths squeezed both labels out of their
+   boxes. */
+.profile-cta-row {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 4px;
+  max-width: 100%;
+}
+.profile-cta-row > .btn {
+  flex: 0 0 auto;
+  height: 59px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  /* !important to meet the theme's own `.btn { padding: 8px 20px !important }` (style.css) —
+     its 40px of side padding was what pushed the row past a phone's edge */
+  padding: 0 7px !important;
+  margin: 0 4px 0 0 !important;
+  white-space: nowrap;
+  font-size: clamp(12px, 3.9vw, 16px);
+  line-height: 1;
+}
+.profile-cta-row > .btn:last-child {
+  margin-right: 0 !important;
+}
+.profile-cta-row > .profile-follow-btn {
+  min-width: min(129px, 33vw);
+}
+/* the superheroine at a fixed size beside the words — inline it is a share of the button's
+   width, which made it grow and shrink with whatever label the language had */
+.profile-cta-row > .profile-follow-btn img {
+  width: 1.4em !important;
+  margin: 0 !important;
+  left: 0 !important;
+}
+.profile-cta-row > .profile-follow-btn .fa-check {
+  font-size: 1.05em !important;
+}
+.profile-cta-row > .btn-success {
+  width: clamp(48px, 15vw, 65px) !important;
+  height: 59px !important;
+  margin-left: 0 !important;
+}
+/* A phone: the two share what the ✉️ leaves, equally, and a label too long for its half —
+   Russian's "Вы подписаны", Italian's "Abbonati" — runs onto a second line inside the 59px
+   box rather than pushing the row past the screen's edge. */
+@media (max-width: 480px) {
+  .profile-cta-row {
+    width: 100%;
+  }
+  .profile-cta-row > .profile-follow-btn,
+  .profile-cta-row > .profile-subs-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: clamp(11px, 3.6vw, 15px);
+    white-space: normal;
+    flex-wrap: wrap;
+    text-align: center;
+    row-gap: 2px;
+    line-height: 1.15;
+  }
+}
+/* the narrowest phones (320px): the superheroine gives its room to the words, which would
+   otherwise need a third line in Russian */
+@media (max-width: 360px) {
+  .profile-cta-row > .profile-follow-btn img {
+    display: none !important;
+  }
+}
+.btn.profile-subs-btn {
+  min-width: min(136px, 35vw);
+  border: 2px solid #0d63e8;
+  border-radius: 0;
+  background: transparent;
+  color: #0d63e8;
+}
+.btn.profile-subs-btn:hover,
+.btn.profile-subs-btn:focus {
+  background: #0d63e8;
+  color: #fff;
+}

@@ -3,6 +3,7 @@ import { api } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
+import { formatPrice } from '../../utils/format';
 
 /**
  * VIP Business Account — the privileges page from the client's mock of 29 Sep 2026.
@@ -87,7 +88,7 @@ export function VipBusiness() {
           </div>
 
           <p style={{ marginTop: 26, fontFamily: MONO, fontWeight: 700, fontSize: 18 }}>
-            Price: 2.500€
+            Price: {formatPrice(2500)}
           </p>
 
           {alreadyVip ? (

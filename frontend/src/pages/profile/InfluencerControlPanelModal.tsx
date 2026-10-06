@@ -23,6 +23,7 @@ import type { UserPresence } from '../../context/AuthContext';
 import { SubscriberListModal } from './SubscriberListModal';
 /* the PAYMENTS block, shared with the normal user's panel so a change lands in both */
 import { EarningsRow, PartnershipButton, PartnershipModal } from './EarningsSection';
+import { formatPrice } from '../../utils/format';
 
 /**
  * Creator control panel — port of #exampleModalCenter's `@else` branch
@@ -64,12 +65,10 @@ export function InfluencerControlPanelModal({
 
   /* blade: round(earnings, 2), then append '.00' when the result has no decimal point */
   const [earnings, setEarnings] = useState(Math.round((profile.earnings ?? 0) * 100) / 100);
-  const earningsDisplay = String(earnings).includes('.') ? String(earnings) : `${earnings}.00`;
   /* the client asked for this line beside the total: "Update in panels — Earnings of
      Video Ads". It is a breakdown, not a second purse — the total above is still what a
      withdrawal draws on, and this says how much of it came from Super Video. */
   const videoAds = Math.round((profile.videoAdsEarnings ?? 0) * 100) / 100;
-  const videoAdsDisplay = String(videoAds).includes('.') ? String(videoAds) : `${videoAds}.00`;
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [subListOpen, setSubListOpen] = useState(false);
   // partnership — waits with the video-views row abov
@@ -598,7 +597,7 @@ export function InfluencerControlPanelModal({
             <div style={{ marginTop: 20 }}>
               <EarningsRow
                 label={t('total_earnings')}
-                amount={`$${earningsDisplay}`}
+                amount={formatPrice(earnings, 2)}
                 action={
                   <button type="button" className="save_btn" style={SAVE_BTN} onClick={() => setWithdrawOpen(true)}>
                     {t('withdraw_button_cpanel', { defaultValue: 'Withdraw money' })}
@@ -609,13 +608,13 @@ export function InfluencerControlPanelModal({
                   on the account tracks it yet — there is `earnings` and `videoAdsEarnings` and
                   no third field — so it reads $0.00, exactly as the video-views line below has
                   always done. Wire it to a real figure when there is one to wire. */}
-              <EarningsRow label={t('subscriptions_earnings')} amount="$0.00" />
+              <EarningsRow label={t('subscriptions_earnings')} amount={formatPrice(0, 2)} />
               <EarningsRow
                 label={tUi('video_ads_earnings')}
-                amount={`$${videoAdsDisplay}`}
+                amount={formatPrice(videoAds, 2)}
                 action={partnershipButton}
               />
-              <EarningsRow label={t('earnings_video_views')} amount="$0.00" action={partnershipButton} />
+              <EarningsRow label={t('earnings_video_views')} amount={formatPrice(0, 2)} action={partnershipButton} />
             </div>
 
             <h3 style={H3}>{t('payment_methods')}</h3>
@@ -871,7 +870,6 @@ export function WithdrawModal({
 }) {
   const { t } = useTranslation('content');
   const { t: tUi } = useTranslation('ui');
-  const display = String(earnings).includes('.') ? String(earnings) : `${earnings}.00`;
   const [amount, setAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -903,7 +901,7 @@ export function WithdrawModal({
           <h5 style={{ fontSize: 28, color: '#fff', marginTop: 8 }}>{t('withdraw_title_cpanel', { defaultValue: 'Withdraw Earnings' })}</h5>
         </div>
 
-        <label style={{ color: '#fff', marginTop: 10, display: 'block' }}>{t('earnings')} ${display}</label>
+        <label style={{ color: '#fff', marginTop: 10, display: 'block' }}>{t('earnings')} {formatPrice(earnings, 2)}</label>
 
         {earnings < 50 ? (
           <p style={{ color: '#fff' }}>{tUi('withdraw_min_balance')}</p>
@@ -914,7 +912,7 @@ export function WithdrawModal({
             <p style={{ color: '#fff' }}>
               {tUi('withdraw_select_amount')}
               <br />
-              {tUi('withdraw_max_available')}${display})
+              {tUi('withdraw_max_available')}{formatPrice(earnings, 2)})
             </p>
             <div className="d-flex align-items-center" style={{ gap: 10 }}>
               <label style={{ color: '#fff', margin: 0 }}>{tUi('amount_label')}</label>

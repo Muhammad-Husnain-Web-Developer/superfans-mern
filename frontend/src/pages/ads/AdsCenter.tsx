@@ -8,7 +8,7 @@ import { PostForLinked } from './PostForLinked';
 import { LocationPicker } from './LocationPicker';
 import { CountrySelect, CitySelect } from './CountryCityFields';
 import { PostPicker } from './PostPicker';
-import { assetImage, isVideoFile } from '../../utils/format';
+import { assetImage, formatPrice, isVideoFile } from '../../utils/format';
 import {
   AD_ACTION_LABEL,
   AD_BUTTON_VARIANTS,
@@ -1154,10 +1154,10 @@ function CreateAdModal({
               <label style={{ fontSize: 16 }}>Amount</label>
               <input type="range" min={card.min} max={card.max} step={1} value={amount} style={{ ['--value' as string]: `${((amount - card.min) / (card.max - card.min)) * 100}%` }} onChange={(e) => setAmount(Number(e.target.value))} />
               <div className="value">
-                ${amount}
+                {formatPrice(amount)}
                 {/* the surcharge, shown before paying — the server charges the same figure */}
                 {isPromotePost && promoteAs === 'post' && (
-                  <small className="ads-surcharge"> +11% = ${(Math.round(amount * 111) / 100).toFixed(2)}</small>
+                  <small className="ads-surcharge"> +11% = {formatPrice(Math.round(amount * 111) / 100, 2)}</small>
                 )}
               </div>
               <div className="value">👥 {estimated.toLocaleString()}</div>

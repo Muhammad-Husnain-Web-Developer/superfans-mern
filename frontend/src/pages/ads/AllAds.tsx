@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { api } from '../../api/client';
-import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage, formatPrice, isVideoFile, videoMime } from '../../utils/format';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { AdsSidebar } from './AdsSidebar';
 import { DataTableShell } from './DataTableShell';
@@ -106,7 +106,7 @@ export function AllAds() {
                       <td><span className={`badge badge-${ad.status ? 'success' : 'secondary'}`}>{ad.status ? 'Running' : 'Stopped'}</span></td>
                       <td>{new Date(ad.createdAt).toLocaleDateString()}</td>
                       <td><span className={`badge badge-${ad.approved ? 'success' : 'warning'}`}>{ad.approved ? 'Approved' : 'Pending'}</span></td>
-                      <td>${ad.amount}</td>
+                      <td>{formatPrice(ad.amount)}</td>
                       <td style={{ whiteSpace: 'nowrap' }}>
                         {ad.approved ? (
                           <button className="btn btn-sm btn-secondary mr-1" onClick={() => decide(ad, 'reject')}>Reject</button>

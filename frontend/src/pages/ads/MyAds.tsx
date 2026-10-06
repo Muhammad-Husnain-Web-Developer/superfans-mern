@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
-import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage, formatPrice, isVideoFile, videoMime } from '../../utils/format';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
 import { usePaymentReturn } from '../../utils/usePaymentReturn';
 import { AdsSidebar } from './AdsSidebar';
@@ -118,11 +118,11 @@ export function MyAds() {
                       {ad.paid ? (
                         <span className="badge badge-success">Paid</span>
                       ) : (
-                        <button className="btn btn-sm btn-success" onClick={() => pay(ad)}>Pay ${ad.amount}</button>
+                        <button className="btn btn-sm btn-success" onClick={() => pay(ad)}>Pay {formatPrice(ad.amount)}</button>
                       )}
                     </td>
                     <td><span className={`badge badge-${ad.approved ? 'success' : 'secondary'}`}>{ad.approved ? 'Approved' : 'Pending Review'}</span></td>
-                    <td>${ad.amount}</td>
+                    <td>{formatPrice(ad.amount)}</td>
                     <td>{new Date(ad.createdAt).toLocaleDateString()}</td>
                     <td>
                       <button

@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../../api/client';
 import { fetchProfile, type ProfileData } from '../../api/profiles';
-import { assetImage, isVideoFile, videoMime } from '../../utils/format';
+import { assetImage, formatPrice, isVideoFile, videoMime } from '../../utils/format';
 import { LOCKED_POST_IMAGE } from '../../utils/networkLogo';
 import { useAuth } from '../../context/AuthContext';
 import { GuestHeader, ProfileSidebar } from './ProfileSidebar';
@@ -235,7 +235,7 @@ export function PostDetail() {
                     <>
                       {t('subscribe', { defaultValue: 'Subscribe' })}<b style={{ marginLeft: '-5px', fontWeight: 900 }}>+</b>{' '}
                       {t('to_see_post', { defaultValue: 'to see the post' })} |{' '}
-                      <b>${post.influencer.priceOfSubscription ?? ''}</b>
+                      <b>{formatPrice(post.influencer.priceOfSubscription)}</b>
                     </>
                   ) : (
                     <>

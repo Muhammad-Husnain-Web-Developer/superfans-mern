@@ -22,6 +22,7 @@ import { EarningsRow, PartnershipButton, PartnershipModal } from './EarningsSect
 import { WithdrawModal } from './InfluencerControlPanelModal';
 import type { UserPresence } from '../../context/AuthContext';
 import { useCropUpload } from './ControlPanelCropModal';
+import { formatPrice } from '../../utils/format';
 
 /**
  * Fan control panel — port of `#userModalCenter` in **layouts/footer.blade.php**
@@ -79,9 +80,7 @@ export function UserModalCenter({
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [partnershipOpen, setPartnershipOpen] = useState(false);
   const [earnings, setEarnings] = useState(Math.round((profile.earnings ?? 0) * 100) / 100);
-  const earningsDisplay = String(earnings).includes('.') ? String(earnings) : `${earnings}.00`;
   const videoAds = Math.round((profile.videoAdsEarnings ?? 0) * 100) / 100;
-  const videoAdsDisplay = String(videoAds).includes('.') ? String(videoAds) : `${videoAds}.00`;
   /* a normal user's threshold is counted in followers, not subscribers */
   const partnershipButton = (
     <PartnershipButton threshold={t('notavailable10k_button')} onClick={() => setPartnershipOpen(true)} />
@@ -571,7 +570,7 @@ export function UserModalCenter({
             <div style={{ marginTop: 20 }}>
               <EarningsRow
                 label={t('total_earnings')}
-                amount={`$${earningsDisplay}`}
+                amount={formatPrice(earnings, 2)}
                 action={
                   <button type="button" className="save_btn" style={SAVE_BTN} onClick={() => setWithdrawOpen(true)}>
                     {t('withdraw_button_cpanel', { defaultValue: 'Withdraw money' })}
@@ -580,10 +579,10 @@ export function UserModalCenter({
               />
               <EarningsRow
                 label={tUi('video_ads_earnings')}
-                amount={`$${videoAdsDisplay}`}
+                amount={formatPrice(videoAds, 2)}
                 action={partnershipButton}
               />
-              <EarningsRow label={t('earnings_video_views')} amount="$0.00" action={partnershipButton} />
+              <EarningsRow label={t('earnings_video_views')} amount={formatPrice(0, 2)} action={partnershipButton} />
             </div>
 
             {/* ---------- account info ---------- */}

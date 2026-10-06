@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Room, RoomEvent, createLocalTracks } from 'livekit-client';
 import { api } from '../../api/client';
-import { assetImage } from '../../utils/format';
+import { assetImage, currencySign, formatPrice } from '../../utils/format';
 import { useStandalonePageStyles } from '../../components/StandalonePage';
 
 interface RoomData {
@@ -107,7 +107,7 @@ export function StartStream() {
   }
 
   function donatePrompt() {
-    const v = window.prompt('Enter a donation amount (€):', '5');
+    const v = window.prompt(`Enter a donation amount (${currencySign()}):`, '5');
     if (v) void donate(Number(v));
   }
 
@@ -159,9 +159,9 @@ export function StartStream() {
               <div className="donos">
                 <h4>{tUi('stream_donations_heading')}</h4>
                 <div className="btns">
-                  <button className="chip-btn" type="button" onClick={() => donate(5)}>5€</button>
-                  <button className="chip-btn" type="button" onClick={() => donate(10)}>10€</button>
-                  <button className="chip-btn" type="button" onClick={() => donate(20)}>20€</button>
+                  <button className="chip-btn" type="button" onClick={() => donate(5)}>{formatPrice(5)}</button>
+                  <button className="chip-btn" type="button" onClick={() => donate(10)}>{formatPrice(10)}</button>
+                  <button className="chip-btn" type="button" onClick={() => donate(20)}>{formatPrice(20)}</button>
                   <button className="chip-btn" type="button" onClick={donatePrompt}>{tUi('donate_custom')}</button>
                 </div>
               </div>
