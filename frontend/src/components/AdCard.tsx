@@ -455,6 +455,12 @@ export function AdCard({
   const promoteAd = item.adType === 'promote-post';
   const promoted = isPromotedPost(item);
   const asNormalPost = promoteAd && item.promoteAs === 'post';
+  /* The wall frames the creative in the tile's grey edge. The reel shows it bare, the way a
+     post stands there (David, 6 Oct 2026: "the Gray border color in ads shouldn't be there in
+     full screen, just full screen post"). */
+  const creativeStyle: React.CSSProperties = isFullscreen
+    ? { width: '100%' }
+    : { borderRadius: 26, border: '7px solid lightgray', width: '100%' };
   const doubleTag =
     !isFullscreen && !!handle && (item.showAdvertiserTag === true || promoteAd);
   const wallCta = (
@@ -517,7 +523,7 @@ export function AdCard({
                 src={assetImage(media)}
                 alt={tUi('alt_advertisement')}
                 className="img-responsive posttt-img"
-                style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
+                style={creativeStyle}
               />
             )}
           </div>
@@ -553,7 +559,7 @@ export function AdCard({
               src={assetImage(media)}
               alt={tUi('alt_advertisement')}
               className="img-responsive posttt-img"
-              style={{ borderRadius: 26, border: '7px solid lightgray', width: '100%' }}
+              style={creativeStyle}
             />
           )}
         </a>
@@ -603,7 +609,25 @@ export function AdCard({
               />
               <span className="ad-fs-author">
                 <span className="ad-fs-name">{item.advertiser?.name || `@${handle}`}</span>
-                {postedOn && <span className="ad-fs-date">{postedOn}</span>}
+                {/* David, 6 Oct 2026: "under the nickname, we have an animation flip: DATE +
+                    Super Ads" — Instagram's own line under a sponsored account. The date and
+                    the label take turns in the one line; the label used to stand on its own
+                    beside the button. A promoted post shown as a normal post never says
+                    Super Ads, so it keeps the date alone. */}
+                {asNormalPost ? (
+                  postedOn && <span className="ad-fs-date">{postedOn}</span>
+                ) : postedOn ? (
+                  <span className="ad-fs-flip" aria-label={`${postedOn} · Super Ads`}>
+                    <span className="ad-fs-flip-card">
+                      <span className="ad-fs-flip-face ad-fs-date">{postedOn}</span>
+                      <span className="ad-fs-flip-face ad-fs-flip-back">
+                        <span className="ad-fs-tag ad-fs-tag--mini">Super Ads</span>
+                      </span>
+                    </span>
+                  </span>
+                ) : (
+                  <span className="ad-fs-tag ad-fs-tag--mini">Super Ads</span>
+                )}
               </span>
             </a>
           ) : null
@@ -615,7 +639,9 @@ export function AdCard({
           {/* the label and the button wrap to the next line together, as one unit, rather
               than splitting across two lines of their own on a narrow phone */}
           <span className="ad-fs-tag-actions">
-            {!asNormalPost && <span className="ad-fs-tag">Super Ads</span>}
+            {/* beside the button only when there is no advertiser to stand under — the
+                migrated ads with nobody on record */}
+            {!asNormalPost && !handle && <span className="ad-fs-tag">Super Ads</span>}
             {!promoteAd && <AdCta action={action} label={ctaLabel} href={href} onClick={onClick} inBar />}
           </span>
         </div>
