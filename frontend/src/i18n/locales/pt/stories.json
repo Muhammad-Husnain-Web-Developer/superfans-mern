@@ -1,5 +1,5 @@
 {
-    "add_title": "Adicionar diário:",
+    "add_title": "Adicionar publicação diária:",
     "select_file": "Selecionar ficheiro:",
     "camera": "Câmara",
     "edit": "Editar",
@@ -17,14 +17,14 @@
     "rotate": "Rodar",
     "edit_text": "Editar texto",
     "remove": "Remover",
-    "share": "Compartilhar o URL do diário",
-    "delete": "Eliminar diário",
-    "delete_confirm": "Eliminar este diário?",
+    "share": "Compartilhar o URL da publicação diária",
+    "delete": "Eliminar publicação diária",
+    "delete_confirm": "Eliminar esta publicação diária?",
     "cancel": "Cancelar",
-    "empty": "Não há diários neste momento.",
+    "empty": "Não há publicações diárias neste momento.",
     "record": "Vídeo",
     "stop": "Parar",
-    "video_too_long": "Um vídeo do diário pode ter no máximo {{seconds}} segundos — este tem {{actual}} s.",
-    "publish_failed": "Não foi possível publicar este diário.",
+    "video_too_long": "Um vídeo da publicação diária pode ter no máximo {{seconds}} segundos — este tem {{actual}} s.",
+    "publish_failed": "Não foi possível publicar esta publicação diária.",
     "camera_denied": "Sem câmara disponível ou permissão recusada."
 }

@@ -1,5 +1,5 @@
 {
-    "add_title": "Aggiungi diario:",
+    "add_title": "Aggiungi post giornaliero:",
     "select_file": "Seleziona file:",
     "camera": "Fotocamera",
     "edit": "Modifica",
@@ -17,14 +17,14 @@
     "rotate": "Ruota",
     "edit_text": "Modifica testo",
     "remove": "Rimuovi",
-    "share": "Condividi l’URL del diario",
-    "delete": "Elimina diario",
-    "delete_confirm": "Eliminare questo diario?",
+    "share": "Condividi l’URL del post giornaliero",
+    "delete": "Elimina post giornaliero",
+    "delete_confirm": "Eliminare questo post giornaliero?",
     "cancel": "Annulla",
-    "empty": "Al momento non ci sono diari.",
+    "empty": "Al momento non ci sono post giornalieri.",
     "record": "Video",
     "stop": "Ferma",
-    "video_too_long": "Un video del diario può durare al massimo {{seconds}} secondi — questo dura {{actual}} s.",
-    "publish_failed": "Non è stato possibile pubblicare questo diario.",
+    "video_too_long": "Un video del post giornaliero può durare al massimo {{seconds}} secondi — questo dura {{actual}} s.",
+    "publish_failed": "Non è stato possibile pubblicare questo post giornaliero.",
     "camera_denied": "Nessuna fotocamera disponibile o permesso negato."
 }

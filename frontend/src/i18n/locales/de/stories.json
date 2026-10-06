@@ -1,5 +1,5 @@
 {
-    "add_title": "Tagebuch hinzufügen:",
+    "add_title": "Täglichen Beitrag hinzufügen:",
     "select_file": "Datei auswählen:",
     "camera": "Kamera",
     "edit": "Bearbeiten",
@@ -17,14 +17,14 @@
     "rotate": "Drehen",
     "edit_text": "Text bearbeiten",
     "remove": "Entfernen",
-    "share": "Tagebuch-URL teilen",
-    "delete": "Tagebuch löschen",
-    "delete_confirm": "Dieses Tagebuch löschen?",
+    "share": "URL des täglichen Beitrags teilen",
+    "delete": "Täglichen Beitrag löschen",
+    "delete_confirm": "Diesen täglichen Beitrag löschen?",
     "cancel": "Abbrechen",
-    "empty": "Gerade gibt es keine Tagebücher.",
+    "empty": "Gerade gibt es keine täglichen Beiträge.",
     "record": "Video",
     "stop": "Stopp",
-    "video_too_long": "Ein Tagebuch-Video darf höchstens {{seconds}} Sekunden lang sein — dieses ist {{actual}} s lang.",
-    "publish_failed": "Dieses Tagebuch konnte nicht gepostet werden.",
+    "video_too_long": "Ein Video im täglichen Beitrag darf höchstens {{seconds}} Sekunden lang sein — dieses ist {{actual}} s lang.",
+    "publish_failed": "Dieser tägliche Beitrag konnte nicht gepostet werden.",
     "camera_denied": "Keine Kamera verfügbar oder Zugriff verweigert."
 }

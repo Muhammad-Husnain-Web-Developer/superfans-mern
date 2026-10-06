@@ -1130,23 +1130,6 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
               {' '}
               {t('followers', { defaultValue: 'Followers' })}
             </a>
-            {/* David, 1 Oct 2026: "put Price Subscription in the own profile CREATOR with his
-                Price." A visitor already reads it off the Subscribe button; the creator has no
-                Subscribe button on their own wall, so their own price was the one thing about
-                their account they could not see here. Owner only, and only when there is a
-                price to show — a free account has nothing to say. */}
-            {isOwner && profile.role === 'influencer' && (profile.priceOfSubscription ?? 0) > 0 && (
-              <>
-                {' | '}
-                <b>
-                  <a style={{ fontSize: '0.69em' }}>${profile.priceOfSubscription}</a>
-                </b>
-                {/* `price_stat`, not `price_fee`: that one is the control panel's form
-                    label and ends in a colon, which read as "$120 Price of fee:" here.
-                    The siblings are bare nouns — Post, Likes, Followers — so this is too. */}
-                <a style={{ fontSize: '0.69em' }}> {t('price_stat', { defaultValue: 'Price' })}</a>
-              </>
-            )}
             <h2
               className="fh5co-heading animate-box"
               style={{ fontFamily: "'Roboto Slab', serif", color: '#dd2110' }}

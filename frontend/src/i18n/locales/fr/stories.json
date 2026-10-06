@@ -1,5 +1,5 @@
 {
-    "add_title": "Ajouter un journal :",
+    "add_title": "Ajouter une publication quotidienne :",
     "select_file": "Choisir un fichier :",
     "camera": "Caméra",
     "edit": "Éditer",
@@ -17,14 +17,14 @@
     "rotate": "Pivoter",
     "edit_text": "Modifier le texte",
     "remove": "Retirer",
-    "share": "Partager l’URL du journal",
-    "delete": "Supprimer le journal",
-    "delete_confirm": "Supprimer ce journal ?",
+    "share": "Partager l’URL de la publication quotidienne",
+    "delete": "Supprimer la publication quotidienne",
+    "delete_confirm": "Supprimer cette publication quotidienne ?",
     "cancel": "Annuler",
-    "empty": "Aucun journal pour le moment.",
+    "empty": "Aucune publication quotidienne pour le moment.",
     "record": "Vidéo",
     "stop": "Arrêter",
-    "video_too_long": "Une vidéo du journal dure au maximum {{seconds}} secondes — celle-ci dure {{actual}} s.",
-    "publish_failed": "Impossible de publier ce journal.",
+    "video_too_long": "Une vidéo de publication quotidienne dure au maximum {{seconds}} secondes — celle-ci dure {{actual}} s.",
+    "publish_failed": "Impossible de publier cette publication quotidienne.",
     "camera_denied": "Aucune caméra disponible, ou permission refusée."
 }

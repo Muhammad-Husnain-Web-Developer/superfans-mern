@@ -208,15 +208,18 @@ input[type="range"]::-webkit-slider-thumb {
    `.power-btn` (parity.css) is 35x35; "smaller" is this sidebar's own request, so it is
    scaled down here rather than touched globally, which would also resize every other
    sidebar's button he did not ask to change. */
-.ads-power-btn-row { text-align: center; margin: 18px 0 20px; }
+/* David, 6 Oct 2026: "Bit more bigger — bit more down (<br>)". A line's worth more air
+   above it (18px → 38px), and 26px → 32px: bigger, but still short of the 35px original he
+   had asked to be made smaller. */
+.ads-power-btn-row { text-align: center; margin: 38px 0 20px; }
 .ads-sidebar .ads-power-btn.power-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 32px;
+  height: 32px;
   padding: 0 !important;
-  font-size: 11px;
+  font-size: 14px;
   line-height: 1;
 }
 

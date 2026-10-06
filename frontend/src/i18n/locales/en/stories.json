@@ -1,5 +1,5 @@
 {
-    "add_title": "Add Diary:",
+    "add_title": "Add Daily Post:",
     "select_file": "Select File:",
     "camera": "Camera",
     "edit": "Edit",
@@ -17,14 +17,14 @@
     "rotate": "Rotate",
     "edit_text": "Edit text",
     "remove": "Remove",
-    "share": "Share Diary URL",
-    "delete": "Delete Diary",
-    "delete_confirm": "Delete this Diary?",
+    "share": "Share Daily Post URL",
+    "delete": "Delete Daily Post",
+    "delete_confirm": "Delete this Daily Post?",
     "cancel": "Cancel",
-    "empty": "No diaries right now.",
+    "empty": "No daily posts right now.",
     "record": "Video",
     "stop": "Stop",
-    "video_too_long": "A diary video can be at most {{seconds}} seconds — this one is {{actual}}s.",
-    "publish_failed": "Could not publish this diary.",
+    "video_too_long": "A daily post video can be at most {{seconds}} seconds — this one is {{actual}}s.",
+    "publish_failed": "Could not publish this daily post.",
     "camera_denied": "No camera available, or permission was refused."
 }
