@@ -200,7 +200,10 @@ export function Posts() {
                       className="btn btn-outline profile-subs-btn"
                       onClick={() => registerModal.open()}
                     >
-                      🔒 {t('subs_btn', { defaultValue: 'Subs' })} + | {formatPrice(profile.priceOfSubscription)}
+                      {/* alone on the row it says the whole word, beside Follow the short one */}
+                      🔒 {profile.freeFollow
+                        ? t('subs_btn', { defaultValue: 'Subs' })
+                        : t('subscribe', { defaultValue: 'Subscribe' })} + | {formatPrice(profile.priceOfSubscription)}
                     </button>
                   </div>
                 ) : (

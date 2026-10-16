@@ -1047,7 +1047,10 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                       className="btn btn-outline profile-subs-btn play-sound1"
                       onClick={() => registerModal.open()}
                     >
-                      🔒 {t('subs_btn', { defaultValue: 'Subs' })} + | {formatPrice(profile.priceOfSubscription)}
+                      {/* alone on the row it says the whole word, beside Follow the short one */}
+                      🔒 {profile.freeFollow
+                        ? t('subs_btn', { defaultValue: 'Subs' })
+                        : t('subscribe', { defaultValue: 'Subscribe' })} + | {formatPrice(profile.priceOfSubscription)}
                     </button>
                     <button
                       className="btn btn-success play-sound1"
@@ -1458,7 +1461,17 @@ export function FollowButtons({
     </button>
   );
 
-  /* the blue subscription button — the only way to the hidden posts */
+  /* A creator who charges chooses in their control panel whether the free Follow stands
+     beside Subscribe (David, 15 Oct 2026); Subscribe alone is the default. Someone who
+     already follows them keeps the button, so they can still unfollow. */
+  const showFollow = !isPaidCreator || !!profile.freeFollow || (following && !isOwner);
+
+  /* the blue subscription button — the only way to the hidden posts. Beside Follow it is the
+     short "Subs"; alone it has the whole row, so the full word (David, 16 Oct 2026: "Put full
+     word SUBSCRIBE when it's only 1 button") */
+  const subsLabel = showFollow
+    ? t('subs_btn', { defaultValue: 'Subs' })
+    : t('subscribe', { defaultValue: 'Subscribe' });
   const subsBtn = !isPaidCreator ? null : (
     <button
       type="button"
@@ -1471,16 +1484,11 @@ export function FollowButtons({
         </>
       ) : (
         <>
-          🔒 {t('subs_btn', { defaultValue: 'Subs' })} + | {formatPrice(profile.priceOfSubscription)}
+          🔒 {subsLabel} + | {formatPrice(profile.priceOfSubscription)}
         </>
       )}
     </button>
   );
-
-  /* A creator who charges chooses in their control panel whether the free Follow stands
-     beside Subscribe (David, 15 Oct 2026); Subscribe alone is the default. Someone who
-     already follows them keeps the button, so they can still unfollow. */
-  const showFollow = !isPaidCreator || !!profile.freeFollow || (following && !isOwner);
 
   return (
     <div

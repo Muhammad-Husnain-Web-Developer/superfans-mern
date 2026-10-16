@@ -394,34 +394,46 @@ export function InfluencerControlPanelModal({
             )}
 
             {/* PROFILE BUTTONS — David, 15 Oct 2026: the creator picks what their profile
-                offers. "Subscribe button" alone is the default; "Free follow button" adds the
-                free Follow beside it. Two checkboxes that act as one choice, saved the moment
-                one is ticked. Hidden posts stay behind the subscription either way. */}
+                offers. The subscription is always on, so its box stays ticked and cannot be
+                cleared (16 Oct: "make it double, as subscription stills working — if they
+                select Free, Subscribe stills filled"). "Free follow button" is the one real
+                switch: it adds the free Follow beside Subs, saved the moment it is ticked.
+                Hidden posts stay behind the subscription either way. */}
             <div style={{ marginBottom: 16 }}>
               <label style={{ color: 'white', display: 'block', marginBottom: 4 }}>
                 {tUi('profile_buttons_heading')}
               </label>
-              {([
-                [false, tUi('profile_btn_subscribe')],
-                [true, tUi('profile_btn_free_follow')],
-              ] as const).map(([value, label]) => (
-                <div className="form-check" key={String(value)}>
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id={`free_follow_${value}`}
-                    checked={freeFollow === value}
-                    onChange={() => {
-                      if (freeFollow === value) return;
-                      setFreeFollow(value);
-                      void save({ freeFollow: value }, tUi('profile_btn_saved'));
-                    }}
-                  />
-                  <label className="form-check-label" htmlFor={`free_follow_${value}`} style={{ color: 'white', marginLeft: 6, cursor: 'pointer' }}>
-                    {label}
-                  </label>
-                </div>
-              ))}
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="profile_btn_subscribe"
+                  checked
+                  readOnly
+                  aria-disabled="true"
+                  onClick={(e) => e.preventDefault()}
+                  style={{ cursor: 'default' }}
+                />
+                <label className="form-check-label" htmlFor="profile_btn_subscribe" style={{ color: 'white', marginLeft: 6 }}>
+                  {tUi('profile_btn_subscribe')}
+                </label>
+              </div>
+              <div className="form-check">
+                <input
+                  className="form-check-input"
+                  type="checkbox"
+                  id="profile_btn_free_follow"
+                  checked={freeFollow}
+                  onChange={(e) => {
+                    const next = e.target.checked;
+                    setFreeFollow(next);
+                    void save({ freeFollow: next }, tUi('profile_btn_saved'));
+                  }}
+                />
+                <label className="form-check-label" htmlFor="profile_btn_free_follow" style={{ color: 'white', marginLeft: 6, cursor: 'pointer' }}>
+                  {tUi('profile_btn_free_follow')}
+                </label>
+              </div>
               <small style={{ color: 'white', opacity: 0.85, display: 'block', marginTop: 4 }}>
                 🔒 {tUi('profile_btn_locked_note')}
               </small>
