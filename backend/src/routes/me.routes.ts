@@ -18,6 +18,7 @@ import { logger } from '../config/logger.js';
 const ADMIN_PAYOUT_EMAIL = 'dmartinherrada@gmail.com';
 import { Like } from '../models/Like.js';
 import { Post } from '../models/Post.js';
+import { usernameUrlMatch } from '../utils/username.js';
 
 export const meRouter = Router();
 
@@ -54,6 +55,7 @@ const settingsSchema = z.object({
   bankAccount: z.string().max(255).optional(),
   paypalAccount: z.string().max(255).optional(),
   priceOfSubscription: z.coerce.number().min(0).optional(),
+  freeFollow: z.boolean().optional(),
   earnings: z.coerce.number().min(0).optional(),
   chatToggle: z.boolean().optional(),
   soundEffects: z.boolean().optional(),
@@ -82,7 +84,7 @@ meRouter.patch(
 
     if (input.usernameUrl && input.usernameUrl !== user.usernameUrl) {
       const clean = input.usernameUrl.trim().replace(/\s+/g, '_');
-      const taken = await User.exists({ usernameUrl: clean, _id: { $ne: user._id } });
+      const taken = await User.exists({ usernameUrl: usernameUrlMatch(clean), _id: { $ne: user._id } });
       if (taken) throw ApiError.badRequest('The username is already associated with an account');
       user.usernameUrl = clean;
     }
@@ -110,6 +112,7 @@ meRouter.patch(
       priceChanged = input.priceOfSubscription !== previousPrice;
       user.priceOfSubscription = input.priceOfSubscription;
     }
+    if (input.freeFollow !== undefined) user.freeFollow = input.freeFollow;
     if (input.earnings !== undefined) user.earnings = input.earnings;
     if (input.chatToggle !== undefined) user.chatToggle = input.chatToggle;
     if (input.soundEffects !== undefined) user.soundEffects = input.soundEffects;
@@ -348,6 +351,11 @@ meRouter.post(
     if (req.params.id === req.auth!.userId) throw ApiError.badRequest('You cannot follow yourself.');
     const target = await User.findById(req.params.id);
     if (!target) throw ApiError.notFound('User not found');
+    /* A creator who charges and has not switched on the free follow is subscribed to, never
+       followed — their profile offers only the Subscribe button then (David, 15 Oct 2026). */
+    if (target.role === 'influencer' && (target.priceOfSubscription ?? 0) > 0 && !target.freeFollow) {
+      throw ApiError.forbidden('This creator can only be subscribed to.');
+    }
     await Followership.updateOne(
       { followedUser: target._id, followerUser: req.auth!.userId },
       { $setOnInsert: { followedUser: target._id, followerUser: req.auth!.userId } },
@@ -539,7 +547,7 @@ meRouter.get(
     const username = typeof req.query.username === 'string' ? req.query.username : null;
     const [emailExists, usernameExists] = await Promise.all([
       email ? User.exists({ email }).then(Boolean) : false,
-      username ? User.exists({ usernameUrl: username }).then(Boolean) : false,
+      username ? User.exists({ usernameUrl: usernameUrlMatch(username) }).then(Boolean) : false,
     ]);
     res.json({ success: true, data: { emailExists, usernameExists } });
   }),

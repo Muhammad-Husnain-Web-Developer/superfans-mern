@@ -4,6 +4,7 @@ import { Router } from 'express';
 import { User } from '../models/User.js';
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
+import { usernameUrlMatch } from '../utils/username.js';
 
 /**
  * Server-rendered Open Graph tags, for link-preview crawlers only (WhatsApp, Facebook,
@@ -99,7 +100,7 @@ ogRouter.get(/^\/(?!api\/|assets\/).*/, async (req, res, next) => {
     const requestUrl = `${env.PUBLIC_APP_URL}${req.originalUrl}`;
     const segment = req.path.replace(/^\/+/, '').split('/')[0] ?? '';
 
-    const user = segment ? await User.findOne({ usernameUrl: segment }).lean() : null;
+    const user = segment ? await User.findOne({ usernameUrl: usernameUrlMatch(decodeURIComponent(segment)) }).lean() : null;
 
     const tags: OgTags = user
       ? {

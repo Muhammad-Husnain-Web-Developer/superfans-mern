@@ -672,20 +672,21 @@ export function ProfileSidebar({
         <PresenceDot
           userId={profile.id}
           presence={profile.presence}
-          size={10}
+          size={11}
           style={{
             marginRight: 5,
             verticalAlign: 'middle',
             zIndex: 3,
             position: 'absolute',
             left: 5,
-            top: 5,
+            /* 1px lower than it was, with the 1px it grew (David, 15 Oct 2026) */
+            top: 6,
           }}
         />
         <PresenceDot
           userId={profile.id}
           presence={profile.presence}
-          size={10}
+          size={11}
           style={{ marginRight: 5, verticalAlign: 'middle' }}
         />{' '}
         {/* `transform: translateX(55%)` inline, as the blade has it — the piece

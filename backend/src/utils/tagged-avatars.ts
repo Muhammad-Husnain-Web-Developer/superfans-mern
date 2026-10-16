@@ -1,4 +1,5 @@
 import { User } from '../models/User.js';
+import { escapeRegex } from './username.js';
 
 interface TaggedPost {
   tags?: string[] | null;
@@ -30,11 +31,14 @@ export async function resolveTaggedAvatars(posts: TaggedPost[]): Promise<string[
 
   const avatars = new Map<string, string>();
   if (unresolved.size > 0) {
-    const users = await User.find({ usernameUrl: { $in: [...unresolved] } })
+    /* a tag written @tepazai still finds @TepazAI — nicknames match without case (utils/username) */
+    const users = await User.find({
+      usernameUrl: { $in: [...unresolved].map((n) => new RegExp(`^${escapeRegex(n)}$`, 'i')) },
+    })
       .select('usernameUrl profilePicture')
       .lean();
     for (const user of users) {
-      if (user.usernameUrl && user.profilePicture) avatars.set(user.usernameUrl, user.profilePicture);
+      if (user.usernameUrl && user.profilePicture) avatars.set(user.usernameUrl.toLowerCase(), user.profilePicture);
     }
   }
 
@@ -42,7 +46,7 @@ export async function resolveTaggedAvatars(posts: TaggedPost[]): Promise<string[
     (post.tags ?? []).map((tag, i) => {
       const name = (tag ?? '').trim();
       const stored = (post.taggedProfilePictures ?? [])[i]?.trim();
-      return stored || (name ? avatars.get(name) ?? '' : '');
+      return stored || (name ? avatars.get(name.toLowerCase()) ?? '' : '');
     }),
   );
 }

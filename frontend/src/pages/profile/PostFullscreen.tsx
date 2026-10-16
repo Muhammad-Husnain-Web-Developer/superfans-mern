@@ -11,6 +11,7 @@ import { SubscribeModal } from './SubscribeModal';
 import { RatingPill } from '../../components/RatingPill';
 import '../../styles/report-menu.css';
 import { AdCard } from '../../components/AdCard';
+import { useBlackSystemBars } from '../../utils/useBlackSystemBars';
 import {
   appendSteps,
   isAdId,
@@ -118,6 +119,8 @@ const HeartIcon = ({ size = 32 }: { size?: number }) => (
  * the video; vertical swipe moves prev/next.
  */
 export function PostFullscreen() {
+  /* the phone's own status and navigation bars go black while the viewer is open */
+  useBlackSystemBars();
   const { t: tUi } = useTranslation('ui');
   const { id = '' } = useParams();
   const navigate = useNavigate();

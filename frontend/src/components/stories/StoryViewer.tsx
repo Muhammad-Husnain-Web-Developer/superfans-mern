@@ -15,6 +15,7 @@ import { assetImage, videoMime } from '../../utils/format';
 import { useAuth } from '../../context/AuthContext';
 import { SwalResult } from '../../pages/profile/Profile';
 import { StoryRing } from './StoryRing';
+import { useBlackSystemBars } from '../../utils/useBlackSystemBars';
 import '../../styles/stories.css';
 import '../../styles/story-editor.css';
 
@@ -55,6 +56,8 @@ export function StoryViewer({
   /** ran past the last story — the strip uses this to open the next creator */
   onFinished?: () => void;
 }) {
+  /* the phone's own status and navigation bars go black while a story is open */
+  useBlackSystemBars();
   const { t: tReport } = useTranslation('report');
   const { t } = useTranslation('stories');
   const { user: authUser } = useAuth();

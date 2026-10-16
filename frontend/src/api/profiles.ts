@@ -23,6 +23,8 @@ export interface ProfileData {
   chatToggle: boolean;
   noOfFollowers: number;
   priceOfSubscription: number | null;
+  /** a creator who charges also offers a free Follow beside Subscribe (their own choice) */
+  freeFollow?: boolean;
   networks: string[];
   networkProfileLinks: string[];
   networkDetails: NetworkDetail[];

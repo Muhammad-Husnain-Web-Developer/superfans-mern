@@ -12,6 +12,7 @@ import { Coupon, Package, PackageInclude, Modal, Asset, WaterMark, Cart } from '
 import { ReachLock } from '../models/ReachLock.js';
 import { forgetLocks } from '../utils/worldReach.js';
 import { invalidateWorldPool } from './world.routes.js';
+import { usernameUrlMatch } from '../utils/username.js';
 
 export const adminRouter = Router();
 
@@ -133,6 +134,11 @@ adminRouter.put(
       }
     }
 
+    /* a nickname no other account holds in any capitals — a URL must name one profile */
+    if (body.usernameUrl) {
+      const taken = await User.exists({ usernameUrl: usernameUrlMatch(body.usernameUrl), _id: { $ne: req.params.id } });
+      if (taken) throw ApiError.badRequest('The username is already associated with an account');
+    }
     await User.updateOne({ _id: req.params.id }, { $set: body });
     /* the WORLD pool keeps only active creators, so a status written here has to reach the
        wall now rather than whenever the pool next expires */
@@ -901,7 +907,7 @@ async function resolveLockUser(who: string) {
   const u =
     byId ??
     (await User.findOne(
-      { $or: [{ usernameUrl: who }, { email: who.toLowerCase() }, { usernameUrl: who.replace(/^@/, '') }] },
+      { $or: [{ email: who.toLowerCase() }, { usernameUrl: usernameUrlMatch(who.replace(/^@/, '')) }] },
       { _id: 1 },
     ).lean());
   if (!u) throw ApiError.notFound(`No user "${who}"`);

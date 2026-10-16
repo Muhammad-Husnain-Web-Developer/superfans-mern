@@ -57,6 +57,7 @@ export function InfluencerControlPanelModal({
   const [soundOn, setSoundOn] = useState(soundEffectsEnabled());
   const [username, setUsername] = useState(profile.usernameUrl ?? '');
   const [price, setPrice] = useState(String(profile.priceOfSubscription ?? ''));
+  const [freeFollow, setFreeFollow] = useState(profile.freeFollow === true);
   const [borderStatus, setBorderStatus] = useState(profile.profilePictureBorderStatus ?? '0');
   const [footerCredits, setFooterCredits] = useState(profile.footerNameUsername ?? 'name');
   const [instagramLink, setInstagramLink] = useState(profile.instagramLink ?? '');
@@ -391,6 +392,40 @@ export function InfluencerControlPanelModal({
               'price',
               20,
             )}
+
+            {/* PROFILE BUTTONS — David, 15 Oct 2026: the creator picks what their profile
+                offers. "Subscribe button" alone is the default; "Free follow button" adds the
+                free Follow beside it. Two checkboxes that act as one choice, saved the moment
+                one is ticked. Hidden posts stay behind the subscription either way. */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: 4 }}>
+                {tUi('profile_buttons_heading')}
+              </label>
+              {([
+                [false, tUi('profile_btn_subscribe')],
+                [true, tUi('profile_btn_free_follow')],
+              ] as const).map(([value, label]) => (
+                <div className="form-check" key={String(value)}>
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    id={`free_follow_${value}`}
+                    checked={freeFollow === value}
+                    onChange={() => {
+                      if (freeFollow === value) return;
+                      setFreeFollow(value);
+                      void save({ freeFollow: value }, tUi('profile_btn_saved'));
+                    }}
+                  />
+                  <label className="form-check-label" htmlFor={`free_follow_${value}`} style={{ color: 'white', marginLeft: 6, cursor: 'pointer' }}>
+                    {label}
+                  </label>
+                </div>
+              ))}
+              <small style={{ color: 'white', opacity: 0.85, display: 'block', marginTop: 4 }}>
+                🔒 {tUi('profile_btn_locked_note')}
+              </small>
+            </div>
 
             {/* PROFILE PICTURE BORDER. The blade keeps this row *under* the NETWORKS
                 heading on the creator modal (layouts_direct_user/footer.blade.php:3757),

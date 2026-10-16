@@ -14,6 +14,7 @@ import { User } from '../models/User.js';
 import { uploadsDir } from '../services/storage.js';
 import { probeVideoDurationSeconds } from '../services/videoDuration.js';
 import { logger } from '../config/logger.js';
+import { usernameUrlMatch } from '../utils/username.js';
 
 const execAsync = promisify(exec);
 
@@ -226,7 +227,7 @@ storiesRouter.get(
   optionalAuth,
   asyncHandler(async (req, res) => {
     const owner = await User.findOne(
-      { usernameUrl: req.params.usernameUrl },
+      { usernameUrl: usernameUrlMatch(String(req.params.usernameUrl)) },
       { usernameUrl: 1, name: 1, profilePicture: 1, verified: 1 },
     );
     if (!owner) throw ApiError.notFound('User not found');

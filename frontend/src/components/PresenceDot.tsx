@@ -76,8 +76,7 @@ export function PresenceDot({
         height: size,
         borderRadius: '50%',
         background: COLOURS[live],
-        /* the dot sits on photos and on white alike, so it carries its own edge */
-        boxShadow: '0 0 0 1px rgba(0,0,0,0.25)',
+        /* just the colour — David, 15 Oct 2026: "Delete Gray Border (Just color)" */
         flex: 'none',
         ...style,
       }}

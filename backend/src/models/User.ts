@@ -69,6 +69,9 @@ export interface IUser extends Document {
 
   // Creator / payments
   priceOfSubscription?: number;
+  /** a creator who charges also lets fans follow for free (David, 15 Oct 2026) — off means
+   *  the profile offers Subscribe only. Hidden posts need the subscription either way. */
+  freeFollow?: boolean;
   bankAccount?: string;
   paypalAccount?: string;
   earnings: number;
@@ -207,6 +210,7 @@ const userSchema = new Schema<IUser>(
     address: String,
 
     priceOfSubscription: Number,
+    freeFollow: { type: Boolean, default: false },
     bankAccount: String,
     paypalAccount: String,
     earnings: { type: Number, default: 0 },

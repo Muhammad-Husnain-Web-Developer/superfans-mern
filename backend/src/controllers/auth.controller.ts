@@ -9,6 +9,7 @@ import { sendMail } from '../services/mailer.js';
 import { renderEmail } from '../services/emailTemplate.js';
 import { env } from '../config/env.js';
 import { broadcast } from '../services/realtime.js';
+import { usernameUrlMatch } from '../utils/username.js';
 import {
   REFRESH_COOKIE,
   ACCESS_COOKIE,
@@ -66,7 +67,7 @@ export async function register(req: Request, res: Response): Promise<void> {
   if (emailTaken) throw ApiError.badRequest('Email already registered');
 
   if ('usernameUrl' in input && input.usernameUrl) {
-    const usernameTaken = await User.exists({ usernameUrl: input.usernameUrl });
+    const usernameTaken = await User.exists({ usernameUrl: usernameUrlMatch(input.usernameUrl) });
     if (usernameTaken) throw ApiError.badRequest('Username already taken');
   }
 

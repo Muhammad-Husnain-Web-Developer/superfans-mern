@@ -1028,17 +1028,20 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                     visitor sees them (FollowButtons) — both lead to registering first */}
                 {profile.role === 'influencer' && (profile.priceOfSubscription ?? 0) > 0 ? (
                   <div className="profile-cta-row">
-                    <span
-                      className="btn btn-primary btn-outline profile-follow-btn play-sound1"
-                      onClick={() => registerModal.open()}
-                    >
-                      <img
-                        src="/assets/images/SUPERHEROINA.svg"
-                        style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
-                        alt=""
-                      />
-                      {t('follow', { defaultValue: 'Follow' })} <b>+</b>
-                    </span>
+                    {/* the free Follow only when the creator turned it on in their control panel */}
+                    {profile.freeFollow && (
+                      <span
+                        className="btn btn-primary btn-outline profile-follow-btn play-sound1"
+                        onClick={() => registerModal.open()}
+                      >
+                        <img
+                          src="/assets/images/SUPERHEROINA.svg"
+                          style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
+                          alt=""
+                        />
+                        {t('follow', { defaultValue: 'Follow' })} <b>+</b>
+                      </span>
+                    )}
                     <button
                       type="button"
                       className="btn btn-outline profile-subs-btn play-sound1"
@@ -1417,7 +1420,8 @@ export function FollowButtons({
      unchanged. A creator with no price, and every normal user, keep the one Follow button.
      The pair is laid out by .profile-cta-row (profile-page.css): centred labels, sizes off
      his mockup on a desktop, and lettering that steps down on a narrow phone so the three
-     buttons keep to one line. The single Follow button keeps its 226px. */
+     buttons keep to one line. The single Follow button keeps its 226px.
+     Since 15 Oct 2026 the free Follow is the creator's own choice (showFollow, below). */
   const followClass = `btn btn-primary btn-outline${isPaidCreator ? ' profile-follow-btn' : ''}`;
   const followStyle = isPaidCreator ? undefined : { width: 226 };
   const followBtn = isOwner ? (
@@ -1473,12 +1477,17 @@ export function FollowButtons({
     </button>
   );
 
+  /* A creator who charges chooses in their control panel whether the free Follow stands
+     beside Subscribe (David, 15 Oct 2026); Subscribe alone is the default. Someone who
+     already follows them keeps the button, so they can still unfollow. */
+  const showFollow = !isPaidCreator || !!profile.freeFollow || (following && !isOwner);
+
   return (
     <div
       className={isPaidCreator ? 'profile-cta-row' : undefined}
       style={isPaidCreator ? undefined : { display: 'flex', justifyContent: 'center', gap: 1 }}
     >
-      {followBtn}
+      {showFollow && followBtn}
       {subsBtn}
       {chatBtn}
 

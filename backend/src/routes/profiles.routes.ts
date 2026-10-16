@@ -12,6 +12,7 @@ import { PremiumAccess } from '../models/PremiumAccess.js';
 import { SocialNetwork } from '../models/SocialNetwork.js';
 import { UserBlock } from '../models/UserBlock.js';
 import { optionalAuth } from '../middleware/auth.js';
+import { usernameUrlMatch } from '../utils/username.js';
 
 export const profilesRouter = Router();
 
@@ -24,7 +25,7 @@ profilesRouter.get(
   '/:usernameUrl',
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const user = await User.findOne({ usernameUrl: req.params.usernameUrl });
+    const user = await User.findOne({ usernameUrl: usernameUrlMatch(String(req.params.usernameUrl)) });
     if (!user) throw ApiError.notFound('Profile not found');
 
     // Blade parity: auth()->user()->hasBlocked($user) / isBlockedBy($user)
@@ -110,6 +111,8 @@ profilesRouter.get(
         chatToggle: user.chatToggle,
         noOfFollowers: user.noOfFollowers,
         priceOfSubscription: user.priceOfSubscription ?? null,
+        /* whether this creator also lets fans follow for free, beside Subscribe */
+        freeFollow: user.freeFollow === true,
         networks: user.networks,
         networkProfileLinks: user.networkProfileLinks,
         networkDetails,
@@ -156,7 +159,7 @@ profilesRouter.get(
   '/:usernameUrl/subscribers',
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const profile = await User.findOne({ usernameUrl: req.params.usernameUrl });
+    const profile = await User.findOne({ usernameUrl: usernameUrlMatch(String(req.params.usernameUrl)) });
     if (!profile) throw ApiError.notFound('Profile not found');
 
     const [subs, follows] = await Promise.all([
@@ -208,7 +211,7 @@ profilesRouter.get(
   '/:usernameUrl/posts',
   optionalAuth,
   asyncHandler(async (req, res) => {
-    const user = await User.findOne({ usernameUrl: req.params.usernameUrl });
+    const user = await User.findOne({ usernameUrl: usernameUrlMatch(String(req.params.usernameUrl)) });
     if (!user) throw ApiError.notFound('Profile not found');
 
     /* createdAt leads: a post made straight in this app carries no mysqlId at all (that field

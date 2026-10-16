@@ -181,17 +181,20 @@ export function Posts() {
                     profile — both lead to registering first */}
                 {profile.role === 'influencer' && (profile.priceOfSubscription ?? 0) > 0 ? (
                   <div className="profile-cta-row">
-                    <span
-                      className="btn btn-primary btn-outline profile-follow-btn"
-                      onClick={() => registerModal.open()}
-                    >
-                      <img
-                        src="/assets/images/SUPERHEROINA.svg"
-                        style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
-                        alt=""
-                      />
-                      {t('follow', { defaultValue: 'Follow' })} <b>+</b>
-                    </span>
+                    {/* the free Follow only when the creator turned it on in their control panel */}
+                    {profile.freeFollow && (
+                      <span
+                        className="btn btn-primary btn-outline profile-follow-btn"
+                        onClick={() => registerModal.open()}
+                      >
+                        <img
+                          src="/assets/images/SUPERHEROINA.svg"
+                          style={{ width: '17.47%', margin: 3, position: 'relative', left: -4, display: 'inline-block' }}
+                          alt=""
+                        />
+                        {t('follow', { defaultValue: 'Follow' })} <b>+</b>
+                      </span>
+                    )}
                     <button
                       type="button"
                       className="btn btn-outline profile-subs-btn"
