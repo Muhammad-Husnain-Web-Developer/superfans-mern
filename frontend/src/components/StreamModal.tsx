@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
+import '../styles/stream-dot.css';
 
 /**
  * #streamingModalCenter — the Go-Live dialog.
@@ -66,10 +67,12 @@ export function StreamModal({ open, onClose }: { open: boolean; onClose: () => v
             >
               ×
             </button>
-            <div style={{ textAlign: 'center', height: 20, marginTop: 35 }}>
-              <img src="/assets/images/superman2.png" style={{ display: 'inline-block', height: 51 }} alt="" />
+            {/* David, 16 Oct 2026: "Change title: 📹Directo / Stream — put <br> between title
+                and body". The title was "Message" under a superman, and its 20px-high box let
+                the form ride up against it; it now takes its own height plus a line's gap. */}
+            <div style={{ textAlign: 'center', marginTop: 35, marginBottom: 24 }}>
               <h5 style={{ fontSize: 30, textAlign: 'center', color: '#fff', display: 'inline-block', margin: 0 }}>
-                {tUi('message_label')}
+                📹{tUi('stream_modal_title')}
               </h5>
             </div>
           </div>
@@ -102,8 +105,15 @@ export function StreamModal({ open, onClose }: { open: boolean; onClose: () => v
                   />
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-                  <button type="submit" className="btn btn-light" disabled={busy} style={{ padding: '10px 20px' }}>
-                    🔴 {t('stream_start_button')}
+                  <button
+                    type="submit"
+                    className="btn btn-light"
+                    disabled={busy}
+                    style={{ padding: '10px 20px', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                  >
+                    {/* the bottom bar's own red stream dot, not the 🔴 emoji */}
+                    <span className="stream-dot" aria-hidden="true" />
+                    {t('stream_start_button')}
                   </button>
                 </div>
               </form>

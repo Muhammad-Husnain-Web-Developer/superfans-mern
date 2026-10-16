@@ -13,6 +13,7 @@ import { SocialNetwork } from '../models/SocialNetwork.js';
 import { UserBlock } from '../models/UserBlock.js';
 import { optionalAuth } from '../middleware/auth.js';
 import { usernameUrlMatch } from '../utils/username.js';
+import { effectivePresence } from '../services/realtime.js';
 
 export const profilesRouter = Router();
 
@@ -137,8 +138,9 @@ profilesRouter.get(
         footerNameUsername: user.footerNameUsername ?? null,
         profilePictureBorderStatus: user.profilePictureBorderStatus ?? null,
         /* ESTADO — the dot the wall draws beside this profile's @nickname. Absent on
-           accounts older than the field, which reads as online (the schema default). */
-        presence: user.presence ?? 'online',
+           accounts older than the field, which reads as online (the schema default) — and
+           "online" only shows while they actually have a page open (services/realtime). */
+        presence: effectivePresence(String(user._id), user.presence),
         country: user.country ?? null,
         birth: user.birth ?? null,
         gender: user.gender ?? null,

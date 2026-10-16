@@ -1,0 +1,47 @@
+/* The bottom bar's red stream dot (.stream-indicator in footer-modals.css), for the Go-Live
+   modal's "Start Stream!" button — David, 16 Oct 2026: "Put the Same Red Stream button of
+   Bottom Bar in the icon Button of modal". The bar's own rule lives inside its ≤768px media
+   query, so it would not reach the modal on a desktop; this is the same dot (18px, 3px dark
+   ring, the same 1.5s pulse), available at every width. */
+.stream-dot {
+  display: inline-block;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  background: red;
+  border-radius: 50%;
+  border: 3px solid #0e0b14;
+  vertical-align: middle;
+  animation: stream-dot-pulse 1.5s infinite;
+}
+
+/* and it steps down with the bar's own breakpoints, so on any phone the two dots match */
+@media (max-width: 480px) {
+  .stream-dot {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+  }
+}
+@media (max-width: 360px) {
+  .stream-dot {
+    width: 12px;
+    height: 12px;
+  }
+}
+@media (max-width: 320px) {
+  .stream-dot {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+@keyframes stream-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}

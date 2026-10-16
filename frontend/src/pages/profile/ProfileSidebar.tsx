@@ -13,6 +13,7 @@ import { FlipLogo } from '../../components/FlipLogo';
 import { NotificationsBell } from '../../components/NotificationsBell';
 import { useUnreadCount } from '../../utils/unreadNotifications';
 import '../../styles/logo-spin.css';
+import '../../styles/stream-dot.css';
 import { assetImage } from '../../utils/format';
 import type { NetworkDetail, ProfileData } from '../../api/profiles';
 
@@ -904,10 +905,10 @@ export function ProfileSidebar({
                 >
                   ×
                 </button>
-                <div style={{ textAlign: 'center', height: 20, marginTop: 35 }}>
-                  <img src="/assets/images/superman2.png" style={{ display: 'inline-block', height: 51 }} alt="" />
+                {/* the same title and gap as components/StreamModal (David, 16 Oct 2026) */}
+                <div style={{ textAlign: 'center', marginTop: 35, marginBottom: 24 }}>
                   <h5 style={{ fontSize: 30, textAlign: 'center', color: '#fff', display: 'inline-block', margin: 0 }}>
-                    {tUi('message_label')}
+                    📹{tUi('stream_modal_title')}
                   </h5>
                 </div>
               </div>
@@ -938,8 +939,15 @@ export function ProfileSidebar({
                     />
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'center', marginTop: 20 }}>
-                    <button type="submit" className="btn btn-light" disabled={goLiveBusy} style={{ padding: '10px 20px' }}>
-                      🔴 {tContent('stream_start_button')}
+                    <button
+                      type="submit"
+                      className="btn btn-light"
+                      disabled={goLiveBusy}
+                      style={{ padding: '10px 20px', display: 'inline-flex', alignItems: 'center', gap: 8 }}
+                    >
+                      {/* the bottom bar's own red stream dot, not the 🔴 emoji */}
+                      <span className="stream-dot" aria-hidden="true" />
+                      {tContent('stream_start_button')}
                     </button>
                   </div>
                 </form>

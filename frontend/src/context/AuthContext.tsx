@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { hydrateSoundEffects } from '../utils/soundEffects';
+import { holdPresenceSocket } from '../utils/presence';
 
 export type UserRole = 'user' | 'influencer' | 'business' | 'admin';
 
@@ -71,6 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     [],
   );
+
+  /* ESTADO: a signed-in account keeps one socket open on every page, which is how the
+     server knows it is here — its dot turns red a minute after the last page closes. */
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    return holdPresenceSocket();
+  }, [userId]);
 
   const value = useMemo(
     () => ({ user, loading, setUser: setUserAndHydrate }),
