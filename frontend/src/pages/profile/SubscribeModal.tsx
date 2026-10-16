@@ -10,6 +10,24 @@ import { playSubscriptionSound } from '../../utils/modalSounds';
  * message, a card-safety line, a Terms checkbox and the green ✨Subscribe button. Confirming
  * (with terms checked) starts the payment redirect.
  */
+
+/**
+ * The client's own drawing of the stars, in place of the ✨ emoji (David, 17 Oct 2026:
+ * "Change icon for this image in all Pertinent Buttons — Subscribe buttons"). The emoji
+ * draws differently on every phone; this is the same picture everywhere. Sized off the
+ * text it sits in, so it fits the 30px title and the button alike.
+ */
+function Sparkles({ style }: { style?: React.CSSProperties }) {
+  return (
+    <img
+      src="/brand/estels.png"
+      alt=""
+      aria-hidden="true"
+      style={{ height: '1em', width: 'auto', verticalAlign: '-0.12em', display: 'inline-block', ...style }}
+    />
+  );
+}
+
 export function SubscribeModal({
   usernameUrl,
   open,
@@ -110,7 +128,9 @@ export function SubscribeModal({
               textWrap: 'balance',
             }}
           >
-            {t('subscribe_to', { defaultValue: '✨ Subscribe to' })} <span>@</span>
+            {/* the translations carry a ✨ of their own; the drawn one replaces it */}
+            <Sparkles />{' '}
+            {t('subscribe_to', { defaultValue: 'Subscribe to' }).replace(/^✨\s*/u, '')} <span>@</span>
             {usernameUrl}:
           </h5>
         </div>
@@ -159,7 +179,8 @@ export function SubscribeModal({
               /* full colour whether or not the terms are ticked — only the action waits */
               style={{ border: '2px solid #409c40', display: 'inline-block', marginLeft: 10, opacity: 1, cursor: agreed && !busy ? 'pointer' : 'not-allowed' }}
             >
-              ✨{t('subscribe', { defaultValue: 'Subscribe' })}
+              <Sparkles style={{ marginRight: 4 }} />
+              {t('subscribe', { defaultValue: 'Subscribe' })}
             </button>
             {needsTerms && !agreed && (
               <p
