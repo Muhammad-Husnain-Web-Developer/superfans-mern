@@ -5,7 +5,7 @@ import { asyncHandler } from '../middleware/asyncHandler.js';
 import { requireAuth } from '../middleware/auth.js';
 import { ChatMessage } from '../models/ChatMessage.js';
 import { User } from '../models/User.js';
-import { emitToUser } from '../services/realtime.js';
+import { effectivePresence, emitToUser } from '../services/realtime.js';
 
 export const chatRouter = Router();
 
@@ -36,7 +36,7 @@ chatRouter.get(
 
     const users = await User.find(
       { _id: { $in: rows.map((r) => r._id) } },
-      { name: 1, profilePicture: 1 },
+      { name: 1, profilePicture: 1, presence: 1 },
     ).lean();
     const byId = new Map(users.map((u) => [String(u._id), u]));
 
@@ -48,6 +48,7 @@ chatRouter.get(
         id: String(u!._id),
         name: u!.name,
         profilePicture: u!.profilePicture ?? null,
+        presence: effectivePresence(String(u!._id), u!.presence),
       }));
 
     res.json(ordered);

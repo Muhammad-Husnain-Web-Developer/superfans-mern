@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslation } from 'react-i18next';
-import { formatPrice } from '../../utils/format';
+import { assetImage, formatPrice } from '../../utils/format';
 import { io, type Socket } from 'socket.io-client';
 import { api } from '../../api/client';
 import { fetchProfile } from '../../api/profiles';
 import { usePaymentReturn } from '../../utils/usePaymentReturn';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, type UserPresence } from '../../context/AuthContext';
 import { useStandalonePageStyles, BOOTSTRAP4_CDN } from '../../components/StandalonePage';
+import { localeLogo } from '../auth/AuthShell';
+import { PresenceDot } from '../../components/PresenceDot';
+import { onPresenceChange } from '../../utils/presence';
 
 /**
  * Chat — port of influencer/messages.blade.php (a full-screen WhatsApp-style page used
@@ -19,6 +22,7 @@ interface ChatUser {
   id: string;
   name: string;
   profilePicture: string | null;
+  presence: UserPresence;
 }
 interface Msg {
   id: string;
@@ -49,7 +53,7 @@ export function Messages() {
   const chatboxRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
   const selectedRef = useRef<ChatUser | null>(null);
-  const { t: tUi } = useTranslation('ui');
+  const { t: tUi, i18n } = useTranslation('ui');
   selectedRef.current = selected;
 
   useEffect(() => {
@@ -74,7 +78,12 @@ export function Messages() {
     if (!handle) return;
     void fetchProfile(handle)
       .then((p) => {
-        const target: ChatUser = { id: p.id, name: p.name, profilePicture: p.profilePicture };
+        const target: ChatUser = {
+          id: p.id,
+          name: p.name,
+          profilePicture: p.profilePicture,
+          presence: p.presence ?? 'online',
+        };
         setUsers((prev) => (prev.some((u) => u.id === target.id) ? prev : [target, ...prev]));
         return openChat(target);
       })
@@ -116,6 +125,17 @@ export function Messages() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(
+    () =>
+      onPresenceChange((userId, presence) => {
+        setUsers((prev) =>
+          prev.map((user) => (user.id === userId ? { ...user, presence } : user)),
+        );
+        setSelected((prev) => (prev?.id === userId ? { ...prev, presence } : prev));
+      }),
+    [],
+  );
 
   useEffect(() => {
     if (chatboxRef.current) chatboxRef.current.scrollTop = chatboxRef.current.scrollHeight;
@@ -212,7 +232,7 @@ export function Messages() {
           >
             <a href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
               <img
-                src="/assets/images/logosmall/Superworld-01.svg"
+                src={localeLogo(i18n.resolvedLanguage ?? 'en')}
                 alt="SuperFans Logo"
                 style={{ height: 26.5 }}
               />
@@ -260,9 +280,24 @@ export function Messages() {
                     onMouseOver={(e) => (e.currentTarget.style.background = '#f5f5f5')}
                     onMouseOut={(e) => (e.currentTarget.style.background = selected?.id === u.id ? '#f5f5f5' : '')}
                   >
-                    <div style={{ flex: 1 }}>
+                    <img
+                      src={u.profilePicture ? assetImage(u.profilePicture) : '/assets/images/SUPERHEROINA.svg'}
+                      alt=""
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        marginRight: 12,
+                        flex: 'none',
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 500, color: '#111' }}>{u.name}</div>
-                      <div style={{ fontSize: 12, color: '#667781' }}>{tUi('chat_last_seen_today')}</div>
+                      <div style={{ fontSize: 12, color: '#667781', display: 'flex', alignItems: 'center', gap: 5 }}>
+                        <PresenceDot userId={u.id} presence={u.presence} size={8} />
+                        {tUi(`presence_${u.presence}`)}
+                      </div>
                     </div>
                     <div style={{ fontSize: 10, color: '#667781' }}>2:30 PM</div>
                   </li>
@@ -300,7 +335,10 @@ export function Messages() {
                     <div style={{ fontWeight: 500, fontSize: 16, display: 'flex', alignItems: 'center' }}>
                       <span id="currentChatUser">{selected.name}</span>
                     </div>
-                    <div style={{ fontSize: 12, color: '#667781' }}>{tUi('chat_online')}</div>
+                    <div style={{ fontSize: 12, color: '#667781', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <PresenceDot userId={selected.id} presence={selected.presence} size={8} />
+                      {tUi(`presence_${selected.presence}`)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -366,7 +404,15 @@ export function Messages() {
                   className="btn btn-success"
                   onClick={() => void send()}
                   disabled={!draft.trim() || sending}
-                  style={{ border: '2px solid #409c40', width: 65, height: 59, display: 'inline-block', marginLeft: 1 }}
+                  style={{
+                    border: '2px solid #409c40',
+                    width: 59,
+                    height: 59,
+                    padding: 0,
+                    flex: '0 0 59px',
+                    display: 'inline-block',
+                    marginLeft: 1,
+                  }}
                 >
                   ✉️
                 </button>
