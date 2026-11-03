@@ -247,3 +247,7 @@
   background: #0d63e8;
   color: #fff;
 }
+.boost-modal-close:hover {
+  color: #fff !important;
+  opacity: 1 !important;
+}

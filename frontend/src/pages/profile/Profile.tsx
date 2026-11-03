@@ -613,19 +613,21 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
             }}
           >
             {/* header */}
-            <div style={{ padding: '15px 20px', textAlign: 'center', position: 'relative' }}>
-              <h3 style={{ fontSize: 22, fontWeight: 900, fontFamily: "'Consolas', monospace", margin: 0, marginTop: 20, color: '#fff' }}>
+            <div style={{ padding: '24px 48px 28px', textAlign: 'center', position: 'relative' }}>
+              <h3 style={{ fontSize: 22, fontWeight: 900, fontFamily: "'Consolas', monospace", margin: 0, color: '#fff' }}>
                 🚀 Boost Your Post
               </h3>
               <button
                 onClick={closeBoost}
-                style={{ position: 'absolute', right: 15, top: 10, marginTop: 10, background: 'transparent', border: 'none', color: '#fff', fontSize: 25, cursor: 'pointer', opacity: 0.8 }}
+                className="boost-modal-close"
+                aria-label={tUi('close')}
+                style={{ position: 'absolute', right: 15, top: 14, padding: 4, lineHeight: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: 18, cursor: 'pointer', opacity: 0.8 }}
               >
                 ✖
               </button>
             </div>
             {/* body */}
-            <div style={{ padding: 20, textAlign: 'center' }}>
+            <div style={{ padding: '8px 20px 20px', textAlign: 'center' }}>
               {posts[0].imageVideo &&
                 (isVideoFile(posts[0].imageVideo) ? (
                   /* David, 30 Sep 2026: "Video Controls out of this modal in case of
@@ -676,7 +678,8 @@ export function Profile({ wallVariant = false }: { wallVariant?: boolean } = {})
                 href={`/super-ads/buy/${posts[0].id}`}
                 target="_blank"
                 rel="noreferrer"
-                style={{ display: 'inline-block', padding: '12px 22px', background: '#00e676', color: '#000', fontSize: 17, fontWeight: 800, marginTop: 12, textDecoration: 'none' }}
+                className="btn btn-success"
+                style={{ display: 'inline-block', padding: '12px 22px', background: '#5cb85c', color: '#fff', border: '3px solid #409c40', borderRadius: 0, fontSize: 17, fontWeight: 800, marginTop: 12, textDecoration: 'none' }}
               >
                 ⚡ Buy Fast Ads
               </a>
