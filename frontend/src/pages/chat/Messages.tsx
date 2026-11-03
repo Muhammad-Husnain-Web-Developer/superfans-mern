@@ -406,6 +406,7 @@ export function Messages() {
                   disabled={!draft.trim() || sending}
                   style={{
                     border: '2px solid #409c40',
+                    borderRadius: 0,
                     width: 59,
                     height: 59,
                     padding: 0,

@@ -209,12 +209,13 @@
   height: 59px !important;
   margin-left: 0 !important;
 }
-/* A phone: the two share what the ✉️ leaves, equally, and a label too long for its half —
-   Russian's "Вы подписаны", Italian's "Abbonati" — runs onto a second line inside the 59px
-   box rather than pushing the row past the screen's edge. */
+/* On phones, all three controls share one height and the message control stays square. */
 @media (max-width: 480px) {
   .profile-cta-row {
     width: 100%;
+  }
+  .profile-cta-row > .btn {
+    height: 56px;
   }
   .profile-cta-row > .profile-follow-btn,
   .profile-cta-row > .profile-subs-btn {
@@ -227,12 +228,11 @@
     row-gap: 2px;
     line-height: 1.15;
   }
-}
-/* the narrowest phones (320px): the superheroine gives its room to the words, which would
-   otherwise need a third line in Russian */
-@media (max-width: 360px) {
-  .profile-cta-row > .profile-follow-btn img {
-    display: none !important;
+  .profile-cta-row > .btn-success {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 0;
+    flex: 0 0 56px;
   }
 }
 .btn.profile-subs-btn {
