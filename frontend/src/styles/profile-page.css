@@ -251,3 +251,8 @@
   color: #fff !important;
   opacity: 1 !important;
 }
+.boost-modal-cta,
+.boost-modal-cta:hover,
+.boost-modal-cta:focus {
+  color: #000 !important;
+}
