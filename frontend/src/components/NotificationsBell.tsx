@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 import { setUnreadCount, useUnreadCount } from '../utils/unreadNotifications';
-import { assetImage } from '../utils/format';
+import { assetImage, isVideoFile, videoMime } from '../utils/format';
 import '../styles/notifications.css';
 
 /**
@@ -37,10 +37,12 @@ type Item =
       postId: string;
       media: 'picture' | 'video';
       thumb: string | null;
+      videoUrl: string | null;
       actors: Actor[];
       others: number;
     }
-  | { kind: 'follow' | 'subscribe' | 'card'; id: string; at: string; actor: Actor };
+  | { kind: 'follow' | 'subscribe'; id: string; at: string; actor: Actor }
+  | { kind: 'card'; id: string; at: string; actor: Actor };
 
 interface PartnerRow {
   id: string;
@@ -60,6 +62,30 @@ const AVATAR_FALLBACK = 'output-onlinepngtools (2).png';
 
 function avatar(a: Actor): string {
   return a.profilePicture ? assetImage(a.profilePicture) : assetImage(AVATAR_FALLBACK);
+}
+
+function NotificationThumb({ thumb, videoUrl }: { thumb: string | null; videoUrl: string | null }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showVideo = Boolean(videoUrl && (!thumb || imageFailed || isVideoFile(thumb)));
+
+  if (videoUrl && showVideo) {
+    return (
+      <video className="notif-thumb" muted autoPlay loop playsInline preload="metadata" aria-hidden="true">
+        <source src={assetImage(videoUrl)} type={videoMime(videoUrl)} />
+      </video>
+    );
+  }
+  if (!thumb) return null;
+  return (
+    <img
+      className="notif-thumb"
+      src={assetImage(thumb)}
+      alt=""
+      onError={() => {
+        if (videoUrl) setImageFailed(true);
+      }}
+    />
+  );
 }
 
 /** The client's own stamps: 30min, 7h, 4d. Anything under a minute reads as "now". */
@@ -170,8 +196,8 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
       .finally(() => setLoading(false));
   }
 
-  /* "Yes, we should open the actioned Post" — a like leads to the post it was left on. A
-     follow, a subscription or a card has no post behind it, so those open the person. */
+  /* A like leads to its post; follows and subscriptions lead to the person. Cards have
+     separate chat and profile actions in their row. */
   function openItem(item: Item) {
     setOpen(false);
     if (item.kind === 'like') {
@@ -179,6 +205,15 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
       return;
     }
     if (item.actor.usernameUrl) navigate(`/${item.actor.usernameUrl}`);
+  }
+
+  function openCardConversation(item: Extract<Item, { kind: 'card' }>) {
+    setOpen(false);
+    const base = user?.role === 'influencer' ? '/influencer' : '/user';
+    const query = item.actor.usernameUrl
+      ? `?to=${encodeURIComponent(item.actor.usernameUrl)}`
+      : '';
+    navigate(`${base}/messages${query}`);
   }
 
   async function answer(request: PartnerRow, accept: boolean) {
@@ -220,16 +255,54 @@ export function NotificationsBell({ variant = 'bar' }: { variant?: 'bar' | 'side
             />
             {when}
           </span>
-          {item.thumb && <img className="notif-thumb" src={assetImage(item.thumb)} alt="" />}
+          <NotificationThumb thumb={item.thumb} videoUrl={item.videoUrl} />
         </button>
+      );
+    }
+    if (item.kind === 'card') {
+      return (
+        <div className="notif-row notif-card-row" key={item.id}>
+          <button
+            type="button"
+            className="notif-card-avatar"
+            onClick={() => openCardConversation(item)}
+            aria-label={t('notif_card')}
+          >
+            <img className="notif-avatar" src={avatar(item.actor)} alt="" />
+          </button>
+          <span className="notif-text">
+            {item.actor.usernameUrl ? (
+              <a
+                className="notif-actor-link"
+                href={`/${item.actor.usernameUrl}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setOpen(false);
+                  navigate(`/${item.actor.usernameUrl}`);
+                }}
+              >
+                @{item.actor.usernameUrl}
+              </a>
+            ) : (
+              <b>{item.actor.name ?? '?'}</b>
+            )}{' '}
+            <button
+              type="button"
+              className="notif-card-message"
+              onClick={() => openCardConversation(item)}
+            >
+              {t('notif_card')}
+            </button>
+            {when}
+          </span>
+        </div>
       );
     }
     const line =
       item.kind === 'follow'
         ? 'notif_followed'
-        : item.kind === 'subscribe'
-          ? 'notif_subscribed'
-          : 'notif_card';
+        : 'notif_subscribed';
     return (
       <button className="notif-row" key={item.id} onClick={() => openItem(item)}>
         <img className="notif-avatar" src={avatar(item.actor)} alt="" />

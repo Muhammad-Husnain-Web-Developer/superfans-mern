@@ -11,10 +11,14 @@ import './sw-ads-loader.css';
  * the Super-Ads pages and the two business auth pages, which the client wants
  * to load behind the same icon, cannot drift apart.
  */
-export function SwAdsLoader() {
+export function SwAdsLoader({ onComplete }: { onComplete?: () => void } = {}) {
   const [faded, setFaded] = useState(false);
   const [gone, setGone] = useState(false);
   const { t: tUi } = useTranslation('ui');
+
+  useEffect(() => {
+    if (gone) onComplete?.();
+  }, [gone, onComplete]);
 
   useEffect(() => {
     let fade: ReturnType<typeof setTimeout>;

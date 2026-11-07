@@ -23,6 +23,7 @@ interface ChatUser {
   name: string;
   profilePicture: string | null;
   presence: UserPresence;
+  unreadCount: number;
 }
 interface Msg {
   id: string;
@@ -83,12 +84,12 @@ export function Messages() {
           name: p.name,
           profilePicture: p.profilePicture,
           presence: p.presence ?? 'online',
+          unreadCount: 0,
         };
         setUsers((prev) => (prev.some((u) => u.id === target.id) ? prev : [target, ...prev]));
         return openChat(target);
       })
       .catch(() => undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* the $10 priority access is reconciled here now, because this is where its checkout
@@ -115,8 +116,20 @@ export function Messages() {
     socketRef.current = socket;
     socket.on('chat:message', (m: Msg) => {
       const open = selectedRef.current;
-      if (open && (m.senderId === open.id || m.receiverId === open.id)) {
+      const isOpenConversation = open?.id === m.senderId || open?.id === m.receiverId;
+      if (isOpenConversation) {
         setMessages((prev) => [...prev, m]);
+        if (m.senderId === open?.id) {
+          void api.post('/chatbox/read', { otherId: open.id })
+            .then(() => setUsers((prev) => prev.map((user) =>
+              user.id === open.id ? { ...user, unreadCount: 0 } : user,
+            )))
+            .catch((error: unknown) => console.error('Could not mark chat messages as read.', error));
+        }
+      } else if (m.senderId !== myId) {
+        setUsers((prev) => prev.map((user) =>
+          user.id === m.senderId ? { ...user, unreadCount: user.unreadCount + 1 } : user,
+        ));
       }
       moveToTop(m.senderId);
     });
@@ -157,6 +170,9 @@ export function Messages() {
     setMobileChatOpen(true);
     const { data } = await api.post<Msg[]>('/chatbox/fetch', { otherId: user.id });
     setMessages(data);
+    setUsers((prev) => prev.map((item) =>
+      item.id === user.id ? { ...item, unreadCount: 0 } : item,
+    ));
   }
 
   async function send() {
@@ -214,6 +230,8 @@ export function Messages() {
           id="userListColumn"
           style={{
             height: '100%',
+            minHeight: 0,
+            overflow: 'hidden',
             display: mobileChatOpen ? 'none' : 'flex',
             flexDirection: 'column',
             borderRight: '1px solid #e9edef',
@@ -254,7 +272,7 @@ export function Messages() {
             )}
           </div>
 
-          <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+          <div style={{ flex: '1 1 0', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
             <div style={{ padding: '15px 0' }}>
               <h5 style={{ color: '#667781', fontSize: 14, padding: '0 15px 10px 15px', margin: 0, textTransform: 'uppercase' }}>
                 ✉️ Cards
@@ -300,6 +318,29 @@ export function Messages() {
                       </div>
                     </div>
                     <div style={{ fontSize: 10, color: '#667781' }}>2:30 PM</div>
+                    {u.unreadCount > 0 && (
+                      <span
+                        aria-label={`${u.unreadCount} unread messages`}
+                        title={`${u.unreadCount} unread messages`}
+                        style={{
+                          minWidth: 20,
+                          height: 20,
+                          padding: '0 6px',
+                          marginLeft: 8,
+                          borderRadius: 10,
+                          background: '#21c55d',
+                          color: '#fff',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 11,
+                          fontWeight: 700,
+                          flex: 'none',
+                        }}
+                      >
+                        {u.unreadCount}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -312,7 +353,7 @@ export function Messages() {
           <div
             id="chatArea"
             className="col-md-8"
-            style={{ display: mobileChatOpen || true ? 'block' : 'none', height: '100%', position: 'relative', margin: 0 }}
+            style={{ display: 'block', height: '100%', position: 'relative', margin: 0 }}
           >
             <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
               <div

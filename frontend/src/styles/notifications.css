@@ -82,9 +82,8 @@
    items are drawn in (their 2px #585858 border), with the count on the end of the line. */
 .notif-sidebar-item {
   position: relative;
-  /* the width the search box under it takes: 180px, centred in the column
-     (.wrapper in layout-direct-user.css) */
-  max-width: 180px;
+  width: 200px;
+  max-width: 100%;
   margin: 10px auto 0;
   box-sizing: border-box;
   padding: 6px;
@@ -204,6 +203,37 @@
   object-fit: cover;
   background: #d8d8d8;
   flex-shrink: 0;
+}
+
+.notif-card-avatar,
+.notif-card-message {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.notif-card-avatar {
+  display: flex;
+  flex: none;
+}
+
+.notif-card-message {
+  text-align: left;
+}
+
+.notif-actor-link {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.notif-actor-link:hover,
+.notif-actor-link:focus {
+  color: #222;
+  text-decoration: underline;
 }
 
 .notif-text {

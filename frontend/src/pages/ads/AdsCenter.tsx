@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
@@ -285,6 +285,8 @@ export function AdsCenter() {
   useStandalonePageStyles([BOOTSTRAP4_CDN, '/page-css/ads-center.css']);
   const [data, setData] = useState<CenterData | null>(null);
   const { t: tUi } = useTranslation('ui');
+  const [adsLoaderReady, setAdsLoaderReady] = useState(false);
+  const onAdsLoaderComplete = useCallback(() => setAdsLoaderReady(true), []);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [restricted, setRestricted] = useState<{ title: string; message: string; profile?: boolean } | null>(null);
@@ -380,7 +382,7 @@ export function AdsCenter() {
 
   return (
     <>
-      <AdsSidebar active="center" />
+      <AdsSidebar active="center" onLoaderComplete={onAdsLoaderComplete} />
       {/* Working inside someone else's account is not a state to leave unsaid: every ad made
           from here belongs to them, not to the business making it. */}
       {postingFor && data?.actingFor && (
@@ -490,7 +492,7 @@ export function AdsCenter() {
         />
       )}
 
-      {restricted && (
+      {restricted && (!restricted.profile || adsLoaderReady) && (
         <div className="ads-modal-overlay" onClick={() => setRestricted(null)}>
           <div className="ads-modal-box" style={{ maxWidth: 460 }} onClick={(e) => e.stopPropagation()}>
             <div style={{ background: '#8a2be2', color: '#fff', borderRadius: 12, padding: '28px 24px', textAlign: 'center' }}>

@@ -501,10 +501,11 @@ export function LoggedInNav({
             className={`collapse-div collapse${menuOpen ? ' in show' : ''}`}
             id="demo"
             style={{
-              left: 12,
+              left: 0,
               padding: 10,
               position: 'relative',
-              width: 'fit-content',
+              width: 220,
+              maxWidth: 'calc(100vw - 24px)',
               float: 'none',
               boxShadow: 'none',
               border: 0,
@@ -566,6 +567,9 @@ const COLLAPSE_ITEM: CSSProperties = {
   border: '2px solid #585858',
   marginTop: 10,
   padding: 6,
+  width: 200,
+  maxWidth: '100%',
+  boxSizing: 'border-box',
 };
 
 /**

@@ -5,6 +5,7 @@ export interface IChatMessage {
   sender: Types.ObjectId;
   receiver: Types.ObjectId;
   message: string;
+  isRead: boolean;
   mysqlId?: number;
   createdAt: Date;
   updatedAt: Date;
@@ -15,6 +16,7 @@ const chatMessageSchema = new Schema<IChatMessage>(
     sender: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     receiver: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     message: { type: String, required: true },
+    isRead: { type: Boolean, default: true },
     mysqlId: { type: Number, unique: true, sparse: true },
   },
   { timestamps: true },

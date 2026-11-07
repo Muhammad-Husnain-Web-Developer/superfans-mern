@@ -15,19 +15,19 @@
 }
 
 .confirm-dialog-confirm {
-  background: #fff;
-  color: #000;
+  background: red;
+  color: #fff;
 }
 .confirm-dialog-confirm:hover:not(:disabled) {
-  background: #000;
+  background: #ed0c0c;
   color: #fff;
 }
 
 .confirm-dialog-cancel {
-  background: red;
-  color: #fff;
+  background: #fff;
+  color: #000;
 }
 .confirm-dialog-cancel:hover:not(:disabled) {
-  background: #ed0c0c;
+  background: #000;
   color: #fff;
 }

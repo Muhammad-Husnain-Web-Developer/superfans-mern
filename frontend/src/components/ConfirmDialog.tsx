@@ -70,21 +70,21 @@ export function ConfirmDialog({
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
           <button
             type="button"
-            className="confirm-dialog-btn confirm-dialog-confirm"
-            onClick={onConfirm}
-            disabled={busy}
-            style={{ cursor: busy ? 'wait' : 'pointer' }}
-          >
-            {confirmText}
-          </button>
-          <button
-            type="button"
             className="confirm-dialog-btn confirm-dialog-cancel"
             onClick={onCancel}
             disabled={busy}
             style={{ cursor: busy ? 'wait' : 'pointer' }}
           >
             {cancelText}
+          </button>
+          <button
+            type="button"
+            className="confirm-dialog-btn confirm-dialog-confirm"
+            onClick={onConfirm}
+            disabled={busy}
+            style={{ cursor: busy ? 'wait' : 'pointer' }}
+          >
+            {confirmText}
           </button>
         </div>
       </div>

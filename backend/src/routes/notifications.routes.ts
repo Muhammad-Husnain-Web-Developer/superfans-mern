@@ -63,6 +63,7 @@ type Row =
       postId: string;
       media: 'picture' | 'video';
       thumb: string | null;
+      videoUrl: string | null;
       actors: Actor[];
       others: number;
     }
@@ -82,12 +83,18 @@ notificationsRouter.get(
       .setOptions({ withMissing: true })
       .lean();
     const mediaOf = new Map(myPosts.map((p) => [String(p._id), mediaKind(p.imageVideo)]));
-    /* the square preview the client draws on the right of a row: a video's poster frame where
-       there is one, the file itself otherwise */
+    /* A video's source is also carried separately so the client can use it when the poster is
+       absent or no longer available. */
     const thumbOf = new Map(
       myPosts.map((p) => [
         String(p._id),
         p.thumbnail ? `thumbnails/${p.thumbnail}` : (p.imageVideo ?? null),
+      ]),
+    );
+    const videoOf = new Map(
+      myPosts.map((p) => [
+        String(p._id),
+        mediaKind(p.imageVideo) === 'video' ? p.imageVideo ?? null : null,
       ]),
     );
     const myPostIds = myPosts.map((p) => p._id);
@@ -187,6 +194,7 @@ notificationsRouter.get(
           postId,
           media: mediaOf.get(postId) ?? 'picture',
           thumb: thumbOf.get(postId) ?? null,
+          videoUrl: videoOf.get(postId) ?? null,
           actors: g.actors,
           others: g.others,
         }),

@@ -22,15 +22,22 @@ chatRouter.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const me = new Types.ObjectId(req.auth!.userId);
-    const rows = await ChatMessage.aggregate<{ _id: Types.ObjectId; last: Date }>([
+    const rows = await ChatMessage.aggregate<{ _id: Types.ObjectId; last: Date; unreadCount: number }>([
       { $match: { $or: [{ sender: me }, { receiver: me }] } },
       {
         $project: {
           other: { $cond: [{ $eq: ['$sender', me] }, '$receiver', '$sender'] },
           createdAt: 1,
+          unread: { $and: [{ $eq: ['$receiver', me] }, { $eq: ['$isRead', false] }] },
         },
       },
-      { $group: { _id: '$other', last: { $max: '$createdAt' } } },
+      {
+        $group: {
+          _id: '$other',
+          last: { $max: '$createdAt' },
+          unreadCount: { $sum: { $cond: ['$unread', 1, 0] } },
+        },
+      },
       { $sort: { last: -1 } },
     ]);
 
@@ -42,13 +49,14 @@ chatRouter.get(
 
     // preserve the recency order from the aggregation
     const ordered = rows
-      .map((r) => byId.get(String(r._id)))
-      .filter(Boolean)
-      .map((u) => ({
-        id: String(u!._id),
-        name: u!.name,
-        profilePicture: u!.profilePicture ?? null,
-        presence: effectivePresence(String(u!._id), u!.presence),
+      .map((r) => ({ row: r, user: byId.get(String(r._id)) }))
+      .filter((entry) => Boolean(entry.user))
+      .map(({ row, user }) => ({
+        id: String(user!._id),
+        name: user!.name,
+        profilePicture: user!.profilePicture ?? null,
+        presence: effectivePresence(String(user!._id), user!.presence),
+        unreadCount: row.unreadCount,
       }));
 
     res.json(ordered);
@@ -57,12 +65,33 @@ chatRouter.get(
 
 /** fetch — the full conversation between the current user and another, oldest first. */
 chatRouter.post(
+  '/read',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { otherId } = z.object({ otherId: z.string() }).parse(req.body);
+    const me = new Types.ObjectId(req.auth!.userId);
+    const them = new Types.ObjectId(otherId);
+
+    await ChatMessage.updateMany(
+      { sender: them, receiver: me, isRead: false },
+      { $set: { isRead: true } },
+    );
+    res.json({ success: true });
+  }),
+);
+
+chatRouter.post(
   '/fetch',
   requireAuth,
   asyncHandler(async (req, res) => {
     const { otherId } = z.object({ otherId: z.string() }).parse(req.body);
     const me = new Types.ObjectId(req.auth!.userId);
     const them = new Types.ObjectId(otherId);
+
+    await ChatMessage.updateMany(
+      { sender: them, receiver: me, isRead: false },
+      { $set: { isRead: true } },
+    );
 
     const messages = await ChatMessage.find({
       $or: [
@@ -95,7 +124,7 @@ chatRouter.post(
       .parse(req.body);
     const me = req.auth!.userId;
 
-    const doc = await ChatMessage.create({ sender: me, receiver: receiverId, message });
+    const doc = await ChatMessage.create({ sender: me, receiver: receiverId, message, isRead: false });
     const payload = {
       id: String(doc._id),
       message: doc.message,

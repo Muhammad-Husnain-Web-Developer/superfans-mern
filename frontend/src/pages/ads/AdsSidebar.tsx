@@ -10,8 +10,10 @@ import { AdsFlipLogo } from '../../components/FlipLogo';
 /** Fixed left nav for the Super-Ads area — port of resources/views/ads/sidebar.blade.php. */
 export function AdsSidebar({
   active,
+  onLoaderComplete,
 }: {
   active?: 'center' | 'my-ads' | 'clients' | 'info' | 'more-tools';
+  onLoaderComplete?: () => void;
 }) {
   const { user } = useAuth();
   const [modal, setModal] = useState<null | 'search' | 'config' | 'help'>(null);
@@ -19,7 +21,7 @@ export function AdsSidebar({
   return (
     <div className="ads-sidebar">
       {/* the blade puts the loading screen at the head of the sidebar partial */}
-      <SwAdsLoader />
+      <SwAdsLoader onComplete={onLoaderComplete} />
       <center>
         <Link className="side_logo" to="/super-ads">
           {/* the heading turns with the banner, so it lives inside the card */}
