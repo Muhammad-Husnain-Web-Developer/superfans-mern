@@ -6,7 +6,7 @@
 set -euo pipefail
 
 echo "==> Pulling latest code"
-#git pull origin main
+git pull origin main
 
 echo "==> Backend: install + build + restart"
 cd backend
